@@ -154,6 +154,29 @@ describe('planejador até o interclasse', () => {
     for (const d of p.days) assert.ok(d.minutes <= 20, `${d.date}: ${d.minutes} min`);
   });
 
+  test('varia o exercício técnico após uma sessão recente do mesmo fundamento', () => {
+    const p = plan('2026-10-15', {
+      competition: null,
+      results: baselineResults('2026-10-14'),
+      sessions: [
+        session('2026-10-14', {
+          kind: 'tecnico',
+          activityId: 'passe-porta',
+          activityName: 'Passe na porta',
+          skills: ['passe'],
+        }),
+      ],
+      profile: profile({
+        focos: ['passe'],
+        minutosDisponiveis: 45,
+        preferenciaSessao: 'longas',
+      }),
+    });
+    const technical = p.days[0]?.blocks.find((block) => block.kind === 'tecnico');
+    assert.equal(technical?.skill, 'passe');
+    assert.equal(technical?.activityId, 'passe-tabela-parede');
+  });
+
   test('alterna capacidades físicas para não limitar o plano a coordenação e core', () => {
     const p = plan('2026-10-12', {
       competition: null,
