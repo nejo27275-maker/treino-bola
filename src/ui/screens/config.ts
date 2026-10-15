@@ -10,7 +10,16 @@ import {
   type PoseAvailability,
 } from '../../media/pose.ts';
 import type { AppContext } from '../app.ts';
-import { button, card, field, linkButton, pageHeader, pill, select } from '../components.ts';
+import {
+  button,
+  card,
+  field,
+  linkButton,
+  pageHeader,
+  pill,
+  select,
+  showFocusOnLabel,
+} from '../components.ts';
 import { h, replaceChildren } from '../dom.ts';
 import type { Screen } from '../router.ts';
 
@@ -99,6 +108,8 @@ export async function configScreen(ctx: AppContext): Promise<Screen> {
     id: 'import-file',
     'aria-label': 'Arquivo de backup para importar',
   });
+  const importLabel = h('label', { for: 'import-file', class: 'btn' }, 'Importar backup');
+  showFocusOnLabel(fileInput, importLabel);
   fileInput.addEventListener('change', async () => {
     const file = fileInput.files?.[0];
     fileInput.value = '';
@@ -472,13 +483,7 @@ export async function configScreen(ctx: AppContext): Promise<Screen> {
           : null,
         h('li', null, 'Situação: ', persistStatus, ' ', persistBtn),
       ),
-      h(
-        'div',
-        { class: 'row' },
-        exportBtn,
-        h('label', { for: 'import-file', class: 'btn' }, 'Importar backup'),
-        fileInput,
-      ),
+      h('div', { class: 'row' }, exportBtn, importLabel, fileInput),
       h('div', { class: 'row', style: { marginTop: '10px' } }, deleteBtn),
       dataStatus,
     ),

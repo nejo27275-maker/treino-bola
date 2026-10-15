@@ -7,7 +7,7 @@ import { logQuiz, type QuizAnswer } from '../../core/sessionLog.ts';
 import { SKILLS } from '../../core/skills.ts';
 import type { AppContext } from '../app.ts';
 import { button, card, linkButton, pageHeader, pill, progress } from '../components.ts';
-import { h, replaceChildren } from '../dom.ts';
+import { h, replaceChildren, replaceKeepingFocus } from '../dom.ts';
 import type { Screen } from '../router.ts';
 
 export const QUIZ_LENGTH = 8;
@@ -40,7 +40,7 @@ export function leituraScreen(ctx: AppContext, query: URLSearchParams): Screen {
       return;
     }
     shownAt = performance.now();
-    const feedback = h('div', { class: 'stack', 'aria-live': 'polite' });
+    const feedback = h('div', { class: 'stack' });
     const optionButtons = q.options.map((o) =>
       h(
         'button',
@@ -93,15 +93,24 @@ export function leituraScreen(ctx: AppContext, query: URLSearchParams): Screen {
         button(
           index + 1 < questions.length ? 'Próxima situação' : 'Ver resultado',
           () => {
+            if (questions[index] !== q) return; // toque duplo não pula uma situação
             index++;
             showQuestion();
           },
           { variant: 'primary', block: true },
         ),
       );
-      (feedback.querySelector('button') as HTMLButtonElement | null)?.focus();
+      // O foco vai para o botão seguinte, que "descreve" o resultado: o leitor de tela anuncia
+      // os dois juntos, sem que a troca de foco corte o anúncio.
+      const resultTitle = feedback.querySelector('h3');
+      const nextBtn = feedback.querySelector<HTMLButtonElement>('button');
+      if (resultTitle && nextBtn) {
+        resultTitle.id = `resultado-${index}`;
+        nextBtn.setAttribute('aria-describedby', resultTitle.id);
+      }
+      nextBtn?.focus();
     };
-    replaceChildren(
+    replaceKeepingFocus(
       body,
       h(
         'div',
@@ -120,7 +129,10 @@ export function leituraScreen(ctx: AppContext, query: URLSearchParams): Screen {
     );
   };
 
+  let finished = false;
   const finish = async () => {
+    if (finished) return;
+    finished = true;
     const correct = answers.filter((a) => a.correct).length;
     const bySkill = new Map<string, { ok: number; total: number }>();
     for (const a of answers) {
@@ -138,7 +150,7 @@ export function leituraScreen(ctx: AppContext, query: URLSearchParams): Screen {
     } catch (error) {
       status.textContent = `Não foi possível salvar: ${error instanceof Error ? error.message : String(error)}`;
     }
-    replaceChildren(
+    replaceKeepingFocus(
       body,
       card(
         {

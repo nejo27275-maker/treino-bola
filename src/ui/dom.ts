@@ -99,6 +99,33 @@ export function replaceChildren(el: Element, ...children: Child[]): void {
   append(el, children);
 }
 
+/**
+ * Substitui o conteúdo sem jogar o foco do teclado/leitor de tela para o topo da página: se o
+ * foco estava dentro do contêiner, volta para o controle equivalente (mesmo `data-focus-key`),
+ * senão para o marcado com `data-autofocus`, senão para o primeiro título do novo conteúdo.
+ */
+export function replaceKeepingFocus(container: Element, ...children: Child[]): void {
+  const active = document.activeElement as HTMLElement | null;
+  const hadFocus = !!active && active !== document.body && container.contains(active);
+  const key = hadFocus ? active?.dataset.focusKey : undefined;
+  replaceChildren(container, ...children);
+  if (!hadFocus) return;
+  if (active?.isConnected && container.contains(active)) {
+    active.focus({ preventScroll: true });
+    return;
+  }
+  const usable = ':not([disabled]):not([aria-disabled="true"])';
+  const target =
+    (key
+      ? container.querySelector<HTMLElement>(`[data-focus-key="${CSS.escape(key)}"]${usable}`)
+      : null) ??
+    container.querySelector<HTMLElement>(`[data-autofocus]${usable}`) ??
+    container.querySelector<HTMLElement>('h2, h3');
+  if (!target) return;
+  if (target.matches('h2, h3') && !target.hasAttribute('tabindex')) target.tabIndex = -1;
+  target.focus({ preventScroll: true });
+}
+
 let uidCounter = 0;
 export function uid(prefix = 'el'): string {
   uidCounter++;

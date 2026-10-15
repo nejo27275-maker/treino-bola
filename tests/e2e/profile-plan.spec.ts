@@ -102,4 +102,13 @@ test('data inválida da competição é recusada com mensagem clara', async ({ p
   await page.getByLabel('Nome da competição').fill('');
   await page.getByRole('button', { name: 'Salvar e recalcular' }).click();
   await expect(page.getByText('Informe o nome da competição.')).toBeVisible();
+  // O erro fica ligado ao campo (leitores de tela anunciam junto com o campo focado).
+  const name = page.getByLabel('Nome da competição');
+  await expect(name).toBeFocused();
+  await expect(name).toHaveAttribute('aria-invalid', 'true');
+  await expect(name).toHaveAccessibleDescription('Informe o nome da competição.');
+  await name.fill('Interclasse');
+  await page.getByLabel('Data').fill('2026-11-30');
+  await page.getByRole('button', { name: 'Salvar e recalcular' }).click();
+  await expect(page.getByText('Competição salva. O plano foi recalculado.')).toBeVisible();
 });

@@ -408,3 +408,18 @@ describe('coordenadas do campo', () => {
     }
   });
 });
+
+describe('descrição em texto da cena', () => {
+  test('posição relativa como na tela (ataque para cima)', async () => {
+    const { relativePosition } = await import('../../src/ui/sim/fieldView.ts');
+    assert.equal(
+      relativePosition({ x: 10, y: 20 }, { x: 13, y: 12 }),
+      '8 m à frente e 3 m à direita (a 9 m)',
+    );
+    assert.equal(
+      relativePosition({ x: 10, y: 20 }, { x: 6, y: 22 }),
+      '2 m atrás e 4 m à esquerda (a 4 m)',
+    );
+    assert.equal(relativePosition({ x: 10, y: 20 }, { x: 10.2, y: 19.8 }), 'colado em você');
+  });
+});

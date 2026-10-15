@@ -19,7 +19,7 @@ import {
   progress,
   select,
 } from '../components.ts';
-import { h, replaceChildren } from '../dom.ts';
+import { h, replaceChildren, replaceKeepingFocus } from '../dom.ts';
 import type { Screen } from '../router.ts';
 import { SignalGenerator, Stopwatch } from '../timers.ts';
 import { dayLabel } from './shared.ts';
@@ -291,7 +291,8 @@ export async function exerciseSessionScreen(ctx: AppContext, id: string): Promis
 
   const timerEl = h('span', { class: 'timer', 'aria-label': 'Tempo ativo' }, '0:00');
   const seriesEl = h('span', { class: 'pill' });
-  const countEl = h('p', { class: 'big-number', 'aria-live': 'polite' });
+  // O placar não é uma região viva: o anúncio de cada toque vem do statusEl (menos repetição).
+  const countEl = h('p', { class: 'big-number' });
   const rateEl = h('p', { class: 'muted small' });
   const progressWrap = h('div');
   const statusEl = h('p', { role: 'status', 'aria-live': 'polite', class: 'small' });
@@ -344,6 +345,7 @@ export async function exerciseSessionScreen(ctx: AppContext, id: string): Promis
     phase = 'descanso';
     stopwatch.pause();
     restLeft = e.pausaSeg;
+    statusEl.textContent = `Série ${seriesInfo().completed} concluída. Descanso de ${e.pausaSeg} segundos.`;
     render();
     restTimer = window.setInterval(() => {
       restLeft--;
@@ -359,6 +361,7 @@ export async function exerciseSessionScreen(ctx: AppContext, id: string): Promis
     phase = 'ativo';
     stopwatch.start();
     ctx.feedback.stimulus();
+    statusEl.textContent = `Descanso terminado: série ${seriesInfo().current} de ${e.series}.`;
     render();
   };
 
@@ -645,7 +648,7 @@ export async function exerciseSessionScreen(ctx: AppContext, id: string): Promis
 
   const render = () => {
     if (phase === 'resumo') {
-      replaceChildren(body, summaryForm());
+      replaceKeepingFocus(body, summaryForm());
       return;
     }
     const controls =
@@ -664,6 +667,7 @@ export async function exerciseSessionScreen(ctx: AppContext, id: string): Promis
                 phase = 'ativo';
                 stopwatch.start();
                 ctx.feedback.unlock();
+                statusEl.textContent = 'Sessão iniciada. Marque cada repetição.';
                 render();
               },
               { variant: 'primary', block: true, big: true },
@@ -678,7 +682,7 @@ export async function exerciseSessionScreen(ctx: AppContext, id: string): Promis
                 null,
                 `Série ${seriesInfo().completed} concluída. Respire e beba água. Próxima: série ${seriesInfo().completed + 1} de ${e.series}.`,
               ),
-              button('Pular descanso', endRest, { block: true }),
+              button('Pular descanso', endRest, { block: true, autofocus: true }),
             )
           : card(
               null,
@@ -689,35 +693,45 @@ export async function exerciseSessionScreen(ctx: AppContext, id: string): Promis
                   variant: 'success',
                   big: true,
                   disabled: phase !== 'ativo',
+                  focusKey: 'acerto',
+                  autofocus: true,
                 }),
                 button('✗ Erro', () => register('erro'), {
                   variant: 'fail',
                   big: true,
                   disabled: phase !== 'ativo',
+                  focusKey: 'erro',
                 }),
               ),
               errorChips,
               h(
                 'div',
                 { class: 'row', style: { marginTop: '10px' } },
-                button(phase === 'pausado' ? 'Continuar' : 'Pausar', () => {
-                  if (phase === 'pausado') {
-                    phase = 'ativo';
-                    stopwatch.start();
-                  } else {
-                    phase = 'pausado';
-                    stopwatch.pause();
-                  }
-                  render();
-                }),
+                button(
+                  phase === 'pausado' ? 'Continuar' : 'Pausar',
+                  () => {
+                    if (phase === 'pausado') {
+                      phase = 'ativo';
+                      stopwatch.start();
+                      statusEl.textContent = 'Sessão retomada.';
+                    } else {
+                      phase = 'pausado';
+                      stopwatch.pause();
+                      statusEl.textContent = 'Sessão pausada.';
+                    }
+                    render();
+                  },
+                  { focusKey: 'pausar' },
+                ),
                 (undoBtn = button('Desfazer', undo, {
                   variant: 'ghost',
                   disabled: marks.length === 0,
+                  focusKey: 'desfazer',
                 })),
-                button('Concluir', finish, { variant: 'primary' }),
+                button('Concluir', finish, { variant: 'primary', focusKey: 'concluir' }),
               ),
             );
-    replaceChildren(
+    replaceKeepingFocus(
       body,
       card(
         null,

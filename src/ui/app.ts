@@ -135,9 +135,17 @@ export class AppContext {
         return;
       }
       const previous = document.activeElement as HTMLElement | null;
-      const titleId = `dlg-title-${Date.now()}`;
+      const stamp = Date.now();
+      const titleId = `dlg-title-${stamp}`;
+      const messageId = `dlg-msg-${stamp}`;
+      // Enquanto o diálogo está aberto, o resto da página fica inerte (sem foco nem toque).
+      const background = ['.app-header', '#conteudo', '#tabbar', '#banner-area', '.skip-link']
+        .map((sel) => document.querySelector<HTMLElement>(sel))
+        .filter((el): el is HTMLElement => el !== null && !el.inert);
+      for (const el of background) el.inert = true;
       const close = (value: boolean) => {
         document.removeEventListener('keydown', onKey, true);
+        for (const el of background) el.inert = false;
         backdrop.remove();
         previous?.focus?.();
         resolve(value);
@@ -147,7 +155,12 @@ export class AppContext {
           e.preventDefault();
           close(false);
         } else if (e.key === 'Tab') {
-          const focusables = [...dialog.querySelectorAll<HTMLElement>('button')];
+          // Prende o foco em TODOS os controles do diálogo (inclusive opções de rádio).
+          const focusables = [
+            ...dialog.querySelectorAll<HTMLElement>(
+              'button:not([disabled]), input:not([disabled]), select, textarea, a[href], [tabindex]:not([tabindex="-1"])',
+            ),
+          ].filter((el) => !(el instanceof HTMLInputElement && el.type === 'radio' && !el.checked));
           const first = focusables[0];
           const last = focusables[focusables.length - 1];
           if (!first || !last) return;
@@ -176,9 +189,19 @@ export class AppContext {
       );
       const dialog = h(
         'div',
-        { class: 'dialog', role: 'alertdialog', 'aria-modal': 'true', 'aria-labelledby': titleId },
+        {
+          class: 'dialog',
+          role: 'alertdialog',
+          'aria-modal': 'true',
+          'aria-labelledby': titleId,
+          'aria-describedby': messageId,
+        },
         h('h2', { id: titleId }, opts.title),
-        typeof opts.message === 'string' ? h('p', null, opts.message) : opts.message,
+        h(
+          'div',
+          { id: messageId },
+          typeof opts.message === 'string' ? h('p', null, opts.message) : opts.message,
+        ),
         h(
           'div',
           { class: 'row', style: { justifyContent: 'flex-end', marginTop: '12px' } },

@@ -151,6 +151,10 @@ async function routineEditor(ctx: AppContext): Promise<HTMLElement> {
               () => {
                 current.splice(i, 1);
                 draw();
+                // O foco vai para o passo que ocupou o lugar (ou o anterior), não para o topo.
+                const inputs = list.querySelectorAll<HTMLInputElement>('input');
+                (inputs[Math.min(i, inputs.length - 1)] ?? addBtn).focus();
+                status.textContent = `Passo ${i + 1} removido.`;
               },
               { small: true, variant: 'ghost', ariaLabel: `Remover passo ${i + 1}` },
             ),
@@ -159,6 +163,16 @@ async function routineEditor(ctx: AppContext): Promise<HTMLElement> {
       }),
     );
   };
+  const addBtn = button(
+    'Adicionar passo',
+    () => {
+      if (current.length >= 30) return;
+      current.push('');
+      draw();
+      (list.querySelector('li:last-child input') as HTMLInputElement | null)?.focus();
+    },
+    { small: true },
+  );
   draw();
   return h(
     'div',
@@ -167,16 +181,7 @@ async function routineEditor(ctx: AppContext): Promise<HTMLElement> {
     h(
       'div',
       { class: 'row' },
-      button(
-        'Adicionar passo',
-        () => {
-          if (current.length >= 30) return;
-          current.push('');
-          draw();
-          (list.querySelector('li:last-child input') as HTMLInputElement | null)?.focus();
-        },
-        { small: true },
-      ),
+      addBtn,
       button(
         'Salvar rotina',
         async () => {

@@ -35,6 +35,10 @@ export function button(
     ariaLabel?: string;
     type?: 'button' | 'submit';
     id?: string;
+    /** Identifica o "mesmo" botão entre re-renderizações, para devolver o foco a ele. */
+    focusKey?: string;
+    /** Recebe o foco quando a tela muda de fase e o botão que tinha foco sumiu. */
+    autofocus?: boolean;
   } = {},
 ): HTMLButtonElement {
   const classes = [
@@ -55,9 +59,117 @@ export function button(
       disabled: opts.disabled,
       'aria-label': opts.ariaLabel,
       id: opts.id,
+      dataset: {
+        ...(opts.focusKey ? { focusKey: opts.focusKey } : {}),
+        ...(opts.autofocus ? { autofocus: '' } : {}),
+      },
     },
     label,
   );
+}
+
+export interface TabItem<T extends string> {
+  id: T;
+  label: string;
+}
+
+/**
+ * Abas acessíveis: só a aba ativa entra na ordem do Tab; setas ←/→, Home e End trocam de aba;
+ * a seleção é atualizada no lugar (o foco não se perde) e o painel é ligado à aba ativa.
+ */
+export function tabList<T extends string>(opts: {
+  label: string;
+  idPrefix: string;
+  panel: HTMLElement;
+  tabs: TabItem<T>[];
+  selected: T;
+  onSelect: (id: T) => void;
+}): {
+  el: HTMLElement;
+  select: (id: T, focus?: boolean) => void;
+  setTabs: (tabs: TabItem<T>[]) => void;
+} {
+  const el = h('div', { class: 'tabs', role: 'tablist', 'aria-label': opts.label });
+  let items = opts.tabs;
+  let current = opts.selected;
+  let buttons: HTMLButtonElement[] = [];
+  const panel = opts.panel;
+  panel.setAttribute('role', 'tabpanel');
+  if (!panel.id) panel.id = `${opts.idPrefix}-painel`;
+  const tabId = (id: T) => `${opts.idPrefix}-aba-${id}`;
+  const sync = () => {
+    buttons.forEach((b, i) => {
+      const on = items[i]?.id === current;
+      b.setAttribute('aria-selected', String(on));
+      b.tabIndex = on ? 0 : -1;
+    });
+    panel.setAttribute('aria-labelledby', tabId(current));
+  };
+  const select = (id: T, focus = false) => {
+    current = id;
+    sync();
+    if (focus) buttons[items.findIndex((t) => t.id === id)]?.focus();
+    opts.onSelect(id);
+  };
+  const render = () => {
+    buttons = items.map((t) =>
+      h(
+        'button',
+        {
+          type: 'button',
+          role: 'tab',
+          class: 'btn small',
+          id: tabId(t.id),
+          'aria-controls': panel.id,
+          onclick: () => select(t.id),
+        },
+        t.label,
+      ),
+    );
+    el.replaceChildren(...buttons);
+    sync();
+  };
+  el.addEventListener('keydown', (e) => {
+    const i = items.findIndex((t) => t.id === current);
+    const last = items.length - 1;
+    const next =
+      e.key === 'ArrowRight'
+        ? (i + 1) % items.length
+        : e.key === 'ArrowLeft'
+          ? (i - 1 + items.length) % items.length
+          : e.key === 'Home'
+            ? 0
+            : e.key === 'End'
+              ? last
+              : -1;
+    const target = items[next];
+    if (!target) return;
+    e.preventDefault();
+    select(target.id, true);
+  });
+  render();
+  return {
+    el,
+    select,
+    setTabs: (tabs) => {
+      const hadFocus = el.contains(document.activeElement);
+      items = tabs;
+      if (!items.some((t) => t.id === current) && items[0]) current = items[0].id;
+      render();
+      if (hadFocus) buttons[items.findIndex((t) => t.id === current)]?.focus();
+    },
+  };
+}
+
+/**
+ * Um campo de arquivo escondido é aberto pelo seu rótulo com aparência de botão: quando o
+ * campo recebe foco pelo teclado, o rótulo mostra o anel de foco.
+ */
+export function showFocusOnLabel(input: HTMLInputElement, label: HTMLElement): void {
+  input.addEventListener('focus', () => {
+    if (input.matches(':focus-visible')) label.classList.add('focus-ring');
+  });
+  input.addEventListener('blur', () => label.classList.remove('focus-ring'));
 }
 
 export function linkButton(
@@ -153,6 +265,34 @@ export function field(label: string, control: HTMLElement, hint?: string): HTMLE
   const hintEl = hint ? h('span', { class: 'small muted', id: `${id}-hint` }, hint) : null;
   if (hintEl) control.setAttribute('aria-describedby', `${id}-hint`);
   return h('div', { class: 'field' }, h('label', { for: id }, label), control, hintEl);
+}
+
+/**
+ * Mostra (ou limpa, com `null`) um erro ligado ao campo: texto logo abaixo dele, anunciado
+ * na hora, `aria-invalid` e `aria-describedby` apontando para a mensagem.
+ */
+export function setFieldError(control: HTMLElement, message: string | null): void {
+  const id = control.id || uid('f');
+  control.id = id;
+  const errorId = `${id}-erro`;
+  let errorEl = document.getElementById(errorId);
+  const described = (control.getAttribute('aria-describedby') ?? '')
+    .split(/\s+/)
+    .filter((x) => x && x !== errorId);
+  if (!message) {
+    errorEl?.remove();
+    control.removeAttribute('aria-invalid');
+    if (described.length) control.setAttribute('aria-describedby', described.join(' '));
+    else control.removeAttribute('aria-describedby');
+    return;
+  }
+  if (!errorEl) {
+    errorEl = h('p', { class: 'field-error', id: errorId, role: 'alert' });
+    control.insertAdjacentElement('afterend', errorEl);
+  }
+  errorEl.textContent = message;
+  control.setAttribute('aria-invalid', 'true');
+  control.setAttribute('aria-describedby', [...described, errorId].join(' '));
 }
 
 export function choiceGroup<T extends string>(

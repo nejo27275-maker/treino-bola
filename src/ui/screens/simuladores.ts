@@ -93,9 +93,10 @@ export async function simulatorScreen(
   let roundAbort: AbortController | null = null;
   let running = false;
 
-  const statsBar = h('div', { class: 'row', 'aria-live': 'polite' });
-  const stage = h('div', { class: 'stack' });
-  const feedback = h('div', { class: 'stack', 'aria-live': 'polite' });
+  // A barra de estatísticas não é região viva (era anunciada a cada rodada, com a semente).
+  const statsBar = h('div', { class: 'row' });
+  const stage = h('div', { class: 'stack', tabindex: '-1' });
+  const feedback = h('div', { class: 'stack' });
   const actions = h('div', { class: 'row' });
 
   const counted = () => rounds.filter((r) => r.outcome !== 'antecipado');
@@ -180,6 +181,10 @@ export async function simulatorScreen(
     updateStats();
     const seed = roundSeed(sessionSeed, mode, attemptIndex);
     const roundNumber = attemptIndex;
+    // Se o foco estava no botão que sumiu ("Começar"/"Próxima rodada"), ele vai para a rodada.
+    const active = document.activeElement;
+    const focusLost =
+      !active || active === document.body || stage.contains(active) || feedback.contains(active);
     RUNNERS[mode]({
       ctx,
       seed,
@@ -189,6 +194,11 @@ export async function simulatorScreen(
       signal: roundAbort.signal,
       done: (result, choice) => onRoundDone(result, seed, roundNumber, choice),
     });
+    stage.setAttribute(
+      'aria-label',
+      `Rodada ${Math.min(counted().length + 1, ROUNDS_PER_SESSION)} de ${ROUNDS_PER_SESSION}: ${info.nome}`,
+    );
+    if (focusLost) stage.focus({ preventScroll: true });
   };
 
   const onRoundDone = (result: RoundResult, seed: number, roundNumber: number, choice?: string) => {
@@ -219,29 +229,32 @@ export async function simulatorScreen(
       nextRound,
       { variant: 'primary', block: true },
     );
-    replaceChildren(
-      feedback,
-      card(
-        {
-          title: result.title,
-          tone: result.success ? 'accent' : result.incomplete ? 'warn' : 'danger',
-          headingLevel: 2,
-          class: 'sim-feedback',
-        },
-        h('p', null, result.explanation),
-        h(
-          'p',
-          { class: 'small muted' },
-          [
-            result.success ? `+${result.points} pontos` : '0 pontos',
-            typeof result.responseMs === 'number'
-              ? ` · tempo de resposta ${millis(result.responseMs)}`
-              : '',
-          ].join(''),
-        ),
+    const resultCard = card(
+      {
+        title: result.title,
+        tone: result.success ? 'accent' : result.incomplete ? 'warn' : 'danger',
+        headingLevel: 2,
+        class: 'sim-feedback',
+      },
+      h('p', null, result.explanation),
+      h(
+        'p',
+        { class: 'small muted' },
+        [
+          result.success ? `+${result.points} pontos` : '0 pontos',
+          typeof result.responseMs === 'number'
+            ? ` · tempo de resposta ${millis(result.responseMs)}`
+            : '',
+        ].join(''),
       ),
-      nextBtn,
     );
+    replaceChildren(feedback, resultCard, nextBtn);
+    // O botão seguinte é descrito pelo resultado: o leitor de tela anuncia os dois juntos.
+    const resultTitle = resultCard.querySelector('h2');
+    if (resultTitle) {
+      resultTitle.id = `resultado-rodada-${roundNumber}`;
+      nextBtn.setAttribute('aria-describedby', resultTitle.id);
+    }
     nextBtn.focus();
   };
 

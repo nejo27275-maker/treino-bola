@@ -4,7 +4,7 @@
  */
 import type { Vec } from '../../core/geometry.ts';
 import { FIELD } from '../../core/sim/common.ts';
-import { prefersReducedMotion, s } from '../dom.ts';
+import { h, prefersReducedMotion, replaceChildren, s } from '../dom.ts';
 
 export type ActorKind = 'voce' | 'colega' | 'adversario' | 'cone';
 
@@ -15,9 +15,40 @@ const COLORS: Record<ActorKind, string> = {
   cone: '#ff9f1c',
 };
 
+const KIND_NAME: Record<ActorKind, string> = {
+  voce: 'Você',
+  colega: 'Companheiro',
+  adversario: 'Adversário',
+  cone: 'Cone',
+};
+
+function meters(v: number): string {
+  return `${Math.round(Math.abs(v))} m`;
+}
+
+/** Posição de `p` em relação a `ref`, como na tela (ataque para cima). */
+export function relativePosition(ref: Vec, p: Vec): string {
+  const ahead = ref.y - p.y;
+  const right = p.x - ref.x;
+  const parts: string[] = [];
+  if (Math.abs(ahead) >= 0.5) parts.push(`${meters(ahead)} ${ahead > 0 ? 'à frente' : 'atrás'}`);
+  if (Math.abs(right) >= 0.5)
+    parts.push(`${meters(right)} ${right > 0 ? 'à direita' : 'à esquerda'}`);
+  const distance = Math.round(Math.hypot(ahead, right));
+  return parts.length ? `${parts.join(' e ')} (a ${distance} m)` : 'colado em você';
+}
+
 export class FieldView {
   readonly svg: SVGSVGElement;
   readonly layers: Record<'base' | 'zones' | 'lines' | 'actors' | 'ball' | 'overlay', SVGGElement>;
+  /**
+   * Descrição em texto da cena, para quem não enxerga o desenho: aberta sob demanda e com as
+   * mesmas informações visíveis (o que estiver escondido no desenho não é descrito).
+   */
+  readonly description: HTMLDetailsElement;
+  private readonly descriptionList: HTMLUListElement;
+  private actorsInfo: { pos: Vec; kind: ActorKind; name: string }[] = [];
+  private fogFromY: number | null = null;
 
   constructor(ariaLabel: string) {
     this.svg = s('svg', {
@@ -36,6 +67,47 @@ export class FieldView {
     };
     for (const layer of Object.values(this.layers)) this.svg.appendChild(layer);
     this.drawPitch();
+    this.descriptionList = h('ul', { class: 'small' });
+    this.description = h(
+      'details',
+      { class: 'scene-description' },
+      h('summary', null, 'Descrição da cena em texto'),
+      h(
+        'p',
+        { class: 'small muted' },
+        'Direções como aparecem na tela: o ataque é para cima. Distâncias aproximadas.',
+      ),
+      this.descriptionList,
+    );
+    this.description.addEventListener('toggle', () => this.refreshDescription());
+  }
+
+  private refreshDescription(): void {
+    if (!this.description.open) return;
+    const me = this.actorsInfo.find((a) => a.kind === 'voce');
+    const hidden = (a: { pos: Vec }) => this.fogFromY !== null && a.pos.y < this.fogFromY;
+    const others = this.actorsInfo.filter((a) => a.kind !== 'voce' && !hidden(a));
+    const items = others.map((a) =>
+      h(
+        'li',
+        null,
+        `${a.name}: ${me ? relativePosition(me.pos, a.pos) : `${meters(a.pos.x)} da lateral esquerda`}`,
+      ),
+    );
+    replaceChildren(
+      this.descriptionList,
+      me
+        ? h(
+            'li',
+            null,
+            `${me.name}: a ${meters(me.pos.y)} da linha de ataque e ${meters(me.pos.x)} da lateral esquerda.`,
+          )
+        : null,
+      items,
+      this.fogFromY !== null
+        ? h('li', null, 'Parte do campo está escondida nesta fase (o que estava às suas costas).')
+        : null,
+    );
   }
 
   private drawPitch(): void {
@@ -63,7 +135,7 @@ export class FieldView {
           y: 7.4,
           'text-anchor': 'middle',
           'font-size': 0.9,
-          fill: 'rgba(255,255,255,0.7)',
+          fill: '#ffffff',
         },
         'ataque ↑',
       ),
@@ -82,7 +154,7 @@ export class FieldView {
           }),
           s(
             'text',
-            { x: 0.75, y: L - i * 5 + 0.3, 'font-size': 0.7, fill: 'rgba(255,255,255,0.7)' },
+            { x: 0.75, y: L - i * 5 + 0.3, 'font-size': 0.7, fill: '#ffffff' },
             `${i * 5}m`,
           ),
         ),
@@ -92,6 +164,9 @@ export class FieldView {
 
   clear(...layers: (keyof FieldView['layers'])[]): void {
     for (const name of layers) this.layers[name].replaceChildren();
+    if (layers.includes('actors')) this.actorsInfo = [];
+    if (layers.includes('overlay')) this.fogFromY = null;
+    this.refreshDescription();
   }
 
   actor(pos: Vec, kind: ActorKind, label?: string, title?: string): SVGGElement {
@@ -135,6 +210,12 @@ export class FieldView {
     }
     if (title) g.append(s('title', null, title));
     this.layers.actors.append(g);
+    this.actorsInfo.push({
+      pos,
+      kind,
+      name: title ?? (label ? `${KIND_NAME[kind]} ${label}` : KIND_NAME[kind]),
+    });
+    this.refreshDescription();
     return g;
   }
 
@@ -200,6 +281,8 @@ export class FieldView {
   }
 
   fog(fromY: number, text: string): void {
+    this.fogFromY = Math.max(this.fogFromY ?? -Infinity, fromY);
+    this.refreshDescription();
     this.layers.overlay.append(
       s('rect', {
         x: -0.5,

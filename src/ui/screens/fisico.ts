@@ -21,7 +21,7 @@ import {
   progress,
   select,
 } from '../components.ts';
-import { h, replaceChildren } from '../dom.ts';
+import { h, replaceChildren, replaceKeepingFocus } from '../dom.ts';
 import type { Screen } from '../router.ts';
 
 function safetyCard(): HTMLElement {
@@ -112,6 +112,11 @@ export async function workoutScreen(ctx: AppContext, id: string): Promise<Screen
   let blocksSkipped = 0;
   let stoppedForPain = false;
   const body = h('div', { class: 'stack' });
+  /** Anuncia mudanças automáticas de fase (novo bloco, descanso, fim) para leitores de tela. */
+  const announcer = h('p', { class: 'visually-hidden', role: 'status', 'aria-live': 'polite' });
+  const announce = (text: string) => {
+    announcer.textContent = text;
+  };
 
   const stopTimer = () => {
     if (timer !== null) window.clearInterval(timer);
@@ -143,6 +148,7 @@ export async function workoutScreen(ctx: AppContext, id: string): Promise<Screen
     phase = 'bloco';
     remaining = block.duracaoSeg;
     ctx.feedback.stimulus();
+    announce(`Bloco ${i + 1} de ${w.blocos.length}: ${block.nome}, ${clock(block.duracaoSeg)}.`);
     render();
     startTimer();
   };
@@ -157,6 +163,9 @@ export async function workoutScreen(ctx: AppContext, id: string): Promise<Screen
         phase = 'descanso';
         remaining = block.descansoSeg;
         ctx.feedback.tick();
+        announce(
+          `Descanso de ${block.descansoSeg} segundos. A seguir: ${w.blocos[index + 1]?.nome ?? 'fim'}.`,
+        );
         render();
         startTimer();
       } else {
@@ -170,6 +179,7 @@ export async function workoutScreen(ctx: AppContext, id: string): Promise<Screen
   const finish = () => {
     stopTimer();
     phase = 'relato';
+    announce('Treino encerrado. Conte como foi para registrar.');
     render();
   };
 
@@ -301,7 +311,7 @@ export async function workoutScreen(ctx: AppContext, id: string): Promise<Screen
 
   const render = () => {
     if (phase === 'relato') {
-      replaceChildren(body, reportForm());
+      replaceKeepingFocus(body, reportForm());
       return;
     }
     if (phase === 'detalhe') {
@@ -377,14 +387,20 @@ export async function workoutScreen(ctx: AppContext, id: string): Promise<Screen
         'O espaço está livre de obstáculos e o piso não escorrega',
       ];
       const checks = items.map(() => h('input', { type: 'checkbox' }));
+      // Erro que fica na tela (não some sozinho) e marca os itens que faltam.
+      const checkError = h('p', { class: 'field-error', role: 'alert' });
       const startBtn = button(
         'Tudo certo, começar',
         () => {
-          if (!checks.every((c) => c.checked)) {
-            ctx.toast(
-              'Confirme os três itens antes de começar. Se algo não estiver bem, prefira descansar hoje.',
-              'erro',
-            );
+          const missing = checks.filter((c) => !c.checked);
+          for (const c of checks) {
+            if (c.checked) c.removeAttribute('aria-invalid');
+            else c.setAttribute('aria-invalid', 'true');
+          }
+          if (missing.length) {
+            checkError.textContent =
+              'Confirme os três itens antes de começar. Se algo não estiver bem, prefira descansar hoje.';
+            missing[0]?.focus();
             return;
           }
           startedAt = ctx.now();
@@ -392,7 +408,7 @@ export async function workoutScreen(ctx: AppContext, id: string): Promise<Screen
         },
         { variant: 'primary', block: true },
       );
-      replaceChildren(
+      replaceKeepingFocus(
         body,
         card(
           { title: 'Antes de começar' },
@@ -404,6 +420,7 @@ export async function workoutScreen(ctx: AppContext, id: string): Promise<Screen
               h('span', null, t),
             ),
           ),
+          checkError,
           startBtn,
           h(
             'p',
@@ -418,7 +435,7 @@ export async function workoutScreen(ctx: AppContext, id: string): Promise<Screen
     if (!block) return;
     const isRest = phase === 'descanso' || (phase === 'pausado' && pausedFrom === 'descanso');
     const next = w.blocos[index + 1];
-    replaceChildren(
+    replaceKeepingFocus(
       body,
       card(
         { tone: isRest ? 'accent' : undefined },
@@ -442,27 +459,33 @@ export async function workoutScreen(ctx: AppContext, id: string): Promise<Screen
       h(
         'div',
         { class: 'row' },
-        button(phase === 'pausado' ? 'Continuar' : 'Pausar', () => {
-          if (phase === 'pausado') {
-            phase = pausedFrom;
-            render();
-            startTimer();
-          } else {
-            pausedFrom = phase === 'descanso' ? 'descanso' : 'bloco';
-            phase = 'pausado';
-            stopTimer();
-            render();
-          }
-        }),
+        button(
+          phase === 'pausado' ? 'Continuar' : 'Pausar',
+          () => {
+            if (phase === 'pausado') {
+              phase = pausedFrom;
+              announce('Treino retomado.');
+              render();
+              startTimer();
+            } else {
+              pausedFrom = phase === 'descanso' ? 'descanso' : 'bloco';
+              phase = 'pausado';
+              stopTimer();
+              announce('Treino pausado.');
+              render();
+            }
+          },
+          { focusKey: 'pausar', autofocus: true },
+        ),
         button(
           'Pular',
           () => {
             if (phase === 'pausado') phase = pausedFrom;
             advance(true);
           },
-          { variant: 'ghost' },
+          { variant: 'ghost', focusKey: 'pular' },
         ),
-        button('Encerrar', finish, { variant: 'ghost' }),
+        button('Encerrar', finish, { variant: 'ghost', focusKey: 'encerrar' }),
       ),
       button(
         'Parar: não estou bem',
@@ -470,7 +493,7 @@ export async function workoutScreen(ctx: AppContext, id: string): Promise<Screen
           stoppedForPain = true;
           finish();
         },
-        { variant: 'danger', block: true },
+        { variant: 'danger', block: true, focusKey: 'parar' },
       ),
     );
   };
@@ -481,6 +504,7 @@ export async function workoutScreen(ctx: AppContext, id: string): Promise<Screen
     { class: 'stack' },
     pageHeader(w.nome, null, { href: '#/fisico', label: 'Preparação física' }),
     body,
+    announcer,
   );
   return {
     title: w.nome,

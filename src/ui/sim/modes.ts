@@ -173,7 +173,7 @@ function runPass(rc: RoundContext): void {
   const sc = generatePass(rc.seed, rc.difficulty);
   const finish = once(rc);
   const view = new FieldView(
-    'Campo do passe pela brecha. Você é o círculo amarelo embaixo; colegas em azul; adversários em vermelho.',
+    'Campo do passe pela brecha: você (V) embaixo, colegas numerados e adversários com o alcance tracejado. As posições estão na descrição em texto abaixo.',
   );
   for (const t of sc.teammates) view.zone(t.pos, sc.receiveRadius, 'recepcao');
   for (const d of sc.defenders) view.zone(d.pos, sc.interceptRadius, 'alcance');
@@ -292,6 +292,7 @@ function runPass(rc: RoundContext): void {
   drawAim();
   rc.stage.replaceChildren(
     h('div', { class: 'field-wrap' }, view.svg),
+    view.description,
     h(
       'p',
       { class: 'small muted' },
@@ -327,7 +328,7 @@ function runControl(rc: RoundContext): void {
   const sc = generateControl(rc.seed, rc.difficulty);
   const finish = once(rc);
   const view = new FieldView(
-    'Domínio orientado: a bola vem do colega embaixo; os adversários vêm na sua direção.',
+    'Domínio orientado: a bola vem do colega (C) embaixo; os adversários vêm na sua direção. As posições estão na descrição em texto abaixo.',
   );
   view.actor(sc.passer, 'colega', 'C', 'Colega que passa');
   for (const d of sc.defenders) {
@@ -384,6 +385,7 @@ function runControl(rc: RoundContext): void {
   });
   rc.stage.replaceChildren(
     h('div', { class: 'field-wrap' }, view.svg),
+    view.description,
     bar.el,
     h('div', { class: 'option-grid' }, buttons),
   );
@@ -394,7 +396,7 @@ function runScan(rc: RoundContext): void {
   const sc = generateScan(rc.seed, rc.difficulty);
   const finish = once(rc);
   const view = new FieldView(
-    'Olhe antes de receber: memorize o campo; depois, o que está às suas costas fica escondido.',
+    'Olhe antes de receber: memorize o campo; depois, o que está às suas costas fica escondido. As posições visíveis estão na descrição em texto abaixo.',
   );
   const drawAll = (hideBehind: boolean) => {
     view.clear('actors', 'overlay');
@@ -446,6 +448,7 @@ function runScan(rc: RoundContext): void {
   rc.stage.replaceChildren(
     phaseLabel,
     h('div', { class: 'field-wrap' }, view.svg),
+    view.description,
     barWrap,
     optionsWrap,
   );
@@ -456,7 +459,7 @@ function runDecision(rc: RoundContext): void {
   const sc = generateDecision(rc.seed, rc.difficulty);
   const finish = once(rc);
   const view = new FieldView(
-    'Decisão rápida: você está com a bola (amarelo). Passar, conduzir ou proteger?',
+    'Decisão rápida: você (V) está com a bola. Passar, conduzir ou proteger? As posições estão na descrição em texto abaixo.',
   );
   for (const t of sc.teammates) view.actor(t.pos, 'colega', t.label, `Colega ${t.label}`);
   for (const d of sc.defenders) view.actor(d.pos, 'adversario', undefined, 'Adversário');
@@ -492,6 +495,7 @@ function runDecision(rc: RoundContext): void {
   });
   rc.stage.replaceChildren(
     h('div', { class: 'field-wrap' }, view.svg),
+    view.description,
     bar.el,
     h('div', { class: 'reaction-pad' }, buttons),
   );
@@ -795,8 +799,41 @@ function runShot(rc: RoundContext): void {
       ),
     ),
   );
+  const dec = (v: number) => v.toFixed(1).replace('.', ',');
+  const third = (x: number) =>
+    x < W * 0.4
+      ? 'mais perto da trave esquerda'
+      : x > W * 0.6
+        ? 'mais perto da trave direita'
+        : 'no centro';
+  const shotDescription = h(
+    'details',
+    { class: 'scene-description' },
+    h('summary', null, 'Descrição da cena em texto'),
+    h(
+      'ul',
+      { class: 'small' },
+      h('li', null, `Baliza vista de frente: ${dec(W)} m de largura e ${dec(H)} m de altura.`),
+      h(
+        'li',
+        null,
+        `Goleiro ${third(sc.keeper.x)}${sc.keeper.lean === 0 ? '' : `, inclinado para a ${sc.keeper.lean < 0 ? 'esquerda' : 'direita'}`}.`,
+      ),
+      sc.blocker
+        ? h(
+            'li',
+            null,
+            `Defensor bloqueando de ${dec(sc.blocker.x - sc.blocker.w / 2)} m a ${dec(sc.blocker.x + sc.blocker.w / 2)} m da trave esquerda, até ${dec(sc.blocker.h)} m de altura.`,
+          )
+        : null,
+      sc.targets.length
+        ? h('li', null, `Alvos marcados: ${sc.targets.map((x) => x.label).join(', ')}.`)
+        : null,
+    ),
+  );
   rc.stage.replaceChildren(
     h('div', { class: 'field-wrap', style: { background: '#1c3a2b' } }, svg),
+    shotDescription,
     bar.el,
     h(
       'p',

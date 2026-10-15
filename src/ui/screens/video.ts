@@ -33,7 +33,16 @@ import {
   type MotionMap,
 } from '../../media/videoTools.ts';
 import type { AppContext } from '../app.ts';
-import { button, card, field, pageHeader, pill, progress, select } from '../components.ts';
+import {
+  button,
+  card,
+  field,
+  pageHeader,
+  pill,
+  progress,
+  select,
+  showFocusOnLabel,
+} from '../components.ts';
 import { h, replaceChildren, s } from '../dom.ts';
 import type { Screen } from '../router.ts';
 
@@ -345,6 +354,18 @@ export async function videoScreen(ctx: AppContext): Promise<Screen> {
     class: 'visually-hidden',
     id: 'video-gravar',
   });
+  const galleryLabel = h(
+    'label',
+    { for: 'video-galeria', class: 'btn primary' },
+    'Escolher da galeria',
+  );
+  const recordLabel = h(
+    'label',
+    { for: 'video-gravar', class: 'btn' },
+    'Gravar com a câmera do celular',
+  );
+  showFocusOnLabel(galleryInput, galleryLabel);
+  showFocusOnLabel(recordInput, recordLabel);
   for (const input of [galleryInput, recordInput]) {
     input.addEventListener('change', () => {
       openFile(input.files?.[0]);
@@ -994,14 +1015,7 @@ export async function videoScreen(ctx: AppContext): Promise<Screen> {
     ),
     card(
       { title: 'Escolher vídeo' },
-      h(
-        'div',
-        { class: 'row' },
-        h('label', { for: 'video-galeria', class: 'btn primary' }, 'Escolher da galeria'),
-        h('label', { for: 'video-gravar', class: 'btn' }, 'Gravar com a câmera do celular'),
-        galleryInput,
-        recordInput,
-      ),
+      h('div', { class: 'row' }, galleryLabel, recordLabel, galleryInput, recordInput),
       h(
         'p',
         { class: 'small muted' },

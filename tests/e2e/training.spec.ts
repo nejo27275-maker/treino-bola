@@ -91,6 +91,11 @@ test('treino físico guiado: checagem de segurança, parar por desconforto e pla
   await page.getByRole('button', { name: 'Começar treino guiado' }).click();
   await page.getByRole('button', { name: 'Tudo certo, começar' }).click();
   await expect(page.getByText('Confirme os três itens')).toBeVisible();
+  // O aviso não some sozinho e o primeiro item pendente recebe o foco.
+  await expect(
+    page.getByRole('checkbox', { name: 'Estou sem dor e me sentindo bem' }),
+  ).toBeFocused();
+  await expect(page.getByRole('checkbox').first()).toHaveAttribute('aria-invalid', 'true');
   for (const label of [
     'Estou sem dor e me sentindo bem',
     'Bebi água',

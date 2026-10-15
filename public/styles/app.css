@@ -7,6 +7,8 @@
   --surface-2: #183026;
   --surface-3: #21402f;
   --border: #2a4a39;
+  /* Bordas de campos de formulário: contraste ≥ 3:1 com o fundo (WCAG 1.4.11). */
+  --control-border: #5c7d6b;
   --text: #eef6f1;
   --muted: #a9c2b5;
   --accent: #3ddc84;
@@ -37,17 +39,18 @@
     --surface-2: #eaf3ee;
     --surface-3: #dbeae1;
     --border: #c8dccf;
+    --control-border: #7a9485;
     --text: #0f1f17;
     --muted: #46604f;
-    --accent: #0f8a4f;
-    --accent-strong: #0b6f3f;
+    --accent: #0b6f3f;
+    --accent-strong: #08592f;
     --on-accent: #ffffff;
     --warn: #8a5a00;
     --on-warn: #ffffff;
     --danger: #b3261e;
     --on-danger: #ffffff;
     --info: #0b5e9e;
-    --pitch: #2e8b57;
+    --pitch: #25734a;
     --own: #0b5e9e;
     --opp: #c62828;
     --focus: #b35c00;
@@ -62,17 +65,18 @@
   --surface-2: #eaf3ee;
   --surface-3: #dbeae1;
   --border: #c8dccf;
+  --control-border: #7a9485;
   --text: #0f1f17;
   --muted: #46604f;
-  --accent: #0f8a4f;
-  --accent-strong: #0b6f3f;
+  --accent: #0b6f3f;
+  --accent-strong: #08592f;
   --on-accent: #ffffff;
   --warn: #8a5a00;
   --on-warn: #ffffff;
   --danger: #b3261e;
   --on-danger: #ffffff;
   --info: #0b5e9e;
-  --pitch: #2e8b57;
+  --pitch: #25734a;
   --own: #0b5e9e;
   --opp: #c62828;
   --focus: #b35c00;
@@ -88,6 +92,9 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* O foco do teclado nunca fica escondido sob o cabeçalho fixo ou a barra inferior. */
+  scroll-padding-top: 72px;
+  scroll-padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + 12px);
 }
 
 body {
@@ -99,7 +106,6 @@ body {
   font-size: 16px;
   line-height: 1.5;
   padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + 16px);
-  overflow-x: hidden;
 }
 
 img,
@@ -261,8 +267,25 @@ main:focus {
   height: 24px;
 }
 
+.tabbar a {
+  position: relative;
+}
+
+/* A aba atual tem uma barra além da cor (não depende só da cor). */
 .tabbar a[aria-current='page'] {
   color: var(--accent);
+  font-weight: 800;
+}
+
+.tabbar a[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 22%;
+  right: 22%;
+  height: 4px;
+  border-radius: 0 0 4px 4px;
+  background: currentColor;
 }
 
 /* ——— Componentes ——— */
@@ -441,7 +464,9 @@ main:focus {
   border: 1px solid var(--border);
   background: var(--surface-2);
   color: var(--text);
-  white-space: nowrap;
+  /* Quebra a linha em telas muito estreitas (ex.: zoom de 200%) em vez de cortar o texto. */
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .pill.accent {
@@ -611,7 +636,7 @@ textarea {
   font: inherit;
   color: var(--text);
   background: var(--surface-2);
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
   border-radius: var(--radius-sm);
   min-height: 48px;
   padding: 10px 12px;
@@ -631,7 +656,7 @@ input[type='range'] {
 
 .choice-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr));
   gap: 8px;
   margin-bottom: 8px;
 }
@@ -643,7 +668,7 @@ input[type='range'] {
   min-height: 48px;
   padding: 8px 12px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
   background: var(--surface-2);
   cursor: pointer;
 }
@@ -893,7 +918,7 @@ input[type='range'] {
 
 .stimulus.go {
   background: var(--opp);
-  color: #fff;
+  color: var(--on-danger);
 }
 
 .timebar {
@@ -1139,6 +1164,7 @@ input[type='range'] {
 
 .block-list li {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
@@ -1189,4 +1215,40 @@ input[type='range'] {
   animation-duration: 0.01ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
+}
+
+/* Rótulo que abre um seletor de arquivo: mostra o foco do campo escondido. */
+.btn.focus-ring {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Mensagem de erro ligada a um campo (setFieldError). */
+.field-error {
+  margin: 6px 0 0;
+  color: var(--danger);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+/* Descrição da cena dos simuladores (para leitores de tela e para quem prefere texto). */
+.scene-description {
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+}
+
+.scene-description summary {
+  cursor: pointer;
+  font-weight: 700;
+  min-height: 32px;
+}
+
+.scene-description ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
 }

@@ -2,7 +2,7 @@
 import { formatDateBR, formatLong, isValidDate } from '../../core/dates.ts';
 import { PHASE_LABEL, type PlanDay } from '../../core/planner.ts';
 import type { AppContext } from '../app.ts';
-import { button, card, field, linkButton, pageHeader, pill } from '../components.ts';
+import { button, card, field, linkButton, pageHeader, pill, setFieldError } from '../components.ts';
 import { h } from '../dom.ts';
 import type { Screen } from '../router.ts';
 import { blockHref, dayLabel } from './shared.ts';
@@ -93,13 +93,13 @@ export async function planoScreen(ctx: AppContext): Promise<Screen> {
       onsubmit: async (e: Event) => {
         e.preventDefault();
         const name = nome.value.trim();
+        setFieldError(nome, name ? null : 'Informe o nome da competição.');
+        setFieldError(data, isValidDate(data.value) ? null : 'Informe uma data válida.');
         if (!name) {
-          status.textContent = 'Informe o nome da competição.';
           nome.focus();
           return;
         }
         if (!isValidDate(data.value)) {
-          status.textContent = 'Informe uma data válida.';
           data.focus();
           return;
         }

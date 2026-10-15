@@ -17,6 +17,7 @@ import {
   pill,
   select,
   sourceBadge,
+  tabList,
 } from '../components.ts';
 import { h, replaceChildren } from '../dom.ts';
 import type { Screen } from '../router.ts';
@@ -330,26 +331,9 @@ export async function historicoScreen(ctx: AppContext, query: URLSearchParams): 
   const snap = await ctx.snapshot();
   const requested = query.get('aba');
   let current: Tab = TABS.some((t) => t.id === requested) ? (requested as Tab) : 'sessoes';
-  const panel = h('div', { role: 'tabpanel', id: 'hist-panel' });
-  const tabButtons = TABS.map((t) =>
-    h(
-      'button',
-      {
-        type: 'button',
-        role: 'tab',
-        class: 'btn small',
-        id: `tab-${t.id}`,
-        'aria-controls': 'hist-panel',
-        'aria-selected': String(t.id === current),
-        onclick: () => select_(t.id),
-      },
-      t.label,
-    ),
-  );
-  const select_ = (tab: Tab) => {
+  const panel = h('div', { id: 'hist-panel' });
+  const show = (tab: Tab) => {
     current = tab;
-    tabButtons.forEach((b, i) => b.setAttribute('aria-selected', String(TABS[i]?.id === tab)));
-    panel.setAttribute('aria-labelledby', `tab-${tab}`);
     replaceChildren(
       panel,
       tab === 'sessoes'
@@ -361,7 +345,15 @@ export async function historicoScreen(ctx: AppContext, query: URLSearchParams): 
             : compareView(snap),
     );
   };
-  select_(current);
+  const tabs = tabList<Tab>({
+    label: 'Visões do histórico',
+    idPrefix: 'hist',
+    panel,
+    tabs: TABS,
+    selected: current,
+    onSelect: show,
+  });
+  show(current);
   const el = h(
     'div',
     { class: 'stack' },
@@ -370,7 +362,7 @@ export async function historicoScreen(ctx: AppContext, query: URLSearchParams): 
       `${snap.sessions.length} sessão(ões) registrada(s) neste aparelho.`,
       { href: '#/mais', label: 'Mais' },
     ),
-    h('div', { class: 'tabs', role: 'tablist', 'aria-label': 'Visões do histórico' }, tabButtons),
+    tabs.el,
     panel,
   );
   return { title: 'Histórico', el };

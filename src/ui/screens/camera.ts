@@ -29,7 +29,17 @@ import {
   type PoseDetector,
 } from '../../media/pose.ts';
 import type { AppContext } from '../app.ts';
-import { button, card, field, linkButton, pageHeader, pill, select } from '../components.ts';
+import {
+  button,
+  card,
+  field,
+  linkButton,
+  pageHeader,
+  pill,
+  select,
+  tabList,
+  type TabItem,
+} from '../components.ts';
 import { h, replaceChildren } from '../dom.ts';
 import type { Screen } from '../router.ts';
 import { Stopwatch } from '../timers.ts';
@@ -639,35 +649,21 @@ export async function cameraScreen(ctx: AppContext, query: URLSearchParams): Pro
     );
   };
 
-  const modeTabs = h('div', { class: 'tabs', role: 'tablist', 'aria-label': 'Modo da câmera' });
-  let poseAvailable = false;
-  const renderTabs = () => {
-    const modes: { id: Mode; label: string }[] = [
-      { id: 'livre', label: 'Treino livre' },
-      { id: 'reacao', label: 'Reação com movimento' },
-      ...(poseAvailable ? [{ id: 'pose' as Mode, label: 'Pose (experimental)' }] : []),
-    ];
-    replaceChildren(
-      modeTabs,
-      modes.map((m) =>
-        h(
-          'button',
-          {
-            type: 'button',
-            role: 'tab',
-            class: 'btn small',
-            'aria-selected': String(m.id === mode),
-            onclick: () => {
-              mode = m.id;
-              renderTabs();
-              renderMode();
-            },
-          },
-          m.label,
-        ),
-      ),
-    );
-  };
+  const baseModes: TabItem<Mode>[] = [
+    { id: 'livre', label: 'Treino livre' },
+    { id: 'reacao', label: 'Reação com movimento' },
+  ];
+  const modeTabs = tabList<Mode>({
+    label: 'Modo da câmera',
+    idPrefix: 'camera',
+    panel: modeBox,
+    tabs: baseModes,
+    selected: mode,
+    onSelect: (id) => {
+      mode = id;
+      renderMode();
+    },
+  });
   const renderMode = () => {
     teardownMode();
     overlay.getContext('2d')?.clearRect(0, 0, overlay.width, overlay.height);
@@ -686,8 +682,7 @@ export async function cameraScreen(ctx: AppContext, query: URLSearchParams): Pro
     );
   };
   void checkPoseAvailability().then((a) => {
-    poseAvailable = a.available;
-    renderTabs();
+    if (a.available) modeTabs.setTabs([...baseModes, { id: 'pose', label: 'Pose (experimental)' }]);
   });
 
   // Ao sair da tela (trocar de aplicativo, bloquear o celular), a câmera é desligada.
@@ -701,7 +696,6 @@ export async function cameraScreen(ctx: AppContext, query: URLSearchParams): Pro
   document.addEventListener('visibilitychange', onVisibility);
   cleanups.push(() => document.removeEventListener('visibilitychange', onVisibility));
 
-  renderTabs();
   drawStatus();
   renderMode();
 
@@ -729,7 +723,7 @@ export async function cameraScreen(ctx: AppContext, query: URLSearchParams): Pro
             field('Frequência de análise', fpsSelect),
           ),
         ),
-    unsupported ? null : modeTabs,
+    unsupported ? null : modeTabs.el,
     unsupported ? null : modeBox,
     card(
       { title: 'Importante', headingLevel: 2 },
