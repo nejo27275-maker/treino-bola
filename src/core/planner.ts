@@ -5,8 +5,9 @@
  * - dia do evento: rotina pré-jogo, aquecimento e hidratação (sem treino extra);
  * - véspera: familiarização leve e descanso;
  * - 2 dias antes: recuperação ativa;
- * - demais dias: desenvolvimento (técnica prioritária + leitura + físico moderado),
- *   com um dia de recuperação a cada três dias de desenvolvimento;
+ * - demais dias: desenvolvimento (técnica prioritária + leitura + rotação física moderada),
+ *   com coordenação, core, equilíbrio, força funcional e aceleração em ciclos; recuperação
+ *   continua intercalada para proteger a consistência e evitar carga repetida;
  * - primeiro dia sem dados: avaliação inicial (linha de base).
  * O bem-estar registrado (esforço/desconforto) reduz a intensidade de hoje.
  */
@@ -138,6 +139,19 @@ export interface PlanInput {
 
 export const MAX_PLAN_DAYS = 21;
 const DEFAULT_MATERIALS: Material[] = ['bola'];
+
+/**
+ * Rotação física deliberada: distribui capacidades diferentes ao longo da semana.
+ * Força funcional não se repete em dias consecutivos; perto do evento, a seleção é
+ * substituída por agilidade de baixo volume, sem força pesada ou esforço máximo.
+ */
+const PHYSICAL_ROTATION: readonly WorkoutKind[] = [
+  'coordenacao',
+  'core',
+  'equilibrio',
+  'forca',
+  'aceleracao',
+];
 
 export const PHASE_LABEL: Record<PlanPhase, string> = {
   avaliacao: 'Avaliação inicial',
@@ -501,10 +515,10 @@ export function buildPlan(input: PlanInput): Plan {
       ];
       dayNotes.push('Faça os testes com calma: o objetivo é medir, não acertar tudo.');
     } else {
-      // desenvolvimento / manutenção: técnica sempre; leitura e físico se alternam entre os dias.
+      // Desenvolvimento/manutenção: técnica sempre; o físico segue rotação de capacidades.
       const t = tech[devIndex % Math.max(1, tech.length)];
       const r = reading[devIndex % Math.max(1, reading.length)];
-      const physicalKind: WorkoutKind = devIndex % 4 < 2 ? 'coordenacao' : 'core';
+      const physicalKind = PHYSICAL_ROTATION[devIndex % PHYSICAL_ROTATION.length] ?? 'coordenacao';
       const nearEvent = dte !== null && dte <= 3;
       const technical = t
         ? flexible(
