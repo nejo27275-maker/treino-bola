@@ -131,10 +131,12 @@ export class FieldView {
       s(
         'text',
         {
-          x: W / 2,
-          y: 7.4,
-          'text-anchor': 'middle',
+          // No canto de cima, à direita: longe de onde os jogadores costumam ficar.
+          x: W - 0.6,
+          y: 1.4,
+          'text-anchor': 'end',
           'font-size': 0.9,
+          'font-weight': 700,
           fill: '#ffffff',
         },
         'ataque ↑',

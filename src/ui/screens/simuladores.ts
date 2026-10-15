@@ -198,6 +198,9 @@ export async function simulatorScreen(
       'aria-label',
       `Rodada ${Math.min(counted().length + 1, ROUNDS_PER_SESSION)} de ${ROUNDS_PER_SESSION}: ${info.nome}`,
     );
+    // A rodada começa com o campo inteiro à vista (logo abaixo do cabeçalho fixo): os alvos
+    // ficam na parte de cima do campo e não podem começar escondidos.
+    stage.scrollIntoView({ block: 'start' });
     if (focusLost) stage.focus({ preventScroll: true });
   };
 
