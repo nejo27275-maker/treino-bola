@@ -379,6 +379,13 @@ export function buildPlan(input: PlanInput): Plan {
   const baseline = needsBaseline(engine);
   const tech = rotation(engine, profile, 'tecnica');
   const reading = rotation(engine, profile, 'leitura');
+  // Histórico de exercícios técnicos concluídos na última semana: ajuda a variar estímulos.
+  const technicalHistory = sessions
+    .filter((s) => {
+      const age = diffDays(s.date, today);
+      return s.kind === 'tecnico' && s.status === 'concluida' && age >= 0 && age <= 7;
+    })
+    .map((s) => ({ date: s.date, activityId: s.activityId }));
   const notes: string[] = [
     'O plano é recalculado sempre que você abre o aplicativo, a partir dos resultados registrados.',
   ];
@@ -394,6 +401,16 @@ export function buildPlan(input: PlanInput): Plan {
   let devIndex = 0;
   let physicalIndex = 0;
   const days: PlanDay[] = dateRange(today, end).map((date, index) => {
+    const avoidRecentExercises = [
+      ...new Set(
+        technicalHistory
+          .filter((entry) => {
+            const age = diffDays(entry.date, date);
+            return age >= 0 && age <= 7;
+          })
+          .map((entry) => entry.activityId),
+      ),
+    ];
     const dte = validEvent ? diffDays(date, validEvent.data) : null;
     let phase = phaseFor(date, index, dte, mode, baseline);
     const isToday = index === 0;
@@ -458,7 +475,12 @@ export function buildPlan(input: PlanInput): Plan {
         t
           ? flexible(
               'tecnico',
-              catalog.pickExercise(t.skill, { difficulty: 1, materials, space }),
+              catalog.pickExercise(t.skill, {
+                difficulty: 1,
+                materials,
+                space,
+                avoid: avoidRecentExercises,
+              }),
               techMinutes,
               'Familiarização: poucas repetições, fáceis e bem feitas, para ganhar confiança.',
               { skill: t.skill },
@@ -536,6 +558,7 @@ export function buildPlan(input: PlanInput): Plan {
               materials,
               space,
               focusError: t.focusError,
+              avoid: avoidRecentExercises,
             }),
             Math.max(6, Math.round(budget * 0.4)),
             t.why,
@@ -585,6 +608,9 @@ export function buildPlan(input: PlanInput): Plan {
     ) {
       // Se o bloco opcional não couber no tempo, não avançamos para a próxima capacidade.
       physicalIndex++;
+    }
+    for (const block of finalBlocks) {
+      if (block.kind === 'tecnico') technicalHistory.push({ date, activityId: block.activityId });
     }
     if (dropped.length) {
       const onlyMental = dropped.every((b) => b.kind === 'mental');
