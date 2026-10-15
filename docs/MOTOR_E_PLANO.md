@@ -91,14 +91,14 @@ As datas são calculadas a partir da **data local do aparelho** em cada abertura
 usa dias UTC (sem horário de verão), então o plano não "pula" dias por causa de fuso. A
 competição padrão é o interclasse de **20/10/2026** e pode ser trocada em Plano.
 
-| Dias até o evento                                                   | Fase                                                                                                   | Intensidade |
-| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ----------- |
-| 0                                                                   | Dia da competição: rotina pré-jogo, aquecimento de jogo, respiração, hidratação. **Sem treino extra.** | leve        |
-| 1                                                                   | Véspera: familiarização leve (poucas repetições fáceis), visualização, revisar a rotina                | leve        |
-| 2                                                                   | Recuperação ativa (mobilidade, leitura de jogo sem impacto, respiração)                                | leve        |
-| 4, 8, 12…                                                           | Recuperação ativa (um dia leve a cada três de desenvolvimento)                                         | leve        |
-| hoje, se faltam testes de base (≥ 3 fundamentos centrais pendentes) | Avaliação inicial (testes de linha de base)                                                            | moderada    |
-| demais dias                                                         | Desenvolvimento: técnica prioritária pelo motor + leitura de jogo + físico moderado                    | moderada    |
+| Dias até o evento                                                   | Fase                                                                                                                          | Intensidade |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| 0                                                                   | Dia da competição: rotina pré-jogo, aquecimento de jogo, respiração, hidratação. **Sem treino extra.**                        | leve        |
+| 1                                                                   | Véspera: familiarização leve (poucas repetições fáceis), visualização, revisar a rotina                                       | leve        |
+| 2                                                                   | Recuperação ativa (mobilidade, leitura de jogo sem impacto, respiração)                                                       | leve        |
+| 4, 8, 12…                                                           | Recuperação ativa (um dia leve a cada três de desenvolvimento)                                                                | leve        |
+| hoje, se faltam testes de base (≥ 3 fundamentos centrais pendentes) | Avaliação inicial (testes de linha de base)                                                                                   | moderada    |
+| demais dias                                                         | Desenvolvimento: técnica prioritária + leitura + rotação física (coordenação, core, equilíbrio, força funcional e aceleração) | moderada    |
 
 - **Minutos honestos:** aquecimentos, treinos físicos, atividades mentais, testes de linha de
   base e simuladores entram com a **duração real** da atividade guiada (ex.: aquecimento dinâmico
@@ -110,8 +110,8 @@ competição padrão é o interclasse de **20/10/2026** e pode ser trocada em Pl
   de dormir.
 - Na **véspera**, o tempo disponível inteiro pode ser usado (o conteúdo é leve): aquecimento,
   familiarização técnica curta e revisão da rotina pré-jogo; a visualização é opcional.
-- Nos dias de desenvolvimento, técnica sempre; leitura de jogo (simulador) e físico se alternam
-  como segundo bloco, e o outro entra se sobrar tempo.
+- Nos dias de desenvolvimento, técnica sempre; leitura e físico dividem os blocos restantes conforme o tempo.
+- O físico segue uma rotação de cinco capacidades: coordenação, core, equilíbrio, força funcional e aceleração. A força não fica presa a toda sessão e, até três dias antes de uma competição, a rotação usa agilidade de baixo volume no lugar de força/aceleração.
 - Se hoje o bem-estar pede descanso ou sessão leve, o plano de hoje muda automaticamente.
 - Competição a mais de 21 dias: mostra as próximas duas semanas.
 - **Evento que já passou:** o aplicativo avisa que a data passou, não mostra datas antigas como

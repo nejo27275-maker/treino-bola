@@ -24,6 +24,8 @@ test('dados persistem após recarregar; exportar, apagar e importar de volta', a
   await openApp(page, '#/perfil');
   await page.getByLabel('Como quer ser chamado? (opcional)').fill('Lia');
   await page.getByRole('button', { name: 'Salvar perfil' }).click();
+  // A gravação é assíncrona e navega para a avaliação ao terminar; espera antes de mudar de rota.
+  await expect(page.getByText('Perfil salvo. Suas recomendações foram atualizadas.')).toBeVisible();
   await recordQuickSession(page);
 
   await page.reload();

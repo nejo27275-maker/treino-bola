@@ -154,6 +154,104 @@ describe('planejador até o interclasse', () => {
     for (const d of p.days) assert.ok(d.minutes <= 20, `${d.date}: ${d.minutes} min`);
   });
 
+  test('varia o exercício técnico após uma sessão recente do mesmo fundamento', () => {
+    const p = plan('2026-10-15', {
+      competition: null,
+      results: baselineResults('2026-10-14'),
+      sessions: [
+        session('2026-10-14', {
+          kind: 'tecnico',
+          activityId: 'passe-porta',
+          activityName: 'Passe na porta',
+          skills: ['passe'],
+        }),
+      ],
+      profile: profile({
+        focos: ['passe'],
+        minutosDisponiveis: 45,
+        preferenciaSessao: 'longas',
+      }),
+    });
+    const technical = p.days[0]?.blocks.find((block) => block.kind === 'tecnico');
+    assert.equal(technical?.skill, 'passe');
+    assert.equal(technical?.activityId, 'passe-tabela-parede');
+  });
+
+  test('alterna capacidades físicas para não limitar o plano a coordenação e core', () => {
+    const p = plan('2026-10-12', {
+      competition: null,
+      results: baselineResults(),
+      profile: profile({ minutosDisponiveis: 45, preferenciaSessao: 'longas' }),
+    });
+    const rotatedIds = new Set([
+      'coordenacao-escada',
+      'core-estabilidade',
+      'equilibrio-propriocepcao',
+      'forca-peso-corporal',
+      'aceleracao-curta',
+    ]);
+    const physicalIds = p.days.flatMap((day) =>
+      day.blocks
+        .filter((block) => block.kind === 'fisico' && rotatedIds.has(block.activityId))
+        .map((block) => block.activityId),
+    );
+    assert.deepEqual(physicalIds.slice(0, 5), [
+      'coordenacao-escada',
+      'core-estabilidade',
+      'equilibrio-propriocepcao',
+      'forca-peso-corporal',
+      'aceleracao-curta',
+    ]);
+    const physicalBlocks = p.days.flatMap((day) =>
+      day.blocks.filter((block) => rotatedIds.has(block.activityId)),
+    );
+    assert.match(
+      physicalBlocks.find((block) => block.activityId === 'forca-peso-corporal')?.why ?? '',
+      /força funcional/i,
+    );
+    assert.match(
+      physicalBlocks.find((block) => block.activityId === 'aceleracao-curta')?.why ?? '',
+      /arrancadas curtas/i,
+    );
+  });
+
+  test('plano curto não pula capacidades quando o bloco físico opcional não cabe', () => {
+    const p = plan('2026-10-12', {
+      competition: { nome: 'Copa distante', data: '2026-12-01' },
+      results: baselineResults('2026-10-11'),
+      profile: profile({ minutosDisponiveis: 20, preferenciaSessao: 'longas' }),
+    });
+    const rotated = new Set([
+      'coordenacao-escada',
+      'core-estabilidade',
+      'equilibrio-propriocepcao',
+      'forca-peso-corporal',
+      'aceleracao-curta',
+    ]);
+    const physicalIds = p.days.flatMap((day) =>
+      day.blocks
+        .filter((block) => block.kind === 'fisico' && rotated.has(block.activityId))
+        .map((block) => block.activityId),
+    );
+    assert.deepEqual(physicalIds.slice(0, 5), [
+      'coordenacao-escada',
+      'core-estabilidade',
+      'equilibrio-propriocepcao',
+      'forca-peso-corporal',
+      'aceleracao-curta',
+    ]);
+  });
+
+  test('evento passado não mantém o treino preso ao modo de proximidade da competição', () => {
+    const p = plan('2026-10-22', {
+      results: baselineResults(),
+      profile: profile({ minutosDisponiveis: 45, preferenciaSessao: 'longas' }),
+    });
+    const firstPhysical = p.days[0]?.blocks.find((block) => block.kind === 'fisico');
+    assert.equal(firstPhysical?.activityId, 'coordenacao-escada');
+    assert.notEqual(firstPhysical?.activityId, 'agilidade-frenagem');
+  });
+
   test('prioriza o fundamento mais fraco nos dias de desenvolvimento', () => {
     const p = plan('2026-10-14', { results: baselineResults() });
     const dev = p.days.find((d) => d.phase === 'desenvolvimento')!;

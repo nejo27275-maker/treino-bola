@@ -40,7 +40,7 @@ No primeiro uso do Playwright fora deste ambiente: `npx playwright install chrom
 | `npm run typecheck`                                             | PASSOU (sem erros)                                                                        |
 | `npm run lint`                                                  | PASSOU (sem avisos)                                                                       |
 | `npm run format:check`                                          | PASSOU                                                                                    |
-| `npm test` — 129 testes unitários                               | **129 PASSOU, 0 FALHOU**                                                                  |
+| `npm test` — 133 testes unitários                               | **133 PASSOU, 0 FALHOU**                                                                  |
 | `npm run build`                                                 | PASSOU — 73 arquivos pré-armazenados (~580 KB); dois builds seguidos geram a mesma versão |
 | `npx playwright test` — 65 testes de ponta a ponta (5 projetos) | **65 PASSOU, 0 FALHOU**                                                                   |
 
@@ -224,7 +224,7 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 | @negada permissão negada mostra como liberar a câmera                                       | camera-sem-permissao | PASSOU |
 | @negada sem HTTPS a tela explica o requisito (contexto inseguro simulado)                   | camera-sem-permissao | PASSOU |
 
-## Testes unitários (129) — todos PASSOU na última execução
+## Testes unitários (133) — todos PASSOU na última execução
 
 **biblioteca de exercícios técnicos** (7) — PASSOU
 
@@ -297,7 +297,7 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 - sobe com ≥80%, desce com <40%, mantém com poucas tentativas
 - nível salvo só muda na direção que a sessão comprova
 
-**planejador até o interclasse** (18) — PASSOU
+**planejador até o interclasse** (22) — PASSOU
 
 - de 14/10/2026 até 20/10/2026: 7 dias, terminando no dia do evento
 - sem dados, hoje é dia de avaliação inicial com testes
