@@ -154,6 +154,24 @@ describe('planejador até o interclasse', () => {
     for (const d of p.days) assert.ok(d.minutes <= 20, `${d.date}: ${d.minutes} min`);
   });
 
+  test('alterna capacidades físicas para não limitar o plano a coordenação e core', () => {
+    const p = plan('2026-10-12', {
+      competition: null,
+      results: baselineResults(),
+      profile: profile({ minutosDisponiveis: 45, preferenciaSessao: 'longas' }),
+    });
+    const physicalIds = p.days.flatMap((day) =>
+      day.blocks.filter((block) => block.kind === 'fisico').map((block) => block.activityId),
+    );
+    assert.deepEqual(physicalIds.slice(0, 5), [
+      'coordenacao-escada',
+      'core-estabilidade',
+      'equilibrio-propriocepcao',
+      'forca-peso-corporal',
+      'aceleracao-curta',
+    ]);
+  });
+
   test('prioriza o fundamento mais fraco nos dias de desenvolvimento', () => {
     const p = plan('2026-10-14', { results: baselineResults() });
     const dev = p.days.find((d) => d.phase === 'desenvolvimento')!;
