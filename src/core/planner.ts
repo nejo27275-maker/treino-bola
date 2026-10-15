@@ -357,24 +357,29 @@ export function buildPlan(input: PlanInput): Plan {
       );
     } else if (phase === 'vespera') {
       const t = tech[0];
+      // O tempo é dividido para sempre caber aquecimento, familiarização e revisão da rotina.
+      const available = budgetMinutes(profile, 'moderada');
+      const warmupMinutes = available >= 15 ? 5 : 3;
+      const techMinutes = Math.min(8, Math.max(4, available - warmupMinutes - 3));
       blocks = [
-        warmup,
+        warmup ? { ...warmup, minutes: warmupMinutes } : null,
         t
           ? item(
               'tecnico',
               catalog.pickExercise(t.skill, { difficulty: 1, materials, space }),
-              8,
+              techMinutes,
               'Familiarização: poucas repetições, fáceis e bem feitas, para ganhar confiança.',
               { skill: t.skill },
             )
           : null,
+        item('mental', catalog.mental('rotina'), 3, 'Revise a rotina de amanhã.'),
         item(
           'mental',
           catalog.mental('visualizacao'),
           4,
           'Visualize boas jogadas: prepara a atenção sem cansar o corpo.',
+          { optional: true },
         ),
-        item('mental', catalog.mental('rotina'), 3, 'Revise a rotina de amanhã.'),
       ];
       dayNotes.push(
         'Nada de treino forte hoje: o objetivo é chegar descansado.',
@@ -499,8 +504,12 @@ export function buildPlan(input: PlanInput): Plan {
     }
 
     // No dia do jogo, rotina e aquecimento não são encurtados pelo limite de tempo de treino.
+    // Na véspera, o conteúdo já é leve (pouca técnica e preparação mental): usa todo o tempo
+    // disponível para que a revisão da rotina não seja cortada.
     const finalBlocks =
-      phase === 'competicao' ? fit(blocks, Number.POSITIVE_INFINITY) : fit(blocks, budget);
+      phase === 'competicao'
+        ? fit(blocks, Number.POSITIVE_INFINITY)
+        : fit(blocks, phase === 'vespera' ? budgetMinutes(profile, 'moderada') : budget);
     const minutes = finalBlocks.reduce((sum, b) => sum + b.minutes, 0);
     const completedSessions = sessions.filter((s) => s.date === date).length;
     let title = PHASE_LABEL[phase];

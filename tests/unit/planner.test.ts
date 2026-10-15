@@ -80,7 +80,31 @@ describe('planejador até o interclasse', () => {
     assert.equal(eve.phase, 'vespera');
     assert.equal(eve.intensity, 'leve');
     assert.ok(!eve.blocks.some((b) => b.kind === 'fisico'));
+    // Familiarização técnica curta e a revisão da rotina pré-jogo cabem no tempo padrão.
+    assert.deepEqual(
+      eve.blocks.map((b) => b.kind),
+      ['aquecimento', 'tecnico', 'mental', 'mental'],
+    );
+    assert.ok(eve.blocks.some((b) => b.activityId === 'rotina-pre-jogo'));
+    assert.ok(eve.minutes <= 20, `${eve.minutes} min`);
     assert.equal(p.days.find((d) => d.date === '2026-10-18')!.phase, 'recuperacao');
+  });
+
+  test('com pouco tempo, a véspera mantém a rotina e corta primeiro a visualização', () => {
+    for (const minutes of [10, 12, 15]) {
+      const p = plan('2026-10-14', {
+        results: baselineResults(),
+        profile: profile({ minutosDisponiveis: minutes }),
+      });
+      const eve = p.days.find((d) => d.date === '2026-10-19')!;
+      assert.ok(eve.minutes <= minutes, `${minutes}: ${eve.minutes} min`);
+      assert.deepEqual(
+        eve.blocks.map((b) => b.kind),
+        ['aquecimento', 'tecnico', 'mental'],
+        `${minutes} min`,
+      );
+      assert.ok(eve.blocks.some((b) => b.activityId === 'rotina-pre-jogo'));
+    }
   });
 
   test('não prescreve treino intenso todos os dias', () => {
