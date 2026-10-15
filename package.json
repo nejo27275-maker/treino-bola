@@ -16,7 +16,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.tests.json",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --write src/core/planner.ts && git diff -- src/core/planner.ts && prettier --check .",
+    "format:check": "prettier --check .",
     "test": "node --test \"tests/unit/**/*.test.ts\"",
     "test:e2e": "playwright test",
     "check": "npm run typecheck && npm run lint && npm run format:check && npm test && npm run build && npm run test:e2e",
