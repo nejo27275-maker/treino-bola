@@ -92,7 +92,8 @@ export function analyzeControl(s: ControlScenario): ControlEvaluation {
   const best = options.reduce((a, b) => (b.utility > a.utility ? b : a));
   const accepted = options
     .filter(
-      (o) => o.valid && o.utility >= best.utility - CONTROL_TOLERANCE && o.space >= CONTROL_MIN_SPACE,
+      (o) =>
+        o.valid && o.utility >= best.utility - CONTROL_TOLERANCE && o.space >= CONTROL_MIN_SPACE,
     )
     .map((o) => o.option);
   if (!accepted.includes(best.option)) accepted.unshift(best.option);

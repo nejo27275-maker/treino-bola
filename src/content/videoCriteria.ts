@@ -10,7 +10,8 @@ export const VIDEO_CRITERIA: VideoCriterion[] = [
     id: 'primeiro_toque',
     nome: 'Domínio e primeiro toque',
     skill: 'primeiro_toque',
-    observar: 'Depois do primeiro contato, a bola fica a até um passo? A superfície "cede" no contato?',
+    observar:
+      'Depois do primeiro contato, a bola fica a até um passo? A superfície "cede" no contato?',
     bom: 'Bola parada perto do pé, pronta para a próxima ação.',
     melhorar: 'Bola rebate longe ou exige vários toques para ser controlada.',
   },
@@ -88,7 +89,9 @@ export const RATING_LABEL: Record<CriterionRating, string> = {
 };
 
 /** Converte a observação em tentativas/acertos com peso baixo (2 "tentativas" por critério). */
-export function ratingToEvidence(rating: CriterionRating): { attempts: number; successes: number } | null {
+export function ratingToEvidence(
+  rating: CriterionRating,
+): { attempts: number; successes: number } | null {
   switch (rating) {
     case 'bom':
       return { attempts: 2, successes: 2 };

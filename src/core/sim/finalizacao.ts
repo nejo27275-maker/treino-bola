@@ -68,7 +68,11 @@ export function generateShot(seed: number, difficulty: number, modality: Modalit
   const hasBlocker = difficulty >= 3 && rng.chance(0.6);
   const blockerW = 0.55;
   const blocker = hasBlocker
-    ? { x: rng.range(blockerW / 2 + 0.2, W - blockerW / 2 - 0.2), w: blockerW, h: Math.min(1.5, H * 0.7) }
+    ? {
+        x: rng.range(blockerW / 2 + 0.2, W - blockerW / 2 - 0.2),
+        w: blockerW,
+        h: Math.min(1.5, H * 0.7),
+      }
     : null;
   const tw = W * 0.22;
   const th = H * 0.32;

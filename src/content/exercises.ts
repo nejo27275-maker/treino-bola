@@ -9,7 +9,8 @@ const E = {
   pe_rigido: {
     tag: 'pe_rigido',
     texto: 'Pé duro: a bola rebateu para longe',
-    correcao: 'Recue levemente o pé no momento do contato e relaxe o joelho para "absorver" a bola.',
+    correcao:
+      'Recue levemente o pé no momento do contato e relaxe o joelho para "absorver" a bola.',
   },
   corpo_desalinhado: {
     tag: 'corpo_desalinhado',
@@ -44,7 +45,8 @@ const E = {
   parou_bola: {
     tag: 'parou_bola',
     texto: 'Parou a bola em vez de orientar',
-    correcao: 'O primeiro toque já deve empurrar a bola para o lado escolhido: pense em "receber andando".',
+    correcao:
+      'O primeiro toque já deve empurrar a bola para o lado escolhido: pense em "receber andando".',
   },
   pe_errado: {
     tag: 'pe_errado',
@@ -94,7 +96,8 @@ const E = {
   reagiu_tarde: {
     tag: 'reagiu_tarde',
     texto: 'Percebeu o sinal tarde',
-    correcao: 'Levante a cabeça com mais frequência, mesmo que a condução fique mais lenta no início.',
+    correcao:
+      'Levante a cabeça com mais frequência, mesmo que a condução fique mais lenta no início.',
   },
   pe_apoio_errado: {
     tag: 'pe_apoio_errado',
@@ -334,7 +337,8 @@ export const EXERCISES: Exercise[] = [
     duracaoMin: 10,
     materiais: ['bola', 'parede'],
     espacoMin: 'medio',
-    objetivo: 'Receber com o corpo aberto (de lado) para conseguir virar para a frente no primeiro toque.',
+    objetivo:
+      'Receber com o corpo aberto (de lado) para conseguir virar para a frente no primeiro toque.',
     organizacao:
       'A 4 ou 5 passos da parede, coloque um objeto às suas costas, a 4 passos: ele marca a direção do ataque.',
     instrucoes: [
@@ -348,7 +352,8 @@ export const EXERCISES: Exercise[] = [
     series: 3,
     repeticoes: 8,
     pausaSeg: 45,
-    criterioSucesso: 'Em um toque, você fica de frente para o objeto (ataque) com a bola controlada.',
+    criterioSucesso:
+      'Em um toque, você fica de frente para o objeto (ataque) com a bola controlada.',
     errosComuns: [E.corpo_fechado, E.nao_olhou, E.toque_longo],
     maisFacil: 'Receba, pare a bola e só depois gire; aumente a velocidade aos poucos.',
     maisDificil:
@@ -456,7 +461,8 @@ export const EXERCISES: Exercise[] = [
     espacoMin: 'medio',
     teste: true,
     objetivo: 'Medir quantos percursos em 10 você completa com a bola controlada.',
-    organizacao: '5 cones (ou objetos) em linha, com 1,5 passo entre eles. Sempre a mesma distância.',
+    organizacao:
+      '5 cones (ou objetos) em linha, com 1,5 passo entre eles. Sempre a mesma distância.',
     instrucoes: [
       'Faça um aquecimento rápido de 1 minuto.',
       'Conduza em zigue-zague do primeiro ao último cone (só a ida).',
@@ -574,7 +580,8 @@ export const EXERCISES: Exercise[] = [
     espacoMin: 'medio',
     teste: true,
     objetivo: 'Medir quantos passes em 10 passam pela porta — sua linha de base de precisão.',
-    organizacao: 'Porta de um passo de largura (dois objetos), a 6 passos. Sempre a mesma montagem.',
+    organizacao:
+      'Porta de um passo de largura (dois objetos), a 6 passos. Sempre a mesma montagem.',
     instrucoes: [
       'Faça um aquecimento rápido de 1 minuto.',
       'Passe rasteiro com a parte interna do pé: 5 com o pé direito e 5 com o esquerdo.',
@@ -767,8 +774,10 @@ export const EXERCISES: Exercise[] = [
     criterioSucesso: 'A bola entra rasteira entre o objeto do canto e a trave escolhida.',
     errosComuns: [E.bola_alta, E.pe_apoio_errado, E.canto_errado, E.tornozelo_solto],
     maisFacil: 'Chegue mais perto (5 passos) e aumente a área do canto.',
-    maisDificil: 'Afaste-se para 9 ou 10 passos, use o pé mais fraco ou finalize depois de conduzir.',
-    semMaterial: 'Sem gol: use dois chinelos ou mochilas como traves, de preferência contra uma parede.',
+    maisDificil:
+      'Afaste-se para 9 ou 10 passos, use o pé mais fraco ou finalize depois de conduzir.',
+    semMaterial:
+      'Sem gol: use dois chinelos ou mochilas como traves, de preferência contra uma parede.',
   },
   {
     id: 'finalizacao-conducao',
@@ -779,7 +788,8 @@ export const EXERCISES: Exercise[] = [
     materiais: ['bola', 'cones'],
     espacoMin: 'grande',
     objetivo: 'Finalizar com precisão depois de conduzir, ajustando os passos antes do chute.',
-    organizacao: 'Comece a 14 passos do gol. Um cone a 8 passos do gol marca o ponto de finalização.',
+    organizacao:
+      'Comece a 14 passos do gol. Um cone a 8 passos do gol marca o ponto de finalização.',
     instrucoes: [
       'Conduza em direção ao cone com toques curtos.',
       'Ao chegar no cone, olhe para o gol e escolha o canto.',
@@ -857,7 +867,8 @@ export const EXERCISES: Exercise[] = [
     errosComuns: [E.nao_olhou, E.olhou_tarde, E.perdeu_bola],
     maisFacil: 'Olhe por cima de um ombro só e receba parado.',
     maisDificil: 'Sinais mais rápidos, duas olhadas antes de cada recepção ou passes mais fortes.',
-    semMaterial: 'Sem parede: um parceiro passa a bola e o celular (ou outra pessoa) mostra os sinais.',
+    semMaterial:
+      'Sem parede: um parceiro passa a bola e o celular (ou outra pessoa) mostra os sinais.',
   },
   {
     id: 'corredores-decisao',

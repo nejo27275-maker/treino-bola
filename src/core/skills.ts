@@ -20,7 +20,8 @@ export const SKILLS: Record<SkillId, SkillInfo> = {
     nome: 'Domínio e primeiro toque',
     curto: 'Primeiro toque',
     grupo: 'tecnica',
-    descricao: 'Controlar a bola no primeiro contato, deixando-a perto e pronta para a próxima ação.',
+    descricao:
+      'Controlar a bola no primeiro contato, deixando-a perto e pronta para a próxima ação.',
     medidoPorAcerto: true,
     simulador: 'dominio_orientado',
   },

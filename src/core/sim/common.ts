@@ -40,10 +40,7 @@ export function byLevel<T>(difficulty: number, table: readonly [T, T, T, T, T]):
 
 export function insideField(p: Vec, margin = 0): boolean {
   return (
-    p.x >= margin &&
-    p.x <= FIELD.width - margin &&
-    p.y >= margin &&
-    p.y <= FIELD.length - margin
+    p.x >= margin && p.x <= FIELD.width - margin && p.y >= margin && p.y <= FIELD.length - margin
   );
 }
 

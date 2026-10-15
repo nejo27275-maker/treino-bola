@@ -49,10 +49,18 @@ export function nextDifficulty(current: number, summary: SessionSummary): Diffic
   const rate = summary.successes / summary.attempts;
   const pct = Math.round(rate * 100);
   if (rate >= 0.8 && level < 5) {
-    return { level: level + 1, changed: true, reason: `Acerto de ${pct}%: nível aumentado para ${level + 1}.` };
+    return {
+      level: level + 1,
+      changed: true,
+      reason: `Acerto de ${pct}%: nível aumentado para ${level + 1}.`,
+    };
   }
   if (rate < 0.4 && level > 1) {
-    return { level: level - 1, changed: true, reason: `Acerto de ${pct}%: nível reduzido para ${level - 1} para consolidar a base.` };
+    return {
+      level: level - 1,
+      changed: true,
+      reason: `Acerto de ${pct}%: nível reduzido para ${level - 1} para consolidar a base.`,
+    };
   }
   return { level, changed: false, reason: `Acerto de ${pct}%: nível ${level} mantido.` };
 }

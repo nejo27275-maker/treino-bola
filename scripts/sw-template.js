@@ -36,7 +36,9 @@ self.addEventListener('activate', (event) => {
     (async () => {
       if (DEV_MODE) {
         const keys = await caches.keys();
-        await Promise.all(keys.filter((k) => k.startsWith('cfa-app-')).map((k) => caches.delete(k)));
+        await Promise.all(
+          keys.filter((k) => k.startsWith('cfa-app-')).map((k) => caches.delete(k)),
+        );
         await self.registration.unregister();
         return;
       }

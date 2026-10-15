@@ -39,7 +39,8 @@ function baseSession(
   extra: Partial<TrainingSession> = {},
 ): TrainingSession {
   const durationSec =
-    timing.activeSec ?? Math.max(0, Math.round((timing.endedAt.getTime() - timing.startedAt.getTime()) / 1000));
+    timing.activeSec ??
+    Math.max(0, Math.round((timing.endedAt.getTime() - timing.startedAt.getTime()) / 1000));
   return {
     id: newId(),
     date: localDate(timing.startedAt),
@@ -115,9 +116,16 @@ export function logExercise(input: ExerciseLogInput): Logged {
     const tags = Object.fromEntries(Object.entries(input.errorTags ?? {}).filter(([, n]) => n > 0));
     // O resultado é atribuído ao fundamento principal (o critério de sucesso mede esse fundamento).
     results.push(
-      record(session, input.exercise.skills[0] as SkillId, 'contagem_manual', input.attempts, input.successes, {
-        ...(Object.keys(tags).length ? { errorTags: tags } : {}),
-      }),
+      record(
+        session,
+        input.exercise.skills[0] as SkillId,
+        'contagem_manual',
+        input.attempts,
+        input.successes,
+        {
+          ...(Object.keys(tags).length ? { errorTags: tags } : {}),
+        },
+      ),
     );
   }
   return { session, results };
@@ -199,7 +207,9 @@ export function logPhysical(input: PhysicalLogInput): Logged {
   return { session, results: [] };
 }
 
-export function logMental(input: Timing & { activity: { id: string; nome: string }; notes?: string }): Logged {
+export function logMental(
+  input: Timing & { activity: { id: string; nome: string }; notes?: string },
+): Logged {
   const session = baseSession('mental', input.activity.id, input.activity.nome, input, {
     skills: ['concentracao'],
     ...(input.notes ? { notes: input.notes.slice(0, 2000) } : {}),
@@ -211,9 +221,15 @@ export function logSelfAssessment(now: Date, ratings: Partial<Record<SkillId, nu
   const entries = Object.entries(ratings).filter(
     (e): e is [SkillId, number] => typeof e[1] === 'number' && e[1] >= 1 && e[1] <= 5,
   );
-  const session = baseSession('autoavaliacao', 'autoavaliacao', 'Autoavaliação', { startedAt: now, endedAt: now, activeSec: 0 }, {
-    skills: entries.map(([s]) => s),
-  });
+  const session = baseSession(
+    'autoavaliacao',
+    'autoavaliacao',
+    'Autoavaliação',
+    { startedAt: now, endedAt: now, activeSec: 0 },
+    {
+      skills: entries.map(([s]) => s),
+    },
+  );
   const results = entries.map(([skill, rating]) =>
     record(session, skill, 'autoavaliacao', 0, 0, { rating: Math.round(rating) }),
   );
@@ -228,7 +244,9 @@ export interface ReactionTrial {
 }
 
 /** Treino de reação com a câmera: só tentativas válidas (sem saída antecipada) contam. */
-export function logCameraReaction(input: Timing & { trials: ReactionTrial[]; facing: string }): Logged {
+export function logCameraReaction(
+  input: Timing & { trials: ReactionTrial[]; facing: string },
+): Logged {
   const valid = input.trials.filter((t) => !t.falseStart && t.detected !== 'indefinido');
   const successes = valid.filter((t) => t.detected === t.expected).length;
   const timeouts = valid.filter((t) => t.detected === null).length;
@@ -249,7 +267,11 @@ export function logCameraReaction(input: Timing & { trials: ReactionTrial[]; fac
           }),
         ]
       : [];
-  if (times.length) session.summary = { ...session.summary!, avgResponseMs: Math.round(times.reduce((a, b) => a + b, 0) / times.length) };
+  if (times.length)
+    session.summary = {
+      ...session.summary!,
+      avgResponseMs: Math.round(times.reduce((a, b) => a + b, 0) / times.length),
+    };
   return { session, results };
 }
 
@@ -260,9 +282,21 @@ export function logVideoAnalysis(
   criteria: { id: string; skill: SkillId }[],
   toEvidence: (r: CriterionRating) => { attempts: number; successes: number } | null,
 ): Logged {
-  const session = baseSession('video', 'analise-video', `Vídeo: ${videoName.slice(0, 80)}`, timing, {
-    skills: [...new Set(criteria.filter((c) => ratings[c.id] && ratings[c.id] !== 'nao_visivel').map((c) => c.skill))],
-  });
+  const session = baseSession(
+    'video',
+    'analise-video',
+    `Vídeo: ${videoName.slice(0, 80)}`,
+    timing,
+    {
+      skills: [
+        ...new Set(
+          criteria
+            .filter((c) => ratings[c.id] && ratings[c.id] !== 'nao_visivel')
+            .map((c) => c.skill),
+        ),
+      ],
+    },
+  );
   const results: ResultRecord[] = [];
   let attempts = 0;
   let successes = 0;
@@ -273,7 +307,11 @@ export function logVideoAnalysis(
     if (!evidence) continue;
     attempts += evidence.attempts;
     successes += evidence.successes;
-    results.push(record(session, c.skill, 'observacao_video', evidence.attempts, evidence.successes, { notes: `Critério: ${c.id}` }));
+    results.push(
+      record(session, c.skill, 'observacao_video', evidence.attempts, evidence.successes, {
+        notes: `Critério: ${c.id}`,
+      }),
+    );
   }
   if (attempts > 0) session.summary = { attempts, successes };
   return { session, results };

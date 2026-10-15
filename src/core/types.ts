@@ -120,14 +120,7 @@ export interface TrainingSession {
   rounds?: RoundLog[];
 }
 
-export const POSITIONS = [
-  'goleiro',
-  'defensor',
-  'lateral',
-  'meio',
-  'atacante',
-  'nao_sei',
-] as const;
+export const POSITIONS = ['goleiro', 'defensor', 'lateral', 'meio', 'atacante', 'nao_sei'] as const;
 export type Position = (typeof POSITIONS)[number];
 
 export const EXPERIENCE_LEVELS = ['iniciante', 'as_vezes', 'regular', 'competitivo'] as const;

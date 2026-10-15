@@ -8,9 +8,22 @@ import { profile, result, session } from './helpers.ts';
 
 const INTERCLASSE = { nome: 'Interclasse', data: '2026-10-20' };
 
-function plan(today: string, opts: { results?: ResultRecord[]; sessions?: TrainingSession[]; profile?: Profile | null; competition?: { nome: string; data: string } | null } = {}) {
+function plan(
+  today: string,
+  opts: {
+    results?: ResultRecord[];
+    sessions?: TrainingSession[];
+    profile?: Profile | null;
+    competition?: { nome: string; data: string } | null;
+  } = {},
+) {
   const p = opts.profile === undefined ? profile() : opts.profile;
-  const engine = runEngine({ today, results: opts.results ?? [], sessions: opts.sessions ?? [], profile: p });
+  const engine = runEngine({
+    today,
+    results: opts.results ?? [],
+    sessions: opts.sessions ?? [],
+    profile: p,
+  });
   return buildPlan({
     today,
     competition: opts.competition === undefined ? INTERCLASSE : opts.competition,
@@ -23,8 +36,13 @@ function plan(today: string, opts: { results?: ResultRecord[]; sessions?: Traini
 
 /** Dados de base suficientes para não cair na fase de avaliação. */
 function baselineResults(date = '2026-10-13'): ResultRecord[] {
-  return (['primeiro_toque', 'passe', 'conducao', 'finalizacao', 'percepcao', 'decisao'] as const).map((s) =>
-    result(s, 10, s === 'passe' ? 3 : 7, { date, source: s === 'percepcao' || s === 'decisao' ? 'simulador' : 'contagem_manual' }),
+  return (
+    ['primeiro_toque', 'passe', 'conducao', 'finalizacao', 'percepcao', 'decisao'] as const
+  ).map((s) =>
+    result(s, 10, s === 'passe' ? 3 : 7, {
+      date,
+      source: s === 'percepcao' || s === 'decisao' ? 'simulador' : 'contagem_manual',
+    }),
   );
 }
 
@@ -51,7 +69,9 @@ describe('planejador até o interclasse', () => {
     assert.equal(day.phase, 'competicao');
     assert.ok(day.blocks.every((b) => b.kind === 'mental' || b.kind === 'aquecimento'));
     assert.ok(day.notes.some((n) => n.toLowerCase().includes('água')));
-    assert.ok(day.notes.some((n) => n.includes('sem treino extra') || n.includes('não há treino extra')));
+    assert.ok(
+      day.notes.some((n) => n.includes('sem treino extra') || n.includes('não há treino extra')),
+    );
   });
 
   test('véspera leve e recuperação dois dias antes', () => {
@@ -71,7 +91,10 @@ describe('planejador até o interclasse', () => {
   });
 
   test('respeita o tempo disponível do perfil', () => {
-    const p = plan('2026-10-14', { results: baselineResults(), profile: profile({ minutosDisponiveis: 20, preferenciaSessao: 'curtas' }) });
+    const p = plan('2026-10-14', {
+      results: baselineResults(),
+      profile: profile({ minutosDisponiveis: 20, preferenciaSessao: 'curtas' }),
+    });
     for (const d of p.days) assert.ok(d.minutes <= 20, `${d.date}: ${d.minutes} min`);
   });
 
@@ -94,7 +117,10 @@ describe('planejador até o interclasse', () => {
 
   test('aberto na véspera: só véspera e evento', () => {
     const p = plan('2026-10-19');
-    assert.deepEqual(p.days.map((d) => d.phase), ['vespera', 'competicao']);
+    assert.deepEqual(
+      p.days.map((d) => d.phase),
+      ['vespera', 'competicao'],
+    );
   });
 
   test('aberto no dia do evento: só o dia da competição', () => {
@@ -119,10 +145,16 @@ describe('planejador até o interclasse', () => {
   });
 
   test('desconforto forte: hoje vira descanso; esforço alto: hoje fica leve', () => {
-    const rest = plan('2026-10-15', { sessions: [session('2026-10-14', { discomfort: 3 })], results: baselineResults() });
+    const rest = plan('2026-10-15', {
+      sessions: [session('2026-10-14', { discomfort: 3 })],
+      results: baselineResults(),
+    });
     assert.equal(rest.days[0]!.phase, 'descanso');
     assert.equal(rest.days[0]!.intensity, 'descanso');
-    const light = plan('2026-10-15', { sessions: [session('2026-10-14', { rpe: 9 })], results: baselineResults() });
+    const light = plan('2026-10-15', {
+      sessions: [session('2026-10-14', { rpe: 9 })],
+      results: baselineResults(),
+    });
     assert.equal(light.days[0]!.intensity, 'leve');
   });
 

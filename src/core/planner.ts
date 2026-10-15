@@ -194,7 +194,14 @@ function rotation(
 }
 
 function needsBaseline(engine: EngineOutput): boolean {
-  const core: SkillId[] = ['primeiro_toque', 'passe', 'conducao', 'finalizacao', 'percepcao', 'decisao'];
+  const core: SkillId[] = [
+    'primeiro_toque',
+    'passe',
+    'conducao',
+    'finalizacao',
+    'percepcao',
+    'decisao',
+  ];
   const pending = core.filter((s) => engine.assessments[s].status === 'pendente').length;
   return pending >= 3;
 }
@@ -240,7 +247,13 @@ function intensityFor(phase: PlanPhase): PlanIntensity {
   }
 }
 
-function item(kind: BlockKind, it: CatalogItem | null, minutes: number, why: string, extra: Partial<PlanBlock> = {}): PlanBlock | null {
+function item(
+  kind: BlockKind,
+  it: CatalogItem | null,
+  minutes: number,
+  why: string,
+  extra: Partial<PlanBlock> = {},
+): PlanBlock | null {
   if (!it) return null;
   return { kind, label: it.nome, minutes, activityId: it.id, why, ...extra };
 }
@@ -290,7 +303,8 @@ export function buildPlan(input: PlanInput): Plan {
       `A competição "${validEvent.nome}" foi em ${formatDateBR(validEvent.data)} e já passou. Configure a próxima competição para gerar um novo plano; até lá, segue um plano de manutenção.`,
     );
   }
-  if (truncated) notes.push('A competição ainda está distante: mostrando as próximas duas semanas.');
+  if (truncated)
+    notes.push('A competição ainda está distante: mostrando as próximas duas semanas.');
   if (engine.wellbeing.level !== 'ok') notes.push(...engine.wellbeing.reasons);
 
   let devIndex = 0;
@@ -298,19 +312,42 @@ export function buildPlan(input: PlanInput): Plan {
     const dte = validEvent ? diffDays(date, validEvent.data) : null;
     let phase = phaseFor(date, index, dte, mode, baseline);
     const isToday = index === 0;
-    if (isToday && engine.wellbeing.level === 'descanso' && phase !== 'competicao') phase = 'descanso';
+    if (isToday && engine.wellbeing.level === 'descanso' && phase !== 'competicao')
+      phase = 'descanso';
     let intensity = intensityFor(phase);
-    if (isToday && engine.wellbeing.level === 'atencao' && intensity === 'moderada') intensity = 'leve';
+    if (isToday && engine.wellbeing.level === 'atencao' && intensity === 'moderada')
+      intensity = 'leve';
     const budget = budgetMinutes(profile, intensity);
     const dayNotes: string[] = [];
     let blocks: (PlanBlock | null)[] = [];
-    const warmup = item('aquecimento', catalog.workout('aquecimento'), 5, 'Prepara músculos e articulações e reduz o risco de lesão.');
+    const warmup = item(
+      'aquecimento',
+      catalog.workout('aquecimento'),
+      5,
+      'Prepara músculos e articulações e reduz o risco de lesão.',
+    );
 
     if (phase === 'competicao') {
       blocks = [
-        item('mental', catalog.mental('rotina'), 5, 'Sua rotina pré-jogo ajuda a entrar concentrado e tranquilo.'),
-        item('aquecimento', catalog.workout('aquecimento_jogo'), 12, 'Aquecimento curto antes do jogo, sem gastar energia.'),
-        item('mental', catalog.mental('respiracao'), 3, 'Respiração calma antes de entrar e depois de um erro.', { optional: true }),
+        item(
+          'mental',
+          catalog.mental('rotina'),
+          5,
+          'Sua rotina pré-jogo ajuda a entrar concentrado e tranquilo.',
+        ),
+        item(
+          'aquecimento',
+          catalog.workout('aquecimento_jogo'),
+          12,
+          'Aquecimento curto antes do jogo, sem gastar energia.',
+        ),
+        item(
+          'mental',
+          catalog.mental('respiracao'),
+          3,
+          'Respiração calma antes de entrar e depois de um erro.',
+          { optional: true },
+        ),
       ];
       dayNotes.push(
         'Hoje não há treino extra: guarde energia para o jogo.',
@@ -323,9 +360,20 @@ export function buildPlan(input: PlanInput): Plan {
       blocks = [
         warmup,
         t
-          ? item('tecnico', catalog.pickExercise(t.skill, { difficulty: 1, materials, space }), 8, 'Familiarização: poucas repetições, fáceis e bem feitas, para ganhar confiança.', { skill: t.skill })
+          ? item(
+              'tecnico',
+              catalog.pickExercise(t.skill, { difficulty: 1, materials, space }),
+              8,
+              'Familiarização: poucas repetições, fáceis e bem feitas, para ganhar confiança.',
+              { skill: t.skill },
+            )
           : null,
-        item('mental', catalog.mental('visualizacao'), 4, 'Visualize boas jogadas: prepara a atenção sem cansar o corpo.'),
+        item(
+          'mental',
+          catalog.mental('visualizacao'),
+          4,
+          'Visualize boas jogadas: prepara a atenção sem cansar o corpo.',
+        ),
         item('mental', catalog.mental('rotina'), 3, 'Revise a rotina de amanhã.'),
       ];
       dayNotes.push(
@@ -336,27 +384,59 @@ export function buildPlan(input: PlanInput): Plan {
     } else if (phase === 'recuperacao' || phase === 'descanso') {
       const r = reading[0];
       blocks = [
-        item('fisico', catalog.workout('mobilidade'), phase === 'descanso' ? 5 : 8, 'Mobilidade leve ajuda a recuperar sem impacto.'),
+        item(
+          'fisico',
+          catalog.workout('mobilidade'),
+          phase === 'descanso' ? 5 : 8,
+          'Mobilidade leve ajuda a recuperar sem impacto.',
+        ),
         r && r.skill
-          ? { kind: 'simulador', label: `Simulador: ${SKILLS[r.skill].curto}`, minutes: 5, activityId: SKILLS[r.skill].simulador ?? 'decisao_rapida', simMode: SKILLS[r.skill].simulador, skill: r.skill, why: 'Leitura de jogo treina a cabeça sem cansar as pernas.' } satisfies PlanBlock
+          ? ({
+              kind: 'simulador',
+              label: `Simulador: ${SKILLS[r.skill].curto}`,
+              minutes: 5,
+              activityId: SKILLS[r.skill].simulador ?? 'decisao_rapida',
+              simMode: SKILLS[r.skill].simulador,
+              skill: r.skill,
+              why: 'Leitura de jogo treina a cabeça sem cansar as pernas.',
+            } satisfies PlanBlock)
           : null,
         item('mental', catalog.mental('respiracao'), 3, 'Respiração para relaxar e recuperar.'),
       ];
-      if (phase === 'descanso') dayNotes.push('Dia de descanso: priorize sono, alimentação e hidratação.');
+      if (phase === 'descanso')
+        dayNotes.push('Dia de descanso: priorize sono, alimentação e hidratação.');
       else dayNotes.push('Dia leve: o corpo melhora durante a recuperação.');
     } else if (phase === 'avaliacao') {
-      const pending = SKILL_ORDER.filter((s) => SKILLS[s].medidoPorAcerto && engine.assessments[s].status === 'pendente');
+      const pending = SKILL_ORDER.filter(
+        (s) => SKILLS[s].medidoPorAcerto && engine.assessments[s].status === 'pendente',
+      );
       const focusFirst = [...(profile?.focos ?? []).filter((s) => pending.includes(s)), ...pending];
       const techPending = focusFirst.filter((s) => SKILLS[s].grupo === 'tecnica');
       const readPending = focusFirst.filter((s) => SKILLS[s].grupo === 'leitura');
       const testBlocks: (PlanBlock | null)[] = [];
       for (const s of techPending.slice(0, 2)) {
-        testBlocks.push(item('teste', catalog.pickTest(s, materials), 8, `Linha de base de ${SKILLS[s].curto.toLowerCase()}: sem ela, o motor não sabe o que priorizar.`, { skill: s }));
+        testBlocks.push(
+          item(
+            'teste',
+            catalog.pickTest(s, materials),
+            8,
+            `Linha de base de ${SKILLS[s].curto.toLowerCase()}: sem ela, o motor não sabe o que priorizar.`,
+            { skill: s },
+          ),
+        );
       }
       for (const s of readPending.slice(0, 1)) {
         const mode = SKILLS[s].simulador;
         if (mode) {
-          testBlocks.push({ kind: 'simulador', label: `Simulador: ${SKILLS[s].curto}`, minutes: 5, activityId: mode, simMode: mode, skill: s, why: 'Medição automática da leitura de jogo (10 rodadas).' });
+          testBlocks.push({
+            kind: 'simulador',
+            label: `Simulador: ${SKILLS[s].curto}`,
+            minutes: 5,
+            activityId: mode,
+            simMode: mode,
+            skill: s,
+            why: 'Medição automática da leitura de jogo (10 rodadas).',
+          });
         }
       }
       blocks = [warmup, ...testBlocks];
@@ -370,15 +450,50 @@ export function buildPlan(input: PlanInput): Plan {
       blocks = [
         warmup,
         t
-          ? item('tecnico', catalog.pickExercise(t.skill, { difficulty: t.difficulty, materials, space, focusError: t.focusError }), Math.max(6, Math.round(budget * 0.4)), t.why, { skill: t.skill })
+          ? item(
+              'tecnico',
+              catalog.pickExercise(t.skill, {
+                difficulty: t.difficulty,
+                materials,
+                space,
+                focusError: t.focusError,
+              }),
+              Math.max(6, Math.round(budget * 0.4)),
+              t.why,
+              { skill: t.skill },
+            )
           : null,
         r && SKILLS[r.skill].simulador
-          ? ({ kind: 'simulador', label: `Simulador: ${SKILLS[r.skill].curto}`, minutes: 5, activityId: SKILLS[r.skill].simulador as SimModeId, simMode: SKILLS[r.skill].simulador, skill: r.skill, why: r.why } satisfies PlanBlock)
+          ? ({
+              kind: 'simulador',
+              label: `Simulador: ${SKILLS[r.skill].curto}`,
+              minutes: 5,
+              activityId: SKILLS[r.skill].simulador as SimModeId,
+              simMode: SKILLS[r.skill].simulador,
+              skill: r.skill,
+              why: r.why,
+            } satisfies PlanBlock)
           : null,
         intensity === 'moderada'
-          ? item('fisico', catalog.workout(nearEvent ? 'agilidade' : physicalKind), 8, nearEvent ? 'Agilidade em volume baixo: rapidez sem acumular cansaço perto do jogo.' : physicalKind === 'core' ? 'Estabilidade do tronco ajuda no equilíbrio e na proteção da bola.' : 'Coordenação melhora o controle do corpo com a bola.', { optional: true })
+          ? item(
+              'fisico',
+              catalog.workout(nearEvent ? 'agilidade' : physicalKind),
+              8,
+              nearEvent
+                ? 'Agilidade em volume baixo: rapidez sem acumular cansaço perto do jogo.'
+                : physicalKind === 'core'
+                  ? 'Estabilidade do tronco ajuda no equilíbrio e na proteção da bola.'
+                  : 'Coordenação melhora o controle do corpo com a bola.',
+              { optional: true },
+            )
           : null,
-        item('mental', catalog.mental(devIndex % 2 === 0 ? 'respiracao' : 'reset_erro'), 3, 'Treino mental curto para manter o foco nos lances.', { optional: true }),
+        item(
+          'mental',
+          catalog.mental(devIndex % 2 === 0 ? 'respiracao' : 'reset_erro'),
+          3,
+          'Treino mental curto para manter o foco nos lances.',
+          { optional: true },
+        ),
       ];
       devIndex++;
     }
@@ -387,7 +502,8 @@ export function buildPlan(input: PlanInput): Plan {
     const minutes = finalBlocks.reduce((sum, b) => sum + b.minutes, 0);
     const completedSessions = sessions.filter((s) => s.date === date).length;
     let title = PHASE_LABEL[phase];
-    if (isToday && engine.wellbeing.level === 'atencao' && phase !== 'competicao') title = `${title} (leve hoje)`;
+    if (isToday && engine.wellbeing.level === 'atencao' && phase !== 'competicao')
+      title = `${title} (leve hoje)`;
     return {
       date,
       weekday: weekdayName(date),

@@ -22,8 +22,34 @@ const dist = path.join(root, 'dist');
 const isDev = process.argv.includes('--dev');
 const require = createRequire(import.meta.url);
 
-/** Arquivos que não entram no pré-cache (opcionais, grandes ou gerados abaixo). */
-const PRECACHE_EXCLUDE = [/^sw\.js$/, /\.map$/, /^vendor\//, /^models\//, /^build-info\.json$/];
+/** Arquivos que não entram no pré-cache (opcionais e grandes, ou o próprio service worker). */
+const PRECACHE_EXCLUDE = [/^sw\.js$/, /\.map$/, /^vendor\//, /^models\//];
+
+/** Informa ao aplicativo se os arquivos opcionais do detector de pose foram instalados. */
+async function poseInfo() {
+  const bundle = path.join(root, 'public', 'vendor', 'mediapipe', 'vision_bundle.mjs');
+  const model = path.join(root, 'public', 'models', 'pose_landmarker_lite.task');
+  const has = async (p) => (await stat(p).catch(() => null))?.isFile() ?? false;
+  if (!(await has(bundle)) || !(await has(model))) return { available: false };
+  try {
+    const manifest = JSON.parse(
+      await readFile(path.join(root, 'public', 'vendor', 'mediapipe', 'manifest.json'), 'utf8'),
+    );
+    return {
+      available: true,
+      package: String(manifest.package ?? '@mediapipe/tasks-vision'),
+      version: String(manifest.version ?? 'desconhecida'),
+      files: Array.isArray(manifest.files) ? manifest.files.map(String) : [],
+    };
+  } catch {
+    return {
+      available: true,
+      package: '@mediapipe/tasks-vision',
+      version: 'desconhecida',
+      files: [],
+    };
+  }
+}
 
 async function listFiles(dir, base = dir) {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -47,6 +73,19 @@ function compileTypeScript() {
 }
 
 async function buildServiceWorker() {
+  // build-info.json é escrito antes da lista de pré-cache para também funcionar offline.
+  await writeFile(
+    path.join(dist, 'build-info.json'),
+    JSON.stringify(
+      {
+        mode: isDev ? 'development' : 'production',
+        builtAt: new Date().toISOString(),
+        pose: await poseInfo(),
+      },
+      null,
+      2,
+    ),
+  );
   const template = await readFile(path.join(root, 'scripts', 'sw-template.js'), 'utf8');
   const files = (await listFiles(dist)).filter((f) => !PRECACHE_EXCLUDE.some((re) => re.test(f)));
   const precache = [];
@@ -71,20 +110,6 @@ async function buildServiceWorker() {
     const acc = await accP;
     return acc + (await stat(path.join(dist, f))).size;
   }, Promise.resolve(0));
-  await writeFile(
-    path.join(dist, 'build-info.json'),
-    JSON.stringify(
-      {
-        version,
-        mode: isDev ? 'development' : 'production',
-        builtAt: new Date().toISOString(),
-        precachedFiles: isDev ? 0 : precache.length,
-        precachedBytes: isDev ? 0 : totalBytes,
-      },
-      null,
-      2,
-    ),
-  );
   return { version, count: precache.length, totalBytes };
 }
 

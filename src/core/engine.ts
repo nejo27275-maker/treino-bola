@@ -28,7 +28,11 @@ export const HALF_LIFE_DAYS = 14;
 export const MIN_EFFECTIVE_ATTEMPTS = 8;
 export const LEVEL_LOW = 0.5;
 export const LEVEL_HIGH = 0.75;
-const CHANNEL_WEIGHT: Record<EvidenceChannel, number> = { real: 1, simulado: 0.6, autoavaliacao: 0.3 };
+const CHANNEL_WEIGHT: Record<EvidenceChannel, number> = {
+  real: 1,
+  simulado: 0.6,
+  autoavaliacao: 0.3,
+};
 const SELF_RATING_EFFECTIVE = 3;
 
 export type SkillStatus = 'pendente' | 'insuficiente' | 'avaliado';
@@ -153,7 +157,8 @@ function estimateChannel(results: ResultRecord[], today: string): ChannelEstimat
   est.effectiveAttempts = weightedAttempts;
   est.rate = (weightedSuccess + 1) / (weightedAttempts + 2);
   est.sessions = sessions.size;
-  if (times.length > 0) est.avgResponseMs = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
+  if (times.length > 0)
+    est.avgResponseMs = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
   return est;
 }
 
@@ -231,7 +236,9 @@ export function assessSkill(
     .filter((r) => r.source === 'autoavaliacao' && typeof r.rating === 'number')
     .sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
   const lastSelf = selfResults[selfResults.length - 1];
-  const selfRating = lastSelf ? { rating: lastSelf.rating as number, date: lastSelf.date } : undefined;
+  const selfRating = lastSelf
+    ? { rating: lastSelf.rating as number, date: lastSelf.date }
+    : undefined;
 
   const sessionIds = new Set(
     results.filter((r) => r.source !== 'autoavaliacao').map((r) => r.sessionId),
@@ -249,7 +256,8 @@ export function assessSkill(
   let den = 0;
   const parts: [EvidenceChannel, number, number][] = [];
   if (real) parts.push(['real', real.rate, Math.min(1, real.effectiveAttempts / 10)]);
-  if (simulado) parts.push(['simulado', simulado.rate, Math.min(1, simulado.effectiveAttempts / 10)]);
+  if (simulado)
+    parts.push(['simulado', simulado.rate, Math.min(1, simulado.effectiveAttempts / 10)]);
   if (selfRating) {
     parts.push(['autoavaliacao', (selfRating.rating - 1) / 4, SELF_RATING_EFFECTIVE / 10]);
   }
@@ -338,13 +346,13 @@ export function assessWellbeing(sessions: TrainingSession[], today: string): Wel
     );
   }
   const lastThreeDays = [0, 1, 2].map((offset) =>
-    sessions.some(
-      (s) => diffDays(s.date, today) === offset && (s.rpe ?? 0) >= 7,
-    ),
+    sessions.some((s) => diffDays(s.date, today) === offset && (s.rpe ?? 0) >= 7),
   );
   if (lastThreeDays.every(Boolean) && level === 'ok') {
     level = 'atencao';
-    reasons.push('Três dias seguidos de esforço alto: inclua recuperação antes de outro treino forte.');
+    reasons.push(
+      'Três dias seguidos de esforço alto: inclua recuperação antes de outro treino forte.',
+    );
   }
   return { level, reasons };
 }
@@ -410,7 +418,9 @@ export function recommend(
     if (a.status === 'pendente') {
       type = 'avaliar';
       priority = 0.55;
-      reasons.push(`Ainda não há nenhum resultado de ${info.curto.toLowerCase()}. Faça o teste para criar sua linha de base em vez de adivinhar seu nível.`);
+      reasons.push(
+        `Ainda não há nenhum resultado de ${info.curto.toLowerCase()}. Faça o teste para criar sua linha de base em vez de adivinhar seu nível.`,
+      );
     } else if (a.status === 'insuficiente') {
       type = 'reavaliar';
       priority = 0.5;
@@ -424,17 +434,23 @@ export function recommend(
       type = 'reavaliar';
       priority = 0.6;
       const values = a.sessionRates.filter((r) => r.attempts >= 5).map((r) => pct(r.rate));
-      reasons.push(`Resultados variaram muito entre sessões (${values.join(', ')}). Repita o teste antes de concluir que existe uma dificuldade.`);
+      reasons.push(
+        `Resultados variaram muito entre sessões (${values.join(', ')}). Repita o teste antes de concluir que existe uma dificuldade.`,
+      );
     } else if (a.highSustained) {
       type = 'progredir';
       priority = 0.3;
       difficulty = Math.min(5, baseDifficulty + 1);
-      reasons.push(`Bom desempenho sustentado (${describeEvidence(a)}). Aumente a dificuldade aos poucos.`);
+      reasons.push(
+        `Bom desempenho sustentado (${describeEvidence(a)}). Aumente a dificuldade aos poucos.`,
+      );
     } else if (a.level === 'baixo') {
       type = 'treinar';
       priority = 0.7 + 0.3 * need;
       difficulty = Math.max(1, baseDifficulty - 1);
-      reasons.push(`Precisa de atenção: ${describeEvidence(a)}. Treine em dificuldade mais baixa para ganhar consistência.`);
+      reasons.push(
+        `Precisa de atenção: ${describeEvidence(a)}. Treine em dificuldade mais baixa para ganhar consistência.`,
+      );
     } else if (a.level === 'medio') {
       type = 'treinar';
       priority = 0.5 + 0.3 * need;
@@ -445,18 +461,30 @@ export function recommend(
       reasons.push(`Nível bom: ${describeEvidence(a)}. Mantenha com repetições curtas.`);
     }
 
-    if (a.real && a.simulado && a.real.effectiveAttempts >= 5 && a.simulado.effectiveAttempts >= 5) {
+    if (
+      a.real &&
+      a.simulado &&
+      a.real.effectiveAttempts >= 5 &&
+      a.simulado.effectiveAttempts >= 5
+    ) {
       if (a.simulado.rate - a.real.rate >= 0.25) {
-        reasons.push('Você decide bem no simulador, mas a execução real ainda está abaixo: priorize repetições técnicas com bola.');
+        reasons.push(
+          'Você decide bem no simulador, mas a execução real ainda está abaixo: priorize repetições técnicas com bola.',
+        );
         priority += 0.05;
       } else if (a.real.rate - a.simulado.rate >= 0.25) {
         reasons.push('A técnica real está boa; a leitura nas simulações ainda pode melhorar.');
       }
     }
     if (a.topError) {
-      reasons.push(`Erro mais frequente nas últimas semanas: "${errorLabel(a.topError.tag)}" (${a.topError.count} vezes).`);
+      reasons.push(
+        `Erro mais frequente nas últimas semanas: "${errorLabel(a.topError.tag)}" (${a.topError.count} vezes).`,
+      );
     }
-    if (a.trend === 'piorando') reasons.push('A última sessão foi pior que a média anterior — confira cansaço e concentração.');
+    if (a.trend === 'piorando')
+      reasons.push(
+        'A última sessão foi pior que a média anterior — confira cansaço e concentração.',
+      );
     if (a.trend === 'melhorando') reasons.push('Tendência de melhora nas últimas sessões.');
     if (focus.has(skill)) {
       priority += 0.25;

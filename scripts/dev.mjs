@@ -25,7 +25,13 @@ if (first.status !== 0) process.exit(first.status ?? 1);
 
 const tsc = spawn(
   process.execPath,
-  [require.resolve('typescript/bin/tsc'), '-p', 'tsconfig.json', '--watch', '--preserveWatchOutput'],
+  [
+    require.resolve('typescript/bin/tsc'),
+    '-p',
+    'tsconfig.json',
+    '--watch',
+    '--preserveWatchOutput',
+  ],
   { cwd: root, stdio: 'inherit' },
 );
 const server = spawn(

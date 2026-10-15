@@ -36,7 +36,13 @@ describe('motor adaptativo — avaliação de fundamentos', () => {
   test('autoavaliação sozinha não vira medição', () => {
     const a = assessSkill(
       'drible',
-      [result('drible', 0, 0, { source: 'autoavaliacao', rating: 5, activityKind: 'autoavaliacao' })],
+      [
+        result('drible', 0, 0, {
+          source: 'autoavaliacao',
+          rating: 5,
+          activityKind: 'autoavaliacao',
+        }),
+      ],
       [],
       TODAY,
     );
@@ -45,8 +51,18 @@ describe('motor adaptativo — avaliação de fundamentos', () => {
   });
 
   test('origem pesa: observação de vídeo vale menos que contagem manual', () => {
-    const manual = assessSkill('passe', [result('passe', 10, 10, { source: 'contagem_manual' })], [], TODAY);
-    const video = assessSkill('passe', [result('passe', 10, 10, { source: 'observacao_video' })], [], TODAY);
+    const manual = assessSkill(
+      'passe',
+      [result('passe', 10, 10, { source: 'contagem_manual' })],
+      [],
+      TODAY,
+    );
+    const video = assessSkill(
+      'passe',
+      [result('passe', 10, 10, { source: 'observacao_video' })],
+      [],
+      TODAY,
+    );
     assert.ok((manual.real?.effectiveAttempts ?? 0) > (video.real?.effectiveAttempts ?? 0));
   });
 
@@ -132,7 +148,12 @@ describe('motor adaptativo — recomendações explicáveis', () => {
 
   test('foco do perfil aumenta a prioridade e é explicado', () => {
     const base = runEngine({ today: TODAY, results: [], sessions: [], profile: profile() });
-    const focused = runEngine({ today: TODAY, results: [], sessions: [], profile: profile({ focos: ['finalizacao'] }) });
+    const focused = runEngine({
+      today: TODAY,
+      results: [],
+      sessions: [],
+      profile: profile({ focos: ['finalizacao'] }),
+    });
     const p0 = base.ranked.find((r) => r.skill === 'finalizacao')!.priority;
     const p1 = focused.ranked.find((r) => r.skill === 'finalizacao')!;
     assert.ok(p1.priority > p0);
@@ -168,7 +189,12 @@ describe('bem-estar e fadiga', () => {
   test('desconforto forte recomenda descanso', () => {
     const w = assessWellbeing([session('2026-10-13', { discomfort: 3 })], TODAY);
     assert.equal(w.level, 'descanso');
-    const out = runEngine({ today: TODAY, results: [], sessions: [session('2026-10-13', { discomfort: 3 })], profile: null });
+    const out = runEngine({
+      today: TODAY,
+      results: [],
+      sessions: [session('2026-10-13', { discomfort: 3 })],
+      profile: null,
+    });
     assert.equal(out.recommendations[0]?.type, 'descansar');
   });
 
@@ -177,7 +203,10 @@ describe('bem-estar e fadiga', () => {
   });
 
   test('registros antigos não geram alerta', () => {
-    assert.equal(assessWellbeing([session('2026-10-01', { rpe: 10, discomfort: 3 })], TODAY).level, 'ok');
+    assert.equal(
+      assessWellbeing([session('2026-10-01', { rpe: 10, discomfort: 3 })], TODAY).level,
+      'ok',
+    );
   });
 });
 
@@ -193,7 +222,10 @@ describe('pontuação e dificuldade progressiva', () => {
     }));
 
   test('resumo ignora rodadas antecipadas', () => {
-    const r = [...rounds(10, 7), { round: 99, seed: 1, outcome: 'antecipado', success: false, incomplete: true, points: 0 }];
+    const r = [
+      ...rounds(10, 7),
+      { round: 99, seed: 1, outcome: 'antecipado', success: false, incomplete: true, points: 0 },
+    ];
     const s = summarizeRounds(r);
     assert.equal(s.attempts, 10);
     assert.equal(s.successes, 7);

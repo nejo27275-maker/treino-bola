@@ -19,8 +19,9 @@ export class Feedback {
     if (!this.getSettings().som) return;
     try {
       if (!this.ctx) {
-        const Ctor = (globalThis as { AudioContext?: AudioCtor; webkitAudioContext?: AudioCtor }).AudioContext ??
-          (globalThis as { webkitAudioContext?: AudioCtor }).webkitAudioContext;
+        const Ctor =
+          (globalThis as { AudioContext?: AudioCtor; webkitAudioContext?: AudioCtor })
+            .AudioContext ?? (globalThis as { webkitAudioContext?: AudioCtor }).webkitAudioContext;
         if (!Ctor) return;
         this.ctx = new Ctor();
       }
@@ -30,7 +31,13 @@ export class Feedback {
     }
   }
 
-  private tone(freq: number, ms: number, delayMs = 0, type: OscillatorType = 'sine', gain = 0.12): void {
+  private tone(
+    freq: number,
+    ms: number,
+    delayMs = 0,
+    type: OscillatorType = 'sine',
+    gain = 0.12,
+  ): void {
     if (!this.getSettings().som) return;
     this.unlock();
     const ctx = this.ctx;
@@ -74,6 +81,12 @@ export class Feedback {
 
   stimulus(): void {
     this.tone(1046, 180, 0, 'square', 0.08);
+    this.vibrate(80);
+  }
+
+  /** Sinal sonoro com direção: grave = esquerda, agudo = direita. */
+  directional(direction: 'esquerda' | 'direita'): void {
+    this.tone(direction === 'esquerda' ? 440 : 1046, 260, 0, 'square', 0.1);
     this.vibrate(80);
   }
 

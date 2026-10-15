@@ -39,7 +39,9 @@ export function rgbaToGray(
   if (rgba.length < size * 4) throw new Error('Buffer RGBA menor que o tamanho informado');
   const data = out && out.length === size ? out : new Uint8Array(size);
   for (let i = 0, j = 0; i < size; i++, j += 4) {
-    data[i] = ((rgba[j] as number) * 77 + (rgba[j + 1] as number) * 150 + (rgba[j + 2] as number) * 29) >> 8;
+    data[i] =
+      ((rgba[j] as number) * 77 + (rgba[j + 1] as number) * 150 + (rgba[j + 2] as number) * 29) >>
+      8;
   }
   return { width, height, data };
 }

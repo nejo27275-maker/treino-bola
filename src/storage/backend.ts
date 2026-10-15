@@ -84,7 +84,9 @@ export class MemoryBackend implements Backend {
 
   async batch(ops: BatchOp[]): Promise<void> {
     // Valida tudo antes de aplicar (atomicidade).
-    const prepared = ops.map((op) => (op.type === 'put' ? { ...op, key: keyOf(op.store, op.value) } : op));
+    const prepared = ops.map((op) =>
+      op.type === 'put' ? { ...op, key: keyOf(op.store, op.value) } : op,
+    );
     for (const op of prepared) {
       const map = this.data.get(op.store) as Map<string, unknown>;
       if (op.type === 'clear') map.clear();
@@ -208,7 +210,8 @@ export async function openBackend(): Promise<{ backend: Backend; warning?: strin
   if (typeof indexedDB === 'undefined') {
     return {
       backend: new MemoryBackend(),
-      warning: 'Este navegador não oferece armazenamento local: seus dados não serão salvos ao fechar o aplicativo.',
+      warning:
+        'Este navegador não oferece armazenamento local: seus dados não serão salvos ao fechar o aplicativo.',
     };
   }
   try {

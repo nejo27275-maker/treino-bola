@@ -13,7 +13,10 @@ export interface Screen {
 }
 
 export type RouteParams = Record<string, string>;
-export type ScreenFactory = (params: RouteParams, query: URLSearchParams) => Screen | Promise<Screen>;
+export type ScreenFactory = (
+  params: RouteParams,
+  query: URLSearchParams,
+) => Screen | Promise<Screen>;
 
 interface Route {
   pattern: RegExp;
@@ -25,7 +28,10 @@ interface Route {
 export function parseHash(hash: string): { path: string; query: URLSearchParams } {
   const raw = hash.replace(/^#/, '') || '/';
   const [path = '/', queryString = ''] = raw.split('?');
-  return { path: path.startsWith('/') ? path : `/${path}`, query: new URLSearchParams(queryString) };
+  return {
+    path: path.startsWith('/') ? path : `/${path}`,
+    query: new URLSearchParams(queryString),
+  };
 }
 
 export class Router {

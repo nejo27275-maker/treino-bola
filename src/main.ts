@@ -10,7 +10,11 @@ import { RouteNotFound, Router } from './ui/router.ts';
 import { avaliacaoScreen } from './ui/screens/avaliacao.ts';
 import { cameraScreen } from './ui/screens/camera.ts';
 import { configScreen } from './ui/screens/config.ts';
-import { exerciseDetailScreen, exerciseSessionScreen, tecnicoScreen } from './ui/screens/tecnico.ts';
+import {
+  exerciseDetailScreen,
+  exerciseSessionScreen,
+  tecnicoScreen,
+} from './ui/screens/tecnico.ts';
 import { fisicoListScreen, workoutScreen } from './ui/screens/fisico.ts';
 import { historicoScreen, sessionDetailScreen } from './ui/screens/historico.ts';
 import { homeScreen } from './ui/screens/home.ts';
@@ -42,7 +46,12 @@ function buildTabbar(): (active: string) => void {
   const nav = document.getElementById('tabbar');
   if (!nav) return () => {};
   const links = TABS.map((t) => {
-    const a = h('a', { href: t.href, dataset: { tab: t.id } }, icon(t.icon), h('span', null, t.label));
+    const a = h(
+      'a',
+      { href: t.href, dataset: { tab: t.id } },
+      icon(t.icon),
+      h('span', null, t.label),
+    );
     return a;
   });
   nav.replaceChildren(...links);
@@ -69,9 +78,18 @@ function errorView(error: unknown, retry: () => void): HTMLElement {
   return h(
     'section',
     { class: 'card tone-danger' },
-    h('h1', { tabindex: '-1' }, notFound ? 'Página não encontrada' : 'Não foi possível abrir esta tela'),
+    h(
+      'h1',
+      { tabindex: '-1' },
+      notFound ? 'Página não encontrada' : 'Não foi possível abrir esta tela',
+    ),
     h('p', null, notFound ? 'O endereço não corresponde a nenhuma tela do aplicativo.' : message),
-    h('div', { class: 'row' }, notFound ? null : button('Tentar novamente', retry, { variant: 'primary' }), h('a', { class: 'btn', href: '#/' }, 'Ir para o início')),
+    h(
+      'div',
+      { class: 'row' },
+      notFound ? null : button('Tentar novamente', retry, { variant: 'primary' }),
+      h('a', { class: 'btn', href: '#/' }, 'Ir para o início'),
+    ),
   );
 }
 
@@ -109,10 +127,14 @@ async function setupServiceWorker(ctx: AppContext): Promise<void> {
       showBanner(
         'banner-update',
         h('span', null, 'Nova versão do aplicativo disponível.'),
-        button('Atualizar agora', () => ctx.pwa.applyUpdate?.(), { variant: 'primary', small: true }),
+        button('Atualizar agora', () => ctx.pwa.applyUpdate?.(), {
+          variant: 'primary',
+          small: true,
+        }),
       );
     };
-    if (registration.waiting && navigator.serviceWorker.controller) markUpdate(registration.waiting);
+    if (registration.waiting && navigator.serviceWorker.controller)
+      markUpdate(registration.waiting);
     registration.addEventListener('updatefound', () => {
       const worker = registration.installing;
       worker?.addEventListener('statechange', () => {
@@ -133,7 +155,8 @@ async function setupServiceWorker(ctx: AppContext): Promise<void> {
 }
 
 function setupConnectivity(ctx: AppContext): void {
-  const update = () => ctx.setHeaderStatus('offline', navigator.onLine ? null : pill('Offline', 'warn'));
+  const update = () =>
+    ctx.setHeaderStatus('offline', navigator.onLine ? null : pill('Offline', 'warn'));
   window.addEventListener('online', update);
   window.addEventListener('offline', update);
   update();
@@ -180,7 +203,11 @@ async function main(): Promise<void> {
   const { backend, warning } = await openBackend();
   const repo = new Repository(backend);
   const settings = await repo.getSettings().catch(() => null);
-  const ctx = new AppContext(repo, settings ?? { som: true, vibracao: true, tema: 'sistema', reduzirAnimacoes: false }, warning);
+  const ctx = new AppContext(
+    repo,
+    settings ?? { som: true, vibracao: true, tema: 'sistema', reduzirAnimacoes: false },
+    warning,
+  );
   applyTheme(ctx.settings);
   setupGlobalErrors(ctx);
   if (warning) showBanner('banner-storage', h('span', null, warning));
@@ -235,7 +262,11 @@ void main().catch((error) => {
         { class: 'card tone-danger' },
         h('h1', null, 'Não foi possível iniciar o aplicativo'),
         h('p', null, error instanceof Error ? error.message : String(error)),
-        h('p', null, 'Recarregue a página. Se o problema continuar, verifique se o navegador está atualizado.'),
+        h(
+          'p',
+          null,
+          'Recarregue a página. Se o problema continuar, verifique se o navegador está atualizado.',
+        ),
       ),
     );
   }

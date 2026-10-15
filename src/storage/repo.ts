@@ -109,7 +109,9 @@ export class Repository {
 
   async listSessions(): Promise<TrainingSession[]> {
     const sessions = await this.backend.getAll<TrainingSession>('sessions');
-    return sessions.sort((a, b) => (a.startedAt < b.startedAt ? 1 : a.startedAt > b.startedAt ? -1 : 0));
+    return sessions.sort((a, b) =>
+      a.startedAt < b.startedAt ? 1 : a.startedAt > b.startedAt ? -1 : 0,
+    );
   }
 
   async listResults(): Promise<ResultRecord[]> {
@@ -214,7 +216,8 @@ export class Repository {
       if (mode === 'mesclar' && (await this.backend.get('kv', key))) continue;
       ops.push({ type: 'put', store: 'kv', value: { key, value } });
     }
-    if (data.profile) ops.push({ type: 'put', store: 'kv', value: { key: 'onboarding', value: true } });
+    if (data.profile)
+      ops.push({ type: 'put', store: 'kv', value: { key: 'onboarding', value: true } });
     const summary: ImportSummary = { sessions: 0, results: 0, videoAnalyses: 0, skipped: 0 };
     for (const s of data.sessions) {
       if (existingSessions.has(s.id)) summary.skipped++;

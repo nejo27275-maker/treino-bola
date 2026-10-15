@@ -38,7 +38,11 @@ describe('datas de calendário', () => {
     assert.equal(addDays('2028-02-28', 1), '2028-02-29');
     assert.equal(addDays('2026-03-01', -1), '2026-02-28');
     assert.equal(diffDays('2026-10-21', '2026-10-20'), -1);
-    assert.deepEqual(dateRange('2026-10-18', '2026-10-20'), ['2026-10-18', '2026-10-19', '2026-10-20']);
+    assert.deepEqual(dateRange('2026-10-18', '2026-10-20'), [
+      '2026-10-18',
+      '2026-10-19',
+      '2026-10-20',
+    ]);
   });
 
   test('rótulos relativos', () => {

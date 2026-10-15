@@ -13,8 +13,8 @@ import type {
   TrainingSession,
 } from '../core/types.ts';
 import { Feedback } from '../media/sound.ts';
-import type { Repository } from '../storage/repo.ts';
-import { setPref } from '../storage/prefs.ts';
+import { DEFAULT_SETTINGS, type Repository } from '../storage/repo.ts';
+import { clearPrefs, setPref } from '../storage/prefs.ts';
 import { h, type Child } from './dom.ts';
 
 registerErrorLabels(ERROR_LABELS);
@@ -53,7 +53,12 @@ export class AppContext {
   settings: Settings;
   readonly storageWarning?: string;
   readonly feedback: Feedback;
-  readonly pwa: PwaState = { installPrompt: null, swStatus: 'registrando', updateReady: false, installed: false };
+  readonly pwa: PwaState = {
+    installPrompt: null,
+    swStatus: 'registrando',
+    updateReady: false,
+    installed: false,
+  };
   navigate: (path: string) => void = () => {};
   refresh: () => void = () => {};
   private headerStatus = new Map<string, HTMLElement>();
@@ -86,13 +91,31 @@ export class AppContext {
     ]);
     const engine = runEngine({ today, results, sessions, profile });
     const plan = buildPlan({ today, competition, profile, engine, sessions, catalog });
-    return { today, profile, competition, sessions, results, engine, plan, simLevels, onboardingSeen };
+    return {
+      today,
+      profile,
+      competition,
+      sessions,
+      results,
+      engine,
+      plan,
+      simLevels,
+      onboardingSeen,
+    };
   }
 
   async saveSettings(settings: Settings): Promise<void> {
     this.settings = settings;
     await this.repo.saveSettings(settings);
     applyTheme(settings);
+  }
+
+  /** Apaga todos os dados do aplicativo (banco e preferências) e volta ao padrão. */
+  async eraseEverything(): Promise<void> {
+    await this.repo.clearAll();
+    clearPrefs();
+    this.settings = { ...DEFAULT_SETTINGS };
+    applyTheme(this.settings, false);
   }
 
   toast(message: string, kind: 'info' | 'sucesso' | 'erro' = 'info', ms = 4000): void {
@@ -137,10 +160,18 @@ export class AppContext {
           }
         }
       };
-      const cancel = h('button', { type: 'button', class: 'btn ghost', onclick: () => close(false) }, opts.cancelLabel ?? 'Cancelar');
+      const cancel = h(
+        'button',
+        { type: 'button', class: 'btn ghost', onclick: () => close(false) },
+        opts.cancelLabel ?? 'Cancelar',
+      );
       const ok = h(
         'button',
-        { type: 'button', class: opts.danger ? 'btn danger' : 'btn primary', onclick: () => close(true) },
+        {
+          type: 'button',
+          class: opts.danger ? 'btn danger' : 'btn primary',
+          onclick: () => close(true),
+        },
         opts.confirmLabel ?? 'Confirmar',
       );
       const dialog = h(
@@ -148,9 +179,18 @@ export class AppContext {
         { class: 'dialog', role: 'alertdialog', 'aria-modal': 'true', 'aria-labelledby': titleId },
         h('h2', { id: titleId }, opts.title),
         typeof opts.message === 'string' ? h('p', null, opts.message) : opts.message,
-        h('div', { class: 'row', style: { justifyContent: 'flex-end', marginTop: '12px' } }, cancel, ok),
+        h(
+          'div',
+          { class: 'row', style: { justifyContent: 'flex-end', marginTop: '12px' } },
+          cancel,
+          ok,
+        ),
       );
-      const backdrop = h('div', { class: 'dialog-backdrop', onclick: (e: Event) => e.target === backdrop && close(false) }, dialog);
+      const backdrop = h(
+        'div',
+        { class: 'dialog-backdrop', onclick: (e: Event) => e.target === backdrop && close(false) },
+        dialog,
+      );
       root.appendChild(backdrop);
       document.addEventListener('keydown', onKey, true);
       (opts.danger ? cancel : ok).focus();
@@ -179,12 +219,15 @@ export class AppContext {
   }
 }
 
-export function applyTheme(settings: Settings): void {
+/** Aplica tema e animações. Com `persist`, guarda a escolha para a próxima abertura. */
+export function applyTheme(settings: Settings, persist = true): void {
   const root = document.documentElement;
   if (settings.tema === 'sistema') delete root.dataset.theme;
   else root.dataset.theme = settings.tema === 'claro' ? 'light' : 'dark';
   if (settings.reduzirAnimacoes) root.dataset.motion = 'reduce';
   else delete root.dataset.motion;
-  setPref('tema', settings.tema);
-  setPref('movimento', settings.reduzirAnimacoes ? 'reduzir' : 'normal');
+  if (persist) {
+    setPref('tema', settings.tema);
+    setPref('movimento', settings.reduzirAnimacoes ? 'reduzir' : 'normal');
+  }
 }

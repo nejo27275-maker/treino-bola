@@ -38,7 +38,13 @@ export function targetLevel(difficulty: number): number {
 export function scoreExercise(
   e: Exercise,
   skill: SkillId,
-  opts: { difficulty: number; materials: Material[]; space: Space; focusError?: string; avoid?: string[] },
+  opts: {
+    difficulty: number;
+    materials: Material[];
+    space: Space;
+    focusError?: string;
+    avoid?: string[];
+  },
 ): number {
   let score = 0;
   if (e.skills[0] === skill) score += 3;
@@ -54,7 +60,13 @@ export function scoreExercise(
 
 export function pickExercise(
   skill: SkillId,
-  opts: { difficulty: number; materials: Material[]; space: Space; focusError?: string; avoid?: string[] },
+  opts: {
+    difficulty: number;
+    materials: Material[];
+    space: Space;
+    focusError?: string;
+    avoid?: string[];
+  },
 ): Exercise | null {
   const candidates = EXERCISES.filter((e) => !e.teste && e.skills.includes(skill));
   let best: Exercise | null = null;

@@ -8,7 +8,17 @@ import { logExercise } from '../../core/sessionLog.ts';
 import { SKILLS, isSkillId } from '../../core/skills.ts';
 import type { DiscomfortLevel, SkillId } from '../../core/types.ts';
 import type { AppContext } from '../app.ts';
-import { button, card, emptyState, field, linkButton, pageHeader, pill, progress, select } from '../components.ts';
+import {
+  button,
+  card,
+  emptyState,
+  field,
+  linkButton,
+  pageHeader,
+  pill,
+  progress,
+  select,
+} from '../components.ts';
 import { h, replaceChildren } from '../dom.ts';
 import type { Screen } from '../router.ts';
 import { SignalGenerator, Stopwatch } from '../timers.ts';
@@ -26,7 +36,12 @@ function exerciseCard(e: Exercise, recommended: boolean, canDo: boolean): HTMLEl
       h(
         'div',
         { class: 'card flat stack', style: { gap: '6px' } },
-        h('div', { class: 'row spread' }, h('h2', { style: { fontSize: '1.05rem', margin: '0' } }, e.nome), e.teste ? pill('Teste', 'warn') : null),
+        h(
+          'div',
+          { class: 'row spread' },
+          h('h2', { style: { fontSize: '1.05rem', margin: '0' } }, e.nome),
+          e.teste ? pill('Teste', 'warn') : null,
+        ),
         h(
           'div',
           { class: 'row' },
@@ -36,7 +51,13 @@ function exerciseCard(e: Exercise, recommended: boolean, canDo: boolean): HTMLEl
           recommended ? pill('Recomendado', 'info') : null,
         ),
         h('p', { class: 'small muted', style: { margin: '0' } }, e.objetivo),
-        canDo ? null : h('p', { class: 'small', style: { margin: '0', color: 'var(--warn)' } }, 'Precisa de material que você não marcou — veja a alternativa no exercício.'),
+        canDo
+          ? null
+          : h(
+              'p',
+              { class: 'small', style: { margin: '0', color: 'var(--warn)' } },
+              'Precisa de material que você não marcou — veja a alternativa no exercício.',
+            ),
       ),
     ),
   );
@@ -46,15 +67,32 @@ export async function tecnicoScreen(ctx: AppContext, query: URLSearchParams): Pr
   const snap = await ctx.snapshot();
   const profile = snap.profile;
   const materials = profile?.materiais?.length ? profile.materiais : null;
-  const recommendedSkills = new Set(snap.engine.recommendations.map((r) => r.skill).filter((s): s is SkillId => s !== null));
+  const recommendedSkills = new Set(
+    snap.engine.recommendations.map((r) => r.skill).filter((s): s is SkillId => s !== null),
+  );
   const initialSkill = query.get('fundamento');
   const skillOptions = [
     { value: 'todos', label: 'Todos os fundamentos' },
-    ...[...new Set(EXERCISES.flatMap((e) => e.skills))].map((s) => ({ value: s, label: SKILLS[s].nome })),
+    ...[...new Set(EXERCISES.flatMap((e) => e.skills))].map((s) => ({
+      value: s,
+      label: SKILLS[s].nome,
+    })),
   ];
-  const skillSelect = select(skillOptions, initialSkill && isSkillId(initialSkill) ? initialSkill : 'todos', 'filtro-fundamento');
-  const onlyMine = h('input', { type: 'checkbox', checked: Boolean(materials), id: 'filtro-materiais' });
-  const showTests = h('input', { type: 'checkbox', checked: query.get('testes') === '1', id: 'filtro-testes' });
+  const skillSelect = select(
+    skillOptions,
+    initialSkill && isSkillId(initialSkill) ? initialSkill : 'todos',
+    'filtro-fundamento',
+  );
+  const onlyMine = h('input', {
+    type: 'checkbox',
+    checked: Boolean(materials),
+    id: 'filtro-materiais',
+  });
+  const showTests = h('input', {
+    type: 'checkbox',
+    checked: query.get('testes') === '1',
+    id: 'filtro-testes',
+  });
   const list = h('ul', { class: 'list', style: { gap: '10px' }, 'aria-live': 'polite' });
 
   const render = () => {
@@ -62,29 +100,64 @@ export async function tecnicoScreen(ctx: AppContext, query: URLSearchParams): Pr
     const filtered = EXERCISES.filter((e) => {
       if (!showTests.checked && e.teste) return false;
       if (skill !== 'todos' && !e.skills.includes(skill as SkillId)) return false;
-      if (onlyMine.checked && materials && !hasMaterials(e, materials) && !e.semMaterial) return false;
+      if (onlyMine.checked && materials && !hasMaterials(e, materials) && !e.semMaterial)
+        return false;
       if (onlyMine.checked && profile && !fitsSpace(e, profile.espaco)) return false;
       return true;
     });
     replaceChildren(
       list,
       filtered.length
-        ? filtered.map((e) => exerciseCard(e, e.skills.some((s) => recommendedSkills.has(s)), !materials || hasMaterials(e, materials)))
-        : h('li', null, emptyState('Nenhum exercício com esses filtros', 'Tente outro fundamento ou desmarque o filtro de materiais.')),
+        ? filtered.map((e) =>
+            exerciseCard(
+              e,
+              e.skills.some((s) => recommendedSkills.has(s)),
+              !materials || hasMaterials(e, materials),
+            ),
+          )
+        : h(
+            'li',
+            null,
+            emptyState(
+              'Nenhum exercício com esses filtros',
+              'Tente outro fundamento ou desmarque o filtro de materiais.',
+            ),
+          ),
     );
   };
-  for (const control of [skillSelect, onlyMine, showTests]) control.addEventListener('change', render);
+  for (const control of [skillSelect, onlyMine, showTests])
+    control.addEventListener('change', render);
   render();
 
   const el = h(
     'div',
     { class: 'stack' },
-    pageHeader('Treinamento técnico', 'Cada exercício tem objetivo, organização, instruções, critério de sucesso, erros comuns e variações.', { href: '#/treinar', label: 'Treinar' }),
+    pageHeader(
+      'Treinamento técnico',
+      'Cada exercício tem objetivo, organização, instruções, critério de sucesso, erros comuns e variações.',
+      { href: '#/treinar', label: 'Treinar' },
+    ),
     card(
       null,
       field('Fundamento', skillSelect),
-      h('label', { class: 'choice' }, onlyMine, h('span', null, profile ? 'Só o que posso fazer com meus materiais e espaço' : 'Filtrar por materiais (configure no perfil)')),
-      h('label', { class: 'choice', style: { marginTop: '8px' } }, showTests, h('span', null, 'Mostrar testes de linha de base')),
+      h(
+        'label',
+        { class: 'choice' },
+        onlyMine,
+        h(
+          'span',
+          null,
+          profile
+            ? 'Só o que posso fazer com meus materiais e espaço'
+            : 'Filtrar por materiais (configure no perfil)',
+        ),
+      ),
+      h(
+        'label',
+        { class: 'choice', style: { marginTop: '8px' } },
+        showTests,
+        h('span', null, 'Mostrar testes de linha de base'),
+      ),
     ),
     list,
   );
@@ -104,24 +177,94 @@ export async function exerciseDetailScreen(ctx: AppContext, id: string): Promise
     'div',
     { class: 'stack' },
     pageHeader(e.nome, null, { href: '#/tecnico', label: 'Biblioteca' }),
-    h('div', { class: 'row' }, e.skills.map((s, i) => pill(SKILLS[s].nome, i === 0 ? 'accent' : undefined)), pill(LEVEL_LABEL[e.nivel] ?? ''), pill(`${e.duracaoMin} min`), e.teste ? pill('Teste de linha de base', 'warn') : null),
+    h(
+      'div',
+      { class: 'row' },
+      e.skills.map((s, i) => pill(SKILLS[s].nome, i === 0 ? 'accent' : undefined)),
+      pill(LEVEL_LABEL[e.nivel] ?? ''),
+      pill(`${e.duracaoMin} min`),
+      e.teste ? pill('Teste de linha de base', 'warn') : null,
+    ),
     card(
       { class: 'stack' },
       section('1. Objetivo', h('p', null, e.objetivo)),
-      section('2. Materiais', h('ul', null, e.materiais.map((m) => h('li', null, MATERIAL_LABEL[m]))), e.semMaterial ? h('p', { class: 'small' }, h('strong', null, 'Sem o material? '), e.semMaterial) : null, h('p', { class: 'small muted' }, `Espaço mínimo: ${SPACE_LABEL[e.espacoMin]}`)),
+      section(
+        '2. Materiais',
+        h(
+          'ul',
+          null,
+          e.materiais.map((m) => h('li', null, MATERIAL_LABEL[m])),
+        ),
+        e.semMaterial
+          ? h('p', { class: 'small' }, h('strong', null, 'Sem o material? '), e.semMaterial)
+          : null,
+        h('p', { class: 'small muted' }, `Espaço mínimo: ${SPACE_LABEL[e.espacoMin]}`),
+      ),
       section('3. Organização do espaço', h('p', null, e.organizacao)),
-      section('4. Instruções', h('ol', { class: 'steps' }, e.instrucoes.map((i) => h('li', null, i)))),
-      section('5. Duração e repetições', h('p', null, `${e.volume} (cerca de ${e.duracaoMin} minutos).`)),
-      section('6. Pausas', h('p', null, e.pausaSeg > 0 ? `${e.pausaSeg} segundos de descanso entre as séries. Beba água.` : 'Sem pausa programada: é um teste curto.')),
+      section(
+        '4. Instruções',
+        h(
+          'ol',
+          { class: 'steps' },
+          e.instrucoes.map((i) => h('li', null, i)),
+        ),
+      ),
+      section(
+        '5. Duração e repetições',
+        h('p', null, `${e.volume} (cerca de ${e.duracaoMin} minutos).`),
+      ),
+      section(
+        '6. Pausas',
+        h(
+          'p',
+          null,
+          e.pausaSeg > 0
+            ? `${e.pausaSeg} segundos de descanso entre as séries. Beba água.`
+            : 'Sem pausa programada: é um teste curto.',
+        ),
+      ),
       section('7. Critério de sucesso', h('p', null, e.criterioSucesso)),
-      section('8 e 9. Erros comuns e como corrigir', h('ul', null, e.errosComuns.map((c) => h('li', null, h('strong', null, `${c.texto}: `), c.correcao)))),
-      section('10. Variações', h('p', null, h('strong', null, 'Mais fácil: '), e.maisFacil), h('p', null, h('strong', null, 'Mais difícil: '), e.maisDificil)),
+      section(
+        '8 e 9. Erros comuns e como corrigir',
+        h(
+          'ul',
+          null,
+          e.errosComuns.map((c) => h('li', null, h('strong', null, `${c.texto}: `), c.correcao)),
+        ),
+      ),
+      section(
+        '10. Variações',
+        h('p', null, h('strong', null, 'Mais fácil: '), e.maisFacil),
+        h('p', null, h('strong', null, 'Mais difícil: '), e.maisDificil),
+      ),
     ),
-    h('div', { class: 'row' }, linkButton(`#/tecnico/${e.id}/sessao`, e.teste ? 'Iniciar teste (10 tentativas)' : 'Iniciar sessão', { variant: 'primary', block: true })),
+    h(
+      'div',
+      { class: 'row' },
+      linkButton(
+        `#/tecnico/${e.id}/sessao`,
+        e.teste ? 'Iniciar teste (10 tentativas)' : 'Iniciar sessão',
+        { variant: 'primary', block: true },
+      ),
+    ),
     sessions.length
       ? card(
           { title: 'Suas últimas sessões deste exercício' },
-          h('ul', { class: 'list' }, sessions.map((s) => h('li', null, h('a', { href: `#/historico/${s.id}` }, dayLabel(s.date, today)), ' · ', s.summary && s.summary.attempts > 0 ? `${s.summary.successes}/${s.summary.attempts} (${percent(s.summary.successes / s.summary.attempts)})` : 'sem contagem'))),
+          h(
+            'ul',
+            { class: 'list' },
+            sessions.map((s) =>
+              h(
+                'li',
+                null,
+                h('a', { href: `#/historico/${s.id}` }, dayLabel(s.date, today)),
+                ' · ',
+                s.summary && s.summary.attempts > 0
+                  ? `${s.summary.successes}/${s.summary.attempts} (${percent(s.summary.successes / s.summary.attempts)})`
+                  : 'sem contagem',
+              ),
+            ),
+          ),
         )
       : null,
   );
@@ -151,9 +294,16 @@ export async function exerciseSessionScreen(ctx: AppContext, id: string): Promis
   const rateEl = h('p', { class: 'muted small' });
   const progressWrap = h('div');
   const statusEl = h('p', { role: 'status', 'aria-live': 'polite', class: 'small' });
-  const errorChips = h('div', { class: 'chip-row', 'aria-label': 'O que aconteceu no erro? (opcional)' });
+  const errorChips = h('div', {
+    class: 'chip-row',
+    'aria-label': 'O que aconteceu no erro? (opcional)',
+  });
   const body = h('div', { class: 'stack' });
-  const signalDisplay = h('div', { class: 'signal-display', 'aria-live': 'assertive', role: 'status' }, '—');
+  const signalDisplay = h(
+    'div',
+    { class: 'signal-display', 'aria-live': 'assertive', role: 'status' },
+    '—',
+  );
   let signalHideTimer: number | null = null;
 
   const totalPlanned = e.series * e.repeticoes;
@@ -177,7 +327,10 @@ export async function exerciseSessionScreen(ctx: AppContext, id: string): Promis
     const info = seriesInfo();
     seriesEl.textContent = `Série ${info.current} de ${e.series}`;
     countEl.textContent = `${successes} / ${attempts}`;
-    rateEl.textContent = attempts > 0 ? `Acertos: ${percent(successes / attempts)} · repetição ${info.reps} de ${e.repeticoes} nesta série` : `Meta: ${e.repeticoes} repetições por série`;
+    rateEl.textContent =
+      attempts > 0
+        ? `Acertos: ${percent(successes / attempts)} · repetição ${info.reps} de ${e.repeticoes} nesta série`
+        : `Meta: ${e.repeticoes} repetições por série`;
     replaceChildren(progressWrap, progress(attempts / totalPlanned, 'Progresso do exercício'));
   };
 
@@ -217,7 +370,10 @@ export async function exerciseSessionScreen(ctx: AppContext, id: string): Promis
     } else {
       ctx.feedback.error();
     }
-    statusEl.textContent = kind === 'acerto' ? 'Acerto registrado.' : 'Erro registrado. Se quiser, marque o que aconteceu.';
+    statusEl.textContent =
+      kind === 'acerto'
+        ? 'Acerto registrado.'
+        : 'Erro registrado. Se quiser, marque o que aconteceu.';
     renderErrorChips(kind === 'erro');
     if (attempts % e.repeticoes === 0) {
       if (attempts >= totalPlanned) {
@@ -248,7 +404,11 @@ export async function exerciseSessionScreen(ctx: AppContext, id: string): Promis
       errorChips,
       show
         ? [
-            h('span', { class: 'small muted', style: { width: '100%' } }, 'O que aconteceu? (opcional)'),
+            h(
+              'span',
+              { class: 'small muted', style: { width: '100%' } },
+              'O que aconteceu? (opcional)',
+            ),
             ...e.errosComuns.map((c) =>
               h(
                 'button',
@@ -291,37 +451,68 @@ export async function exerciseSessionScreen(ctx: AppContext, id: string): Promis
 
   const signalsCard = () => {
     if (!e.sinais) return null;
-    const toggle = button(signals?.running ? 'Parar sinais' : 'Ativar sinais do aplicativo', () => {
-      if (signals?.running) {
-        signals.stop();
-        toggle.textContent = 'Ativar sinais do aplicativo';
-      } else {
-        signals = new SignalGenerator(e.sinais!, (sig) => showSignal(sig.text, sig.label));
-        signals.start();
-        toggle.textContent = 'Parar sinais';
-      }
-    }, { small: true });
+    const toggle = button(
+      signals?.running ? 'Parar sinais' : 'Ativar sinais do aplicativo',
+      () => {
+        if (signals?.running) {
+          signals.stop();
+          toggle.textContent = 'Ativar sinais do aplicativo';
+        } else {
+          signals = new SignalGenerator(e.sinais!, (sig) => showSignal(sig.text, sig.label));
+          signals.start();
+          toggle.textContent = 'Parar sinais';
+        }
+      },
+      { small: true },
+    );
     return card(
       { title: 'Sinais do aplicativo', headingLevel: 3 },
-      h('p', { class: 'small muted' }, 'Apoie o celular onde você consiga ver a tela. O aplicativo mostra sinais (e toca um bipe, se o som estiver ligado) em intervalos aleatórios — como um parceiro apontando.'),
+      h(
+        'p',
+        { class: 'small muted' },
+        'Apoie o celular onde você consiga ver a tela. O aplicativo mostra sinais (e toca um bipe, se o som estiver ligado) em intervalos aleatórios — como um parceiro apontando.',
+      ),
       signalDisplay,
       h('div', { class: 'row', style: { marginTop: '8px' } }, toggle),
     );
   };
 
   const summaryForm = () => {
-    const rpeSelect = select([{ value: '', label: 'Não informar' }, ...RPE_SCALE.map((r) => ({ value: String(r.value), label: r.label }))], '', 'rpe');
+    const rpeSelect = select(
+      [
+        { value: '', label: 'Não informar' },
+        ...RPE_SCALE.map((r) => ({ value: String(r.value), label: r.label })),
+      ],
+      '',
+      'rpe',
+    );
     const discomfort = h(
       'fieldset',
       null,
       h('legend', null, 'Sentiu algum desconforto?'),
-      h('div', { class: 'choice-grid' }, DISCOMFORT_LABELS.map((label, i) => h('label', { class: 'choice' }, h('input', { type: 'radio', name: 'desconforto', value: String(i), checked: i === 0 }), h('span', null, label)))),
+      h(
+        'div',
+        { class: 'choice-grid' },
+        DISCOMFORT_LABELS.map((label, i) =>
+          h(
+            'label',
+            { class: 'choice' },
+            h('input', { type: 'radio', name: 'desconforto', value: String(i), checked: i === 0 }),
+            h('span', null, label),
+          ),
+        ),
+      ),
     );
-    const notes = h('textarea', { maxlength: 2000, placeholder: 'Opcional: como foi, o que sentiu, o que quer ajustar.' });
+    const notes = h('textarea', {
+      maxlength: 2000,
+      placeholder: 'Opcional: como foi, o que sentiu, o que quer ajustar.',
+    });
     const saveBtn = button('Salvar sessão', () => void save(true), { variant: 'primary' });
     const save = async (counted: boolean) => {
       saveBtn.disabled = true;
-      const discomfortValue = Number((discomfort.querySelector('input:checked') as HTMLInputElement | null)?.value ?? 0) as DiscomfortLevel;
+      const discomfortValue = Number(
+        (discomfort.querySelector('input:checked') as HTMLInputElement | null)?.value ?? 0,
+      ) as DiscomfortLevel;
       const logged = logExercise({
         exercise: e,
         startedAt,
@@ -351,24 +542,62 @@ export async function exerciseSessionScreen(ctx: AppContext, id: string): Promis
     };
     return card(
       { title: 'Resumo da sessão' },
-      h('div', { class: 'grid-3' },
-        h('div', { class: 'stat' }, h('span', { class: 'value' }, String(attempts)), h('span', { class: 'label' }, 'tentativas')),
-        h('div', { class: 'stat' }, h('span', { class: 'value' }, String(successes)), h('span', { class: 'label' }, 'acertos')),
-        h('div', { class: 'stat' }, h('span', { class: 'value' }, attempts ? percent(successes / attempts) : '—'), h('span', { class: 'label' }, 'aproveitamento')),
+      h(
+        'div',
+        { class: 'grid-3' },
+        h(
+          'div',
+          { class: 'stat' },
+          h('span', { class: 'value' }, String(attempts)),
+          h('span', { class: 'label' }, 'tentativas'),
+        ),
+        h(
+          'div',
+          { class: 'stat' },
+          h('span', { class: 'value' }, String(successes)),
+          h('span', { class: 'label' }, 'acertos'),
+        ),
+        h(
+          'div',
+          { class: 'stat' },
+          h('span', { class: 'value' }, attempts ? percent(successes / attempts) : '—'),
+          h('span', { class: 'label' }, 'aproveitamento'),
+        ),
       ),
-      h('p', { class: 'small muted', style: { marginTop: '8px' } }, `Tempo ativo: ${clock(stopwatch.elapsedMs() / 1000)}. Origem: contagem manual (você contou os acertos).`),
+      h(
+        'p',
+        { class: 'small muted', style: { marginTop: '8px' } },
+        `Tempo ativo: ${clock(stopwatch.elapsedMs() / 1000)}. Origem: contagem manual (você contou os acertos).`,
+      ),
       field('Esforço percebido (0 a 10)', rpeSelect),
       discomfort,
       field('Observações', notes),
-      h('div', { class: 'row' },
+      h(
+        'div',
+        { class: 'row' },
         attempts > 0 ? saveBtn : null,
-        button(attempts > 0 ? 'Salvar sem a contagem' : 'Salvar como concluído (sem contagem)', () => void save(false), { variant: 'ghost' }),
-        button('Descartar', async () => {
-          if (await ctx.confirm({ title: 'Descartar sessão?', message: 'Nada desta sessão será salvo.', confirmLabel: 'Descartar', danger: true })) {
-            phase = 'salvo';
-            ctx.navigate(`/tecnico/${e.id}`);
-          }
-        }, { variant: 'danger' }),
+        button(
+          attempts > 0 ? 'Salvar sem a contagem' : 'Salvar como concluído (sem contagem)',
+          () => void save(false),
+          { variant: 'ghost' },
+        ),
+        button(
+          'Descartar',
+          async () => {
+            if (
+              await ctx.confirm({
+                title: 'Descartar sessão?',
+                message: 'Nada desta sessão será salvo.',
+                confirmLabel: 'Descartar',
+                danger: true,
+              })
+            ) {
+              phase = 'salvo';
+              ctx.navigate(`/tecnico/${e.id}`);
+            }
+          },
+          { variant: 'danger' },
+        ),
       ),
       statusEl,
     );
@@ -379,10 +608,29 @@ export async function exerciseSessionScreen(ctx: AppContext, id: string): Promis
       body,
       card(
         { title: 'Sessão registrada ✓', tone: discomfort >= 2 ? 'warn' : 'accent' },
-        h('p', null, attempts > 0 ? `${successes} acertos em ${attempts} tentativas (${percent(successes / attempts)}).` : 'Sessão registrada sem contagem de acertos.'),
-        discomfort === 3 ? h('p', null, 'Você marcou desconforto forte: descanse e avise um adulto responsável. Se a dor continuar, procure um profissional de saúde.') : null,
-        discomfort === 2 ? h('p', null, 'Desconforto moderado: amanhã, faça apenas atividades leves.') : null,
-        h('div', { class: 'row' }, linkButton(`#/historico/${sessionId}`, 'Ver no histórico'), linkButton('#/', 'Ver novas prioridades', { variant: 'primary' })),
+        h(
+          'p',
+          null,
+          attempts > 0
+            ? `${successes} acertos em ${attempts} tentativas (${percent(successes / attempts)}).`
+            : 'Sessão registrada sem contagem de acertos.',
+        ),
+        discomfort === 3
+          ? h(
+              'p',
+              null,
+              'Você marcou desconforto forte: descanse e avise um adulto responsável. Se a dor continuar, procure um profissional de saúde.',
+            )
+          : null,
+        discomfort === 2
+          ? h('p', null, 'Desconforto moderado: amanhã, faça apenas atividades leves.')
+          : null,
+        h(
+          'div',
+          { class: 'row' },
+          linkButton(`#/historico/${sessionId}`, 'Ver no histórico'),
+          linkButton('#/', 'Ver novas prioridades', { variant: 'primary' }),
+        ),
       ),
     );
   };
@@ -397,29 +645,53 @@ export async function exerciseSessionScreen(ctx: AppContext, id: string): Promis
         ? card(
             null,
             h('p', null, h('strong', null, 'Critério de sucesso: '), e.criterioSucesso),
-            h('p', { class: 'small muted' }, 'Toque em "Acerto" ou "Erro" depois de cada repetição. O tempo só conta enquanto a sessão está ativa.'),
-            button('Começar', () => {
-              phase = 'ativo';
-              stopwatch.start();
-              ctx.feedback.unlock();
-              render();
-            }, { variant: 'primary', block: true, big: true }),
+            h(
+              'p',
+              { class: 'small muted' },
+              'Toque em "Acerto" ou "Erro" depois de cada repetição. O tempo só conta enquanto a sessão está ativa.',
+            ),
+            button(
+              'Começar',
+              () => {
+                phase = 'ativo';
+                stopwatch.start();
+                ctx.feedback.unlock();
+                render();
+              },
+              { variant: 'primary', block: true, big: true },
+            ),
           )
         : phase === 'descanso'
           ? card(
               { title: 'Descanso', tone: 'accent' },
               h('p', { class: 'big-number', id: 'rest-left', 'aria-live': 'off' }, clock(restLeft)),
-              h('p', null, `Série ${seriesInfo().completed} concluída. Respire e beba água. Próxima: série ${seriesInfo().completed + 1} de ${e.series}.`),
+              h(
+                'p',
+                null,
+                `Série ${seriesInfo().completed} concluída. Respire e beba água. Próxima: série ${seriesInfo().completed + 1} de ${e.series}.`,
+              ),
               button('Pular descanso', endRest, { block: true }),
             )
           : card(
               null,
-              h('div', { class: 'counter-pad' },
-                button('✓ Acerto', () => register('acerto'), { variant: 'success', big: true, disabled: phase !== 'ativo' }),
-                button('✗ Erro', () => register('erro'), { variant: 'fail', big: true, disabled: phase !== 'ativo' }),
+              h(
+                'div',
+                { class: 'counter-pad' },
+                button('✓ Acerto', () => register('acerto'), {
+                  variant: 'success',
+                  big: true,
+                  disabled: phase !== 'ativo',
+                }),
+                button('✗ Erro', () => register('erro'), {
+                  variant: 'fail',
+                  big: true,
+                  disabled: phase !== 'ativo',
+                }),
               ),
               errorChips,
-              h('div', { class: 'row', style: { marginTop: '10px' } },
+              h(
+                'div',
+                { class: 'row', style: { marginTop: '10px' } },
                 button(phase === 'pausado' ? 'Continuar' : 'Pausar', () => {
                   if (phase === 'pausado') {
                     phase = 'ativo';
@@ -436,11 +708,31 @@ export async function exerciseSessionScreen(ctx: AppContext, id: string): Promis
             );
     replaceChildren(
       body,
-      card(null, h('div', { class: 'row spread' }, seriesEl, timerEl), countEl, rateEl, progressWrap),
+      card(
+        null,
+        h('div', { class: 'row spread' }, seriesEl, timerEl),
+        countEl,
+        rateEl,
+        progressWrap,
+      ),
       controls,
       statusEl,
       phase !== 'pronto' ? signalsCard() : null,
-      h('details', { class: 'card flat' }, h('summary', null, 'Instruções e erros comuns'), h('ol', { class: 'steps' }, e.instrucoes.map((i) => h('li', null, i))), h('ul', null, e.errosComuns.map((c) => h('li', null, `${c.texto} → ${c.correcao}`)))),
+      h(
+        'details',
+        { class: 'card flat' },
+        h('summary', null, 'Instruções e erros comuns'),
+        h(
+          'ol',
+          { class: 'steps' },
+          e.instrucoes.map((i) => h('li', null, i)),
+        ),
+        h(
+          'ul',
+          null,
+          e.errosComuns.map((c) => h('li', null, `${c.texto} → ${c.correcao}`)),
+        ),
+      ),
     );
     updateCounters();
   };
@@ -448,13 +740,28 @@ export async function exerciseSessionScreen(ctx: AppContext, id: string): Promis
   render();
   tickTimer = window.setInterval(tick, 250);
 
-  const el = h('div', { class: 'stack' }, pageHeader(e.nome, e.teste ? 'Teste de linha de base: 10 tentativas nas mesmas condições.' : e.volume, { href: `#/tecnico/${e.id}`, label: 'Exercício' }), body);
+  const el = h(
+    'div',
+    { class: 'stack' },
+    pageHeader(
+      e.nome,
+      e.teste ? 'Teste de linha de base: 10 tentativas nas mesmas condições.' : e.volume,
+      { href: `#/tecnico/${e.id}`, label: 'Exercício' },
+    ),
+    body,
+  );
   return {
     title: `Sessão: ${e.nome}`,
     el,
     canLeave: async () => {
       if (phase === 'salvo' || attempts === 0) return true;
-      return ctx.confirm({ title: 'Sair sem salvar?', message: 'Você registrou tentativas nesta sessão. Se sair agora, elas serão perdidas.', confirmLabel: 'Sair sem salvar', cancelLabel: 'Continuar a sessão', danger: true });
+      return ctx.confirm({
+        title: 'Sair sem salvar?',
+        message: 'Você registrou tentativas nesta sessão. Se sair agora, elas serão perdidas.',
+        confirmLabel: 'Sair sem salvar',
+        cancelLabel: 'Continuar a sessão',
+        danger: true,
+      });
     },
     destroy: () => {
       stopTimers();

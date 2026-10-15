@@ -118,7 +118,10 @@ function tryGenerate(rng: Rng, seed: number, difficulty: number): DecisionScenar
     });
   } else if (archetype === 'passe') {
     // Marcador fechando a frente; um colega livre com corredor aberto.
-    defenders.push({ id: 'a1', pos: polar(player, rng.range(2.6, 3.4), up + rng.range(-0.3, 0.3)) });
+    defenders.push({
+      id: 'a1',
+      pos: polar(player, rng.range(2.6, 3.4), up + rng.range(-0.3, 0.3)),
+    });
     const freeSide = rng.chance(0.5) ? -1 : 1;
     teammates.push({
       id: 'c1',
@@ -137,9 +140,16 @@ function tryGenerate(rng: Rng, seed: number, difficulty: number): DecisionScenar
     // Pressão forte (por trás ou de lado), sem espaço e sem colega livre.
     defenders.push({
       id: 'a1',
-      pos: polar(player, rng.range(1.2, 1.9), rng.pick([0, Math.PI, Math.PI / 2]) + rng.range(-0.4, 0.4)),
+      pos: polar(
+        player,
+        rng.range(1.2, 1.9),
+        rng.pick([0, Math.PI, Math.PI / 2]) + rng.range(-0.4, 0.4),
+      ),
     });
-    defenders.push({ id: 'a2', pos: polar(player, rng.range(2.6, 3.4), up + rng.range(-0.3, 0.3)) });
+    defenders.push({
+      id: 'a2',
+      pos: polar(player, rng.range(2.6, 3.4), up + rng.range(-0.3, 0.3)),
+    });
     for (let i = 0; i < nMates; i++) {
       const side = i % 2 === 0 ? -1 : 1;
       const mate = polar(player, rng.range(6, 9), up + side * rng.range(0.8, 1.3));
@@ -191,7 +201,9 @@ export function evaluateDecision(
   const facts = [
     `espaço à frente: ${a.spaceAhead >= 10 ? 'mais de 10 m' : fmt(a.spaceAhead)}`,
     `marcador mais perto: ${fmt(a.nearestDefender)}`,
-    a.bestTeammate ? `colega ${a.bestTeammate.replace('c', '')} com corredor livre` : 'nenhum colega livre',
+    a.bestTeammate
+      ? `colega ${a.bestTeammate.replace('c', '')} com corredor livre`
+      : 'nenhum colega livre',
   ].join('; ');
   if (a.accepted.includes(choice)) {
     const isBest = choice === a.best;

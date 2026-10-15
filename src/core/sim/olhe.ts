@@ -112,7 +112,10 @@ function place(rng: Rng, center: Vec, minR: number, maxR: number, a0: number, a1
   const angle = rng.range(a0, a1);
   const r = rng.range(minR, maxR);
   const p = vec(center.x + Math.cos(angle) * r, center.y + Math.sin(angle) * r);
-  return vec(Math.min(FIELD.width - 1, Math.max(1, p.x)), Math.min(FIELD.length - 1, Math.max(1, p.y)));
+  return vec(
+    Math.min(FIELD.width - 1, Math.max(1, p.x)),
+    Math.min(FIELD.length - 1, Math.max(1, p.y)),
+  );
 }
 
 function tryGenerate(rng: Rng, seed: number, difficulty: number): ScanScenario {
@@ -131,19 +134,34 @@ function tryGenerate(rng: Rng, seed: number, difficulty: number): ScanScenario {
   const lateralAngle = sideSign < 0 ? Math.PI + rng.range(-0.35, 0.2) : rng.range(-0.2, 0.35);
   if (archetype === 'livre') {
     defenders.push({ id: 'a1', pos: place(rng, player, 7, 10, up - 1.2, up + 1.2) });
-    teammates.push({ id: 'c1', label: '1', pos: place(rng, player, 7, 10, lateralAngle, lateralAngle) });
+    teammates.push({
+      id: 'c1',
+      label: '1',
+      pos: place(rng, player, 7, 10, lateralAngle, lateralAngle),
+    });
   } else if (archetype === 'pressao_com_opcao') {
     defenders.push({ id: 'a1', pos: place(rng, player, 1.2, 1.9, up - 0.5, up + 0.5) });
-    teammates.push({ id: 'c1', label: '1', pos: place(rng, player, 6, 9, lateralAngle, lateralAngle) });
+    teammates.push({
+      id: 'c1',
+      label: '1',
+      pos: place(rng, player, 6, 9, lateralAngle, lateralAngle),
+    });
   } else if (archetype === 'pressao_sem_opcao') {
     defenders.push({ id: 'a1', pos: place(rng, player, 1.2, 1.9, up - 0.5, up + 0.5) });
     const mate = place(rng, player, 6, 9, lateralAngle, lateralAngle);
     teammates.push({ id: 'c1', label: '1', pos: mate });
     // Marcador colado no companheiro lateral.
-    defenders.push({ id: 'a2', pos: vec(mate.x + rng.range(-0.8, 0.8), mate.y + rng.range(-1.2, -0.6)) });
+    defenders.push({
+      id: 'a2',
+      pos: vec(mate.x + rng.range(-0.8, 0.8), mate.y + rng.range(-1.2, -0.6)),
+    });
   } else {
     defenders.push({ id: 'a1', pos: place(rng, player, 2.8, 3.8, up - 0.4, up + 0.4) });
-    teammates.push({ id: 'c1', label: '1', pos: place(rng, player, 6, 9, lateralAngle, lateralAngle) });
+    teammates.push({
+      id: 'c1',
+      label: '1',
+      pos: place(rng, player, 6, 9, lateralAngle, lateralAngle),
+    });
   }
   if (difficulty >= 3) {
     // Um adversário extra distante (ruído visual que precisa ser lido).

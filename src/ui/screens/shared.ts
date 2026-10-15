@@ -69,7 +69,9 @@ export function activityHref(session: TrainingSession): string | null {
 export function sessionSummaryText(s: TrainingSession): string {
   const parts: string[] = [];
   if (s.summary && s.summary.attempts > 0) {
-    parts.push(`${s.summary.successes}/${s.summary.attempts} acertos (${percent(s.summary.successes / s.summary.attempts)})`);
+    parts.push(
+      `${s.summary.successes}/${s.summary.attempts} acertos (${percent(s.summary.successes / s.summary.attempts)})`,
+    );
     if (s.summary.avgResponseMs) parts.push(`tempo médio ${millis(s.summary.avgResponseMs)}`);
     if (typeof s.summary.score === 'number') parts.push(`${s.summary.score} pontos`);
   } else if (s.kind === 'autoavaliacao') {
@@ -93,5 +95,9 @@ export function simName(id: string): string {
 }
 
 export function loadingView(): HTMLElement {
-  return h('div', { class: 'boot', role: 'status', 'aria-live': 'polite' }, h('p', null, 'Carregando…'));
+  return h(
+    'div',
+    { class: 'boot', role: 'status', 'aria-live': 'polite' },
+    h('p', null, 'Carregando…'),
+  );
 }

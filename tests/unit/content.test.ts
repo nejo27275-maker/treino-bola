@@ -15,7 +15,10 @@ describe('biblioteca de exercícios técnicos', () => {
     assert.equal(new Set(ids).size, ids.length);
     for (const e of EXERCISES) {
       assert.ok(e.skills.length > 0 && e.skills.every(isSkillId), e.id);
-      assert.ok(e.materiais.every((m) => (MATERIALS as readonly string[]).includes(m)), e.id);
+      assert.ok(
+        e.materiais.every((m) => (MATERIALS as readonly string[]).includes(m)),
+        e.id,
+      );
     }
   });
 
@@ -29,19 +32,28 @@ describe('biblioteca de exercícios técnicos', () => {
       assert.ok(e.pausaSeg >= 0, `${e.id}: pausa`);
       assert.ok(e.criterioSucesso.length > 20, `${e.id}: critério observável`);
       assert.ok(e.errosComuns.length >= 2, `${e.id}: erros comuns`);
-      for (const c of e.errosComuns) assert.ok(c.texto && c.correcao, `${e.id}: correção de ${c.tag}`);
+      for (const c of e.errosComuns)
+        assert.ok(c.texto && c.correcao, `${e.id}: correção de ${c.tag}`);
       assert.ok(e.maisFacil && e.maisDificil, `${e.id}: variações`);
     }
   });
 
   test('exercícios que exigem cones, parede ou parceiro oferecem alternativa', () => {
     for (const e of EXERCISES) {
-      if (e.materiais.some((m) => m !== 'bola')) assert.ok(e.semMaterial, `${e.id} sem alternativa`);
+      if (e.materiais.some((m) => m !== 'bola'))
+        assert.ok(e.semMaterial, `${e.id} sem alternativa`);
     }
   });
 
   test('testes de linha de base: 10 tentativas, um por fundamento técnico medido', () => {
-    for (const skill of ['primeiro_toque', 'dominio_orientado', 'conducao', 'passe', 'drible', 'finalizacao'] as const) {
+    for (const skill of [
+      'primeiro_toque',
+      'dominio_orientado',
+      'conducao',
+      'passe',
+      'drible',
+      'finalizacao',
+    ] as const) {
       const t = testFor(skill);
       assert.ok(t, `sem teste de ${skill}`);
       assert.equal(t.series, 1);
@@ -50,8 +62,22 @@ describe('biblioteca de exercícios técnicos', () => {
   });
 
   test('cobre os temas pedidos (primeiro toque, pés alternados, corredores, pressão…)', () => {
-    const text = EXERCISES.map((e) => `${e.nome} ${e.instrucoes.join(' ')}`).join(' ').toLowerCase();
-    for (const term of ['primeiro toque', 'alterne', 'passe', 'cones', 'mude de direção', 'proteja', 'finta', 'canto', 'ombro', 'porta', 'pressão']) {
+    const text = EXERCISES.map((e) => `${e.nome} ${e.instrucoes.join(' ')}`)
+      .join(' ')
+      .toLowerCase();
+    for (const term of [
+      'primeiro toque',
+      'alterne',
+      'passe',
+      'cones',
+      'mude de direção',
+      'proteja',
+      'finta',
+      'canto',
+      'ombro',
+      'porta',
+      'pressão',
+    ]) {
       assert.ok(text.includes(term), `faltando: ${term}`);
     }
   });
@@ -59,22 +85,45 @@ describe('biblioteca de exercícios técnicos', () => {
   test('todo fundamento técnico tem exercício e os rótulos de erro existem', () => {
     for (const [id, info] of Object.entries(SKILLS)) {
       if (info.grupo !== 'tecnica') continue;
-      assert.ok(EXERCISES.some((e) => !e.teste && e.skills.includes(id as never)), id);
+      assert.ok(
+        EXERCISES.some((e) => !e.teste && e.skills.includes(id as never)),
+        id,
+      );
     }
     for (const e of EXERCISES) for (const c of e.errosComuns) assert.ok(ERROR_LABELS[c.tag]);
   });
 
   test('a escolha respeita materiais e espaço disponíveis', () => {
-    const noWall = pickExercise('primeiro_toque', { difficulty: 1, materials: ['bola'], space: 'pequeno' });
+    const noWall = pickExercise('primeiro_toque', {
+      difficulty: 1,
+      materials: ['bola'],
+      space: 'pequeno',
+    });
     assert.ok(noWall && noWall.materiais.every((m) => m === 'bola'), String(noWall?.id));
-    const focus = pickExercise('passe', { difficulty: 2, materials: ['bola', 'cones', 'parede'], space: 'grande', focusError: 'pes_parados' });
+    const focus = pickExercise('passe', {
+      difficulty: 2,
+      materials: ['bola', 'cones', 'parede'],
+      space: 'grande',
+      focusError: 'pes_parados',
+    });
     assert.equal(focus?.id, 'passe-tabela-parede');
   });
 });
 
 describe('treinos físicos', () => {
   test('todos os tipos usados pelo planejador existem', () => {
-    const kinds: WorkoutKind[] = ['aquecimento', 'coordenacao', 'agilidade', 'equilibrio', 'aceleracao', 'core', 'forca', 'mobilidade', 'aquecimento_jogo', 'chute'];
+    const kinds: WorkoutKind[] = [
+      'aquecimento',
+      'coordenacao',
+      'agilidade',
+      'equilibrio',
+      'aceleracao',
+      'core',
+      'forca',
+      'mobilidade',
+      'aquecimento_jogo',
+      'chute',
+    ];
     for (const k of kinds) assert.ok(catalog.workout(k), k);
   });
 
@@ -103,7 +152,11 @@ describe('leitura de jogo e preparação mental', () => {
 
   test('atividades mentais de todos os tipos', () => {
     const kinds: MentalKind[] = ['respiracao', 'rotina', 'reset_erro', 'visualizacao', 'confianca'];
-    for (const k of kinds) assert.ok(MENTAL_ACTIVITIES.some((m) => m.kind === k), k);
+    for (const k of kinds)
+      assert.ok(
+        MENTAL_ACTIVITIES.some((m) => m.kind === k),
+        k,
+      );
   });
 
   test('critérios de vídeo cobrem a avaliação guiada', () => {

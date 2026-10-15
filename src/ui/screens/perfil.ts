@@ -1,7 +1,17 @@
 /** Perfil do jogador: configuração curta, opcional, editável e apagável. */
 import { MATERIAL_LABEL, SPACE_LABEL } from '../../content/catalog.ts';
 import { POSITION_LABEL, SKILLS, SKILL_ORDER } from '../../core/skills.ts';
-import type { DifficultyPref, Experience, Material, Modality, Position, Profile, SessionPref, SkillId, Space } from '../../core/types.ts';
+import type {
+  DifficultyPref,
+  Experience,
+  Material,
+  Modality,
+  Position,
+  Profile,
+  SessionPref,
+  SkillId,
+  Space,
+} from '../../core/types.ts';
 import { MATERIALS, MINUTE_OPTIONS, POSITIONS, SPACES } from '../../core/types.ts';
 import type { AppContext } from '../app.ts';
 import { button, card, choiceGroup, field, pageHeader } from '../components.ts';
@@ -54,10 +64,34 @@ export async function perfilScreen(ctx: AppContext): Promise<Screen> {
   const existing = await ctx.repo.getProfile();
   const p = existing ?? defaultProfile(ctx.now());
 
-  const apelido = h('input', { type: 'text', value: p.apelido, maxlength: 40, autocomplete: 'nickname', placeholder: 'Opcional' });
-  const posicao = choiceGroup<Position>('Posição preferida', 'posicao', POSITIONS.map((v) => ({ value: v, label: POSITION_LABEL[v] })), p.posicao, false);
-  const experiencia = choiceGroup<Experience>('Experiência no futebol', 'experiencia', EXPERIENCE_OPTIONS, p.experiencia, false);
-  const modalidade = choiceGroup<Modality>('Onde será o interclasse?', 'modalidade', MODALITY_OPTIONS, p.modalidade, false);
+  const apelido = h('input', {
+    type: 'text',
+    value: p.apelido,
+    maxlength: 40,
+    autocomplete: 'nickname',
+    placeholder: 'Opcional',
+  });
+  const posicao = choiceGroup<Position>(
+    'Posição preferida',
+    'posicao',
+    POSITIONS.map((v) => ({ value: v, label: POSITION_LABEL[v] })),
+    p.posicao,
+    false,
+  );
+  const experiencia = choiceGroup<Experience>(
+    'Experiência no futebol',
+    'experiencia',
+    EXPERIENCE_OPTIONS,
+    p.experiencia,
+    false,
+  );
+  const modalidade = choiceGroup<Modality>(
+    'Onde será o interclasse?',
+    'modalidade',
+    MODALITY_OPTIONS,
+    p.modalidade,
+    false,
+  );
   const focos = choiceGroup<SkillId>(
     'Fundamentos que quer melhorar',
     'focos',
@@ -65,11 +99,41 @@ export async function perfilScreen(ctx: AppContext): Promise<Screen> {
     p.focos,
     true,
   );
-  const minutos = choiceGroup<string>('Tempo por dia para treinar', 'minutos', MINUTE_OPTIONS.map((m) => ({ value: String(m), label: `${m} min` })), String(p.minutosDisponiveis), false);
-  const espaco = choiceGroup<Space>('Espaço disponível', 'espaco', SPACES.map((v) => ({ value: v, label: SPACE_LABEL[v] })), p.espaco, false);
-  const materiais = choiceGroup<Material>('Materiais que você tem', 'materiais', MATERIALS.map((v) => ({ value: v, label: MATERIAL_LABEL[v] })), p.materiais, true);
-  const dificuldade = choiceGroup<DifficultyPref>('Nível de dificuldade preferido', 'dificuldade', DIFFICULTY_OPTIONS, p.dificuldade, false);
-  const sessao = choiceGroup<SessionPref>('Duração das sessões', 'sessao', SESSION_OPTIONS, p.preferenciaSessao, false);
+  const minutos = choiceGroup<string>(
+    'Tempo por dia para treinar',
+    'minutos',
+    MINUTE_OPTIONS.map((m) => ({ value: String(m), label: `${m} min` })),
+    String(p.minutosDisponiveis),
+    false,
+  );
+  const espaco = choiceGroup<Space>(
+    'Espaço disponível',
+    'espaco',
+    SPACES.map((v) => ({ value: v, label: SPACE_LABEL[v] })),
+    p.espaco,
+    false,
+  );
+  const materiais = choiceGroup<Material>(
+    'Materiais que você tem',
+    'materiais',
+    MATERIALS.map((v) => ({ value: v, label: MATERIAL_LABEL[v] })),
+    p.materiais,
+    true,
+  );
+  const dificuldade = choiceGroup<DifficultyPref>(
+    'Nível de dificuldade preferido',
+    'dificuldade',
+    DIFFICULTY_OPTIONS,
+    p.dificuldade,
+    false,
+  );
+  const sessao = choiceGroup<SessionPref>(
+    'Duração das sessões',
+    'sessao',
+    SESSION_OPTIONS,
+    p.preferenciaSessao,
+    false,
+  );
 
   const status = h('p', { role: 'status', 'aria-live': 'polite', class: 'small' });
 
@@ -105,24 +169,54 @@ export async function perfilScreen(ctx: AppContext): Promise<Screen> {
     { onsubmit: save, novalidate: true },
     card(
       { title: 'Sobre você' },
-      field('Como quer ser chamado? (opcional)', apelido, 'Pode ser um apelido. Não pedimos nome completo, idade ou contato.'),
+      field(
+        'Como quer ser chamado? (opcional)',
+        apelido,
+        'Pode ser um apelido. Não pedimos nome completo, idade ou contato.',
+      ),
       posicao.el,
       experiencia.el,
       modalidade.el,
     ),
     card({ title: 'Objetivos' }, focos.el, dificuldade.el),
-    card({ title: 'Rotina e espaço' }, minutos.el, sessao.el, espaco.el, materiais.el, h('p', { class: 'small muted' }, 'Sem cones? Garrafas, chinelos ou mochilas servem. Os exercícios mostram alternativas.')),
-    h('div', { class: 'row', style: { marginTop: '12px' } }, h('button', { type: 'submit', class: 'btn primary' }, 'Salvar perfil'), existing ? null : button('Pular por agora', async () => {
-      await ctx.repo.setOnboardingSeen();
-      ctx.navigate('/');
-    }, { variant: 'ghost' })),
+    card(
+      { title: 'Rotina e espaço' },
+      minutos.el,
+      sessao.el,
+      espaco.el,
+      materiais.el,
+      h(
+        'p',
+        { class: 'small muted' },
+        'Sem cones? Garrafas, chinelos ou mochilas servem. Os exercícios mostram alternativas.',
+      ),
+    ),
+    h(
+      'div',
+      { class: 'row', style: { marginTop: '12px' } },
+      h('button', { type: 'submit', class: 'btn primary' }, 'Salvar perfil'),
+      existing
+        ? null
+        : button(
+            'Pular por agora',
+            async () => {
+              await ctx.repo.setOnboardingSeen();
+              ctx.navigate('/');
+            },
+            { variant: 'ghost' },
+          ),
+    ),
     status,
   );
 
   const el = h(
     'div',
     { class: 'stack' },
-    pageHeader(existing ? 'Editar perfil' : 'Configurar perfil', 'Tudo é opcional e pode ser alterado depois. Quando faltar informação, o aplicativo usa recomendações conservadoras.', { href: existing ? '#/config' : '#/', label: 'Voltar' }),
+    pageHeader(
+      existing ? 'Editar perfil' : 'Configurar perfil',
+      'Tudo é opcional e pode ser alterado depois. Quando faltar informação, o aplicativo usa recomendações conservadoras.',
+      { href: existing ? '#/config' : '#/', label: 'Voltar' },
+    ),
     form,
   );
   return { title: existing ? 'Editar perfil' : 'Configurar perfil', el };

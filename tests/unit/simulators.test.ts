@@ -21,7 +21,13 @@ import {
   type ShotScenario,
 } from '../../src/core/sim/finalizacao.ts';
 import { roundSeed } from '../../src/core/sim/index.ts';
-import { analyzeScan, evaluateScan, generateScan, isBehindPlayer, type ScanScenario } from '../../src/core/sim/olhe.ts';
+import {
+  analyzeScan,
+  evaluateScan,
+  generateScan,
+  isBehindPlayer,
+  type ScanScenario,
+} from '../../src/core/sim/olhe.ts';
 import {
   evaluatePass,
   generatePass,
@@ -148,7 +154,11 @@ describe('Modo B — domínio orientado', () => {
   });
 
   test('perto da lateral, a opção que sai do campo é inválida', () => {
-    const s: ControlScenario = { ...base, player: vec(1.5, 16), defenders: [{ id: 'a1', pos: vec(6, 16) }] };
+    const s: ControlScenario = {
+      ...base,
+      player: vec(1.5, 16),
+      defenders: [{ id: 'a1', pos: vec(6, 16) }],
+    };
     const a = analyzeControl(s);
     assert.equal(a.options.find((o) => o.option === 'esquerda')!.valid, false);
     assert.equal(evaluateControl(s, 'esquerda', 500).outcome, 'fora');
@@ -193,7 +203,11 @@ describe('Modo C — olhe antes de receber', () => {
   });
 
   test('com marcador colado e colega livre ao lado, tocar para o lado é o melhor', () => {
-    const s: ScanScenario = { ...base, archetype: 'pressao_com_opcao', defenders: [{ id: 'a1', pos: vec(12, 14.5) }] };
+    const s: ScanScenario = {
+      ...base,
+      archetype: 'pressao_com_opcao',
+      defenders: [{ id: 'a1', pos: vec(12, 14.5) }],
+    };
     const a = analyzeScan(s);
     assert.equal(a.facts.turnConeFree, false);
     assert.equal(a.best, 'tocar_lado');
@@ -233,7 +247,10 @@ describe('Modo C — olhe antes de receber', () => {
         pressao_sem_opcao: ['proteger', 'devolver'],
         pressao_media: ['tocar_lado', 'devolver'],
       };
-      assert.ok(expected[s.archetype]!.includes(a.best), `semente ${seed}: ${s.archetype} → ${a.best}`);
+      assert.ok(
+        expected[s.archetype]!.includes(a.best),
+        `semente ${seed}: ${s.archetype} → ${a.best}`,
+      );
     }
     assert.ok(bests.size >= 3, 'as rodadas não podem ter sempre a mesma resposta');
   });
@@ -332,7 +349,11 @@ describe('Modo F — finalização', () => {
 
   test('fora, bloqueado, defendido e gol seguem as regras explícitas', () => {
     assert.equal(evaluateShot(s, vec(3.05, 0.5)).outcome, 'fora');
-    assert.equal(evaluateShot(s, vec(1.5, 1.95)).outcome, 'fora', 'acima do travessão (com o raio da bola)');
+    assert.equal(
+      evaluateShot(s, vec(1.5, 1.95)).outcome,
+      'fora',
+      'acima do travessão (com o raio da bola)',
+    );
     assert.equal(evaluateShot(s, vec(0.5, 0.4)).outcome, 'bloqueado');
     assert.equal(evaluateShot(s, vec(1.5, 0.8)).outcome, 'defendido');
     const goal = evaluateShot(s, vec(2.75, 0.2));
@@ -366,14 +387,22 @@ describe('Modo F — finalização', () => {
 describe('coordenadas do campo', () => {
   test('atores gerados ficam dentro do campo', () => {
     for (const seed of SEEDS.slice(0, 50)) {
-      const scenarios = [generatePass(seed, 4), generateControl(seed, 4), generateScan(seed, 4), generateDecision(seed, 4)];
+      const scenarios = [
+        generatePass(seed, 4),
+        generateControl(seed, 4),
+        generateScan(seed, 4),
+        generateDecision(seed, 4),
+      ];
       for (const sc of scenarios) {
         const actors = [
           ...('teammates' in sc ? sc.teammates : []),
           ...('defenders' in sc ? sc.defenders : []),
         ];
         for (const a of actors) {
-          assert.ok(a.pos.x >= 0 && a.pos.x <= FIELD.width && a.pos.y >= 0 && a.pos.y <= FIELD.length, `${sc.mode} semente ${seed}`);
+          assert.ok(
+            a.pos.x >= 0 && a.pos.x <= FIELD.width && a.pos.y >= 0 && a.pos.y <= FIELD.length,
+            `${sc.mode} semente ${seed}`,
+          );
         }
       }
     }

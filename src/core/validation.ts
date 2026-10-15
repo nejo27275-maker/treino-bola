@@ -74,7 +74,8 @@ const ID_RE = /^[A-Za-z0-9_-]{1,100}$/;
 const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,6})?)?(Z|[+-]\d{2}:\d{2})$/;
 
 function obj(v: unknown, path: string): Record<string, unknown> {
-  if (typeof v !== 'object' || v === null || Array.isArray(v)) throw new Invalid(`${path}: deveria ser um objeto`);
+  if (typeof v !== 'object' || v === null || Array.isArray(v))
+    throw new Invalid(`${path}: deveria ser um objeto`);
   return v as Record<string, unknown>;
 }
 
@@ -95,13 +96,20 @@ function id(v: unknown, path: string): string {
 }
 
 function num(v: unknown, path: string, min: number, max: number, integer = false): number {
-  if (typeof v !== 'number' || !Number.isFinite(v)) throw new Invalid(`${path}: deveria ser um número`);
+  if (typeof v !== 'number' || !Number.isFinite(v))
+    throw new Invalid(`${path}: deveria ser um número`);
   if (v < min || v > max) throw new Invalid(`${path}: fora do intervalo ${min}–${max}`);
   if (integer && !Number.isInteger(v)) throw new Invalid(`${path}: deveria ser inteiro`);
   return v;
 }
 
-function optNum(v: unknown, path: string, min: number, max: number, integer = false): number | undefined {
+function optNum(
+  v: unknown,
+  path: string,
+  min: number,
+  max: number,
+  integer = false,
+): number | undefined {
   return v === undefined || v === null ? undefined : num(v, path, min, max, integer);
 }
 
@@ -124,7 +132,8 @@ function date(v: unknown, path: string): string {
 
 function iso(v: unknown, path: string): string {
   const s = str(v, path, 40);
-  if (!ISO_RE.test(s) || Number.isNaN(Date.parse(s))) throw new Invalid(`${path}: data/hora inválida`);
+  if (!ISO_RE.test(s) || Number.isNaN(Date.parse(s)))
+    throw new Invalid(`${path}: data/hora inválida`);
   return s;
 }
 
@@ -141,7 +150,9 @@ function skill(v: unknown, path: string): SkillId {
 
 export function validateProfile(v: unknown, path = 'perfil'): Profile {
   const o = obj(v, path);
-  const focos = arr(o.focos ?? [], `${path}.focos`, 20).map((s, i) => skill(s, `${path}.focos[${i}]`));
+  const focos = arr(o.focos ?? [], `${path}.focos`, 20).map((s, i) =>
+    skill(s, `${path}.focos[${i}]`),
+  );
   const materiais = arr(o.materiais ?? [], `${path}.materiais`, 10).map((m, i) =>
     oneOf(m, MATERIALS, `${path}.materiais[${i}]`),
   );
@@ -226,7 +237,9 @@ export function validateSession(v: unknown, path = 'sessao'): TrainingSession {
     status: oneOf(o.status, ['concluida', 'interrompida'] as const, `${path}.status`),
   };
   if (o.skills !== undefined) {
-    session.skills = arr(o.skills, `${path}.skills`, 20).map((s, i) => skill(s, `${path}.skills[${i}]`));
+    session.skills = arr(o.skills, `${path}.skills`, 20).map((s, i) =>
+      skill(s, `${path}.skills[${i}]`),
+    );
   }
   const difficulty = optNum(o.difficulty, `${path}.difficulty`, 1, 5, true);
   if (difficulty !== undefined) session.difficulty = difficulty;
@@ -313,14 +326,16 @@ const RATINGS: readonly CriterionRating[] = ['bom', 'parcial', 'melhorar', 'nao_
 
 export function validateAnalysis(v: unknown, path = 'analise'): VideoAnalysis {
   const o = obj(v, path);
-  const markers = arr(o.markers ?? [], `${path}.markers`, LIMITS.markers).map((m, i): VideoMarker => {
-    const mo = obj(m, `${path}.markers[${i}]`);
-    return {
-      id: id(mo.id, `${path}.markers[${i}].id`),
-      timeSec: num(mo.timeSec, `${path}.markers[${i}].timeSec`, 0, 86_400),
-      label: str(mo.label, `${path}.markers[${i}].label`, LIMITS.shortText),
-    };
-  });
+  const markers = arr(o.markers ?? [], `${path}.markers`, LIMITS.markers).map(
+    (m, i): VideoMarker => {
+      const mo = obj(m, `${path}.markers[${i}]`);
+      return {
+        id: id(mo.id, `${path}.markers[${i}].id`),
+        timeSec: num(mo.timeSec, `${path}.markers[${i}].timeSec`, 0, 86_400),
+        label: str(mo.label, `${path}.markers[${i}].label`, LIMITS.shortText),
+      };
+    },
+  );
   const criteriaObj = obj(o.criteria ?? {}, `${path}.criteria`);
   const criteria: Record<string, CriterionRating> = {};
   for (const [k, value] of Object.entries(criteriaObj).slice(0, 30)) {
@@ -382,7 +397,9 @@ function validateList<T>(
     }
   });
   if (skipped > 0) {
-    warnings.push(`${skipped} registro(s) inválido(s) em "${name}" foram ignorados (ex.: ${examples.join('; ')}).`);
+    warnings.push(
+      `${skipped} registro(s) inválido(s) em "${name}" foram ignorados (ex.: ${examples.join('; ')}).`,
+    );
   }
   return out;
 }
@@ -399,7 +416,9 @@ export function validateExport(input: unknown): ImportValidation {
     if (version > EXPORT_SCHEMA_VERSION) {
       return {
         ok: false,
-        errors: [`O arquivo foi criado por uma versão mais nova do aplicativo (formato ${version}). Atualize o aplicativo para importá-lo.`],
+        errors: [
+          `O arquivo foi criado por uma versão mais nova do aplicativo (formato ${version}). Atualize o aplicativo para importá-lo.`,
+        ],
       };
     }
     const optional = <T>(value: unknown, fn: (v: unknown) => T, label: string): T | null => {
@@ -412,14 +431,26 @@ export function validateExport(input: unknown): ImportValidation {
         return null;
       }
     };
-    const sessions = validateList(arr(root.sessions ?? [], 'sessions', LIMITS.sessions), 'sessions', validateSession, warnings);
+    const sessions = validateList(
+      arr(root.sessions ?? [], 'sessions', LIMITS.sessions),
+      'sessions',
+      validateSession,
+      warnings,
+    );
     const sessionIds = new Set(sessions.map((s) => s.id));
-    const results = validateList(arr(root.results ?? [], 'results', LIMITS.results), 'results', validateResult, warnings);
+    const results = validateList(
+      arr(root.results ?? [], 'results', LIMITS.results),
+      'results',
+      validateResult,
+      warnings,
+    );
     const orphan = results.filter((r) => !sessionIds.has(r.sessionId)).length;
-    if (orphan > 0) warnings.push(`${orphan} resultado(s) sem sessão correspondente foram mantidos.`);
+    if (orphan > 0)
+      warnings.push(`${orphan} resultado(s) sem sessão correspondente foram mantidos.`);
     const routine = optional(
       root.preGameRoutine,
-      (v) => arr(v, 'preGameRoutine', LIMITS.routine).map((s, i) => str(s, `preGameRoutine[${i}]`, 200)),
+      (v) =>
+        arr(v, 'preGameRoutine', LIMITS.routine).map((s, i) => str(s, `preGameRoutine[${i}]`, 200)),
       'Rotina pré-jogo',
     );
     return {

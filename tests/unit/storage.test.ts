@@ -23,7 +23,12 @@ function repo() {
   return new Repository(new MemoryBackend());
 }
 
-const EXERCISE = { id: 'passe-porta', nome: 'Passe na porta', skills: ['passe' as const], nivel: 1 };
+const EXERCISE = {
+  id: 'passe-porta',
+  nome: 'Passe na porta',
+  skills: ['passe' as const],
+  nivel: 1,
+};
 
 describe('registro de sessões', () => {
   test('exercício contado gera sessão e resultado de contagem manual', () => {
@@ -74,7 +79,14 @@ describe('registro de sessões', () => {
         { round: 0, seed: 1, outcome: 'acerto', success: true, points: 9, responseMs: 420 },
         { round: 1, seed: 2, outcome: 'erro', success: false, points: 0, responseMs: 300 },
         { round: 2, seed: 3, outcome: 'antecipado', success: false, incomplete: true, points: 0 },
-        { round: 3, seed: 4, outcome: 'tempo_esgotado', success: false, incomplete: true, points: 0 },
+        {
+          round: 3,
+          seed: 4,
+          outcome: 'tempo_esgotado',
+          success: false,
+          incomplete: true,
+          points: 0,
+        },
       ],
     });
     assert.equal(session.seed, 99);
@@ -98,7 +110,15 @@ describe('registro de sessões', () => {
     assert.equal(quiz.results.length, 2);
     assert.ok(quiz.results.every((r) => r.source === 'quiz'));
 
-    const phys = logPhysical({ workout: { id: 'core', nome: 'Core', skills: ['forca'] }, startedAt: T0, endedAt: T1, blocksDone: 6, blocksTotal: 6, rpe: 6, discomfort: 0 });
+    const phys = logPhysical({
+      workout: { id: 'core', nome: 'Core', skills: ['forca'] },
+      startedAt: T0,
+      endedAt: T1,
+      blocksDone: 6,
+      blocksTotal: 6,
+      rpe: 6,
+      discomfort: 0,
+    });
     assert.equal(phys.session.rpe, 6);
     assert.equal(phys.results.length, 0, 'treino físico registra volume e bem-estar, não nota');
 
@@ -147,7 +167,16 @@ describe('repositório local', () => {
 
   test('sessões alimentam o histórico e o motor', async () => {
     const r = repo();
-    const logged = logExercise({ exercise: EXERCISE, startedAt: T0, endedAt: T1, counted: true, attempts: 20, successes: 5, seriesDone: 2, seriesTotal: 2 });
+    const logged = logExercise({
+      exercise: EXERCISE,
+      startedAt: T0,
+      endedAt: T1,
+      counted: true,
+      attempts: 20,
+      successes: 5,
+      seriesDone: 2,
+      seriesTotal: 2,
+    });
     await r.saveSession(logged.session, logged.results);
     const sessions = await r.listSessions();
     const results = await r.listResults();
@@ -159,17 +188,37 @@ describe('repositório local', () => {
 
   test('gravação é atômica: um registro inválido não grava nada', async () => {
     const r = repo();
-    const logged = logExercise({ exercise: EXERCISE, startedAt: T0, endedAt: T1, counted: true, attempts: 10, successes: 5, seriesDone: 1, seriesTotal: 1 });
-    await assert.rejects(r.backend.batch([
-      { type: 'put', store: 'sessions', value: logged.session },
-      { type: 'put', store: 'results', value: { semId: true } },
-    ]));
+    const logged = logExercise({
+      exercise: EXERCISE,
+      startedAt: T0,
+      endedAt: T1,
+      counted: true,
+      attempts: 10,
+      successes: 5,
+      seriesDone: 1,
+      seriesTotal: 1,
+    });
+    await assert.rejects(
+      r.backend.batch([
+        { type: 'put', store: 'sessions', value: logged.session },
+        { type: 'put', store: 'results', value: { semId: true } },
+      ]),
+    );
     assert.equal((await r.listSessions()).length, 0);
   });
 
   test('excluir sessão remove os resultados ligados a ela', async () => {
     const r = repo();
-    const logged = logExercise({ exercise: EXERCISE, startedAt: T0, endedAt: T1, counted: true, attempts: 10, successes: 5, seriesDone: 1, seriesTotal: 1 });
+    const logged = logExercise({
+      exercise: EXERCISE,
+      startedAt: T0,
+      endedAt: T1,
+      counted: true,
+      attempts: 10,
+      successes: 5,
+      seriesDone: 1,
+      seriesTotal: 1,
+    });
     await r.saveSession(logged.session, logged.results);
     await r.deleteSession(logged.session.id);
     assert.equal((await r.listResults()).length, 0);
@@ -179,7 +228,14 @@ describe('repositório local', () => {
     const a = repo();
     await a.saveProfile(profile());
     await a.saveCompetition({ nome: 'Copa', data: '2026-11-05' });
-    const logged = logSimulator({ mode: 'passe_brecha', seed: 7, difficulty: 1, startedAt: T0, endedAt: T1, rounds: [{ round: 0, seed: 1, outcome: 'acerto', success: true, points: 8 }] });
+    const logged = logSimulator({
+      mode: 'passe_brecha',
+      seed: 7,
+      difficulty: 1,
+      startedAt: T0,
+      endedAt: T1,
+      rounds: [{ round: 0, seed: 1, outcome: 'acerto', success: true, points: 8 }],
+    });
     await a.saveSession(logged.session, logged.results);
     const exported = await a.exportAll(T1);
     const text = JSON.stringify(exported);
@@ -189,7 +245,18 @@ describe('repositório local', () => {
     assert.deepEqual(parsed.warnings, []);
 
     const b = repo();
-    await b.saveSession(logExercise({ exercise: EXERCISE, startedAt: T0, endedAt: T1, counted: false, attempts: 0, successes: 0, seriesDone: 0, seriesTotal: 1 }).session);
+    await b.saveSession(
+      logExercise({
+        exercise: EXERCISE,
+        startedAt: T0,
+        endedAt: T1,
+        counted: false,
+        attempts: 0,
+        successes: 0,
+        seriesDone: 0,
+        seriesTotal: 1,
+      }).session,
+    );
     const summary = await b.importData(parsed.data, 'substituir');
     assert.equal(summary.sessions, 1);
     assert.equal((await b.listSessions()).length, 1, 'substituir apaga o que existia');
@@ -199,7 +266,14 @@ describe('repositório local', () => {
 
   test('importar mesclando não duplica registros', async () => {
     const a = repo();
-    const logged = logSimulator({ mode: 'finalizacao', seed: 3, difficulty: 1, startedAt: T0, endedAt: T1, rounds: [{ round: 0, seed: 1, outcome: 'gol', success: true, points: 8 }] });
+    const logged = logSimulator({
+      mode: 'finalizacao',
+      seed: 3,
+      difficulty: 1,
+      startedAt: T0,
+      endedAt: T1,
+      rounds: [{ round: 0, seed: 1, outcome: 'gol', success: true, points: 8 }],
+    });
     await a.saveSession(logged.session, logged.results);
     const data = validateExport(await a.exportAll());
     assert.ok(data.ok);
@@ -213,7 +287,18 @@ describe('repositório local', () => {
   test('apagar tudo deixa o aplicativo vazio', async () => {
     const r = repo();
     await r.saveProfile(profile());
-    await r.saveSession(logExercise({ exercise: EXERCISE, startedAt: T0, endedAt: T1, counted: true, attempts: 3, successes: 1, seriesDone: 1, seriesTotal: 1 }).session);
+    await r.saveSession(
+      logExercise({
+        exercise: EXERCISE,
+        startedAt: T0,
+        endedAt: T1,
+        counted: true,
+        attempts: 3,
+        successes: 1,
+        seriesDone: 1,
+        seriesTotal: 1,
+      }).session,
+    );
     await r.clearAll();
     assert.deepEqual(await r.counts(), { sessions: 0, results: 0, analyses: 0, frames: 0 });
     assert.equal(await r.getProfile(), null);

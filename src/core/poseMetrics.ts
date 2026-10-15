@@ -83,7 +83,11 @@ function mid(a: P, b: P): P {
 const DEG = 180 / Math.PI;
 
 /** Ângulo no vértice B (graus) formado por A-B-C. */
-export function jointAngle(a: { X: number; Y: number }, b: { X: number; Y: number }, c: { X: number; Y: number }): number {
+export function jointAngle(
+  a: { X: number; Y: number },
+  b: { X: number; Y: number },
+  c: { X: number; Y: number },
+): number {
   const v1x = a.X - b.X;
   const v1y = a.Y - b.Y;
   const v2x = c.X - b.X;
@@ -204,7 +208,10 @@ export function computePoseMetrics(
       [ls, rs, lh, rh],
       ([a, b, c, d]) => {
         const width = Math.hypot((a as P).X - (b as P).X, (a as P).Y - (b as P).Y);
-        const torso = Math.hypot(mid(a as P, b as P).X - mid(c as P, d as P).X, mid(a as P, b as P).Y - mid(c as P, d as P).Y);
+        const torso = Math.hypot(
+          mid(a as P, b as P).X - mid(c as P, d as P).X,
+          mid(a as P, b as P).Y - mid(c as P, d as P).Y,
+        );
         return torso < 1e-3 ? Number.NaN : width / torso;
       },
       minVisibility,

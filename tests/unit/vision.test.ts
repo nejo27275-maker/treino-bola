@@ -9,17 +9,27 @@ import {
   rgbaToGray,
   type GrayFrame,
 } from '../../src/core/motion.ts';
-import { computePoseMetrics, jointAngle, summarizePoseSeries, type Landmark } from '../../src/core/poseMetrics.ts';
+import {
+  computePoseMetrics,
+  jointAngle,
+  summarizePoseSeries,
+  type Landmark,
+} from '../../src/core/poseMetrics.ts';
 import { createRng } from '../../src/core/rng.ts';
 
 const W = 64;
 const H = 48;
 
-function frame(fill: number, block?: { x: number; y: number; w: number; h: number; value: number }, noiseSeed?: number): GrayFrame {
+function frame(
+  fill: number,
+  block?: { x: number; y: number; w: number; h: number; value: number },
+  noiseSeed?: number,
+): GrayFrame {
   const data = new Uint8Array(W * H).fill(fill);
   if (noiseSeed !== undefined) {
     const rng = createRng(noiseSeed);
-    for (let i = 0; i < data.length; i++) data[i] = Math.max(0, Math.min(255, fill + rng.int(-6, 6)));
+    for (let i = 0; i < data.length; i++)
+      data[i] = Math.max(0, Math.min(255, fill + rng.int(-6, 6)));
   }
   if (block) {
     for (let y = block.y; y < block.y + block.h; y++) {
@@ -67,7 +77,14 @@ describe('detecção de movimento (diferença de quadros)', () => {
 
   test('início do movimento exige quadros consecutivos e identifica o lado', () => {
     const det = new OnsetDetector({ threshold: 0.02, consecutive: 2 });
-    const still = { ratio: 0.001, leftRatio: 0.001, rightRatio: 0.001, cx: 0.5, cy: 0.5, changed: 3 };
+    const still = {
+      ratio: 0.001,
+      leftRatio: 0.001,
+      rightRatio: 0.001,
+      cx: 0.5,
+      cy: 0.5,
+      changed: 3,
+    };
     const left = { ratio: 0.05, leftRatio: 0.09, rightRatio: 0.01, cx: 0.2, cy: 0.5, changed: 150 };
     assert.equal(det.push(still, 0), null);
     assert.equal(det.push(left, 33), null, 'um quadro isolado não basta');
@@ -79,7 +96,14 @@ describe('detecção de movimento (diferença de quadros)', () => {
 
   test('movimento dos dois lados é "indefinido"', () => {
     const det = new OnsetDetector({ threshold: 0.02, consecutive: 1 });
-    const both = { ratio: 0.08, leftRatio: 0.08, rightRatio: 0.075, cx: 0.5, cy: 0.5, changed: 240 };
+    const both = {
+      ratio: 0.08,
+      leftRatio: 0.08,
+      rightRatio: 0.075,
+      cx: 0.5,
+      cy: 0.5,
+      changed: 240,
+    };
     assert.equal(det.push(both, 10)?.side, 'indefinido');
   });
 
@@ -90,7 +114,10 @@ describe('detecção de movimento (diferença de quadros)', () => {
     values[9] = 0.05;
     values[30] = 0.04;
     const peaks = findPeaks(values, times, { minSeparation: 1.5, maxPeaks: 5 });
-    assert.deepEqual(peaks.map((p) => p.time), [2, 7.5]);
+    assert.deepEqual(
+      peaks.map((p) => p.time),
+      [2, 7.5],
+    );
   });
 });
 
@@ -123,7 +150,9 @@ describe('métricas de pose', () => {
     assert.equal(lean.reliable, true);
     assert.ok(Math.abs(lean.value ?? 99) < 1);
     assert.ok((straight.find((m) => m.id === 'flexao_joelho_esq')!.value ?? 99) < 1);
-    const leaning = computePoseMetrics(standingPose(0.08), 1).find((m) => m.id === 'inclinacao_tronco')!;
+    const leaning = computePoseMetrics(standingPose(0.08), 1).find(
+      (m) => m.id === 'inclinacao_tronco',
+    )!;
     assert.ok((leaning.value ?? 0) > 10);
   });
 
@@ -135,7 +164,9 @@ describe('métricas de pose', () => {
   test('resumo de série: estabilidade do tronco', () => {
     const stable = Array.from({ length: 8 }, () => computePoseMetrics(standingPose(0), 1));
     assert.equal(summarizePoseSeries(stable).stability, 'estavel');
-    const variable = Array.from({ length: 8 }, (_, i) => computePoseMetrics(standingPose(i % 2 === 0 ? 0.1 : -0.1), 1));
+    const variable = Array.from({ length: 8 }, (_, i) =>
+      computePoseMetrics(standingPose(i % 2 === 0 ? 0.1 : -0.1), 1),
+    );
     assert.equal(summarizePoseSeries(variable).stability, 'variavel');
     assert.equal(summarizePoseSeries([]).stability, 'indefinido');
   });

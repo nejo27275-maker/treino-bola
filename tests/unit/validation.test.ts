@@ -4,7 +4,11 @@ import { EXPORT_APP_ID, parseImportText, validateExport } from '../../src/core/v
 import { profile, result, session } from './helpers.ts';
 
 function validExport() {
-  const s = session('2026-10-14', { id: 's-1', kind: 'tecnico', summary: { attempts: 10, successes: 6 } });
+  const s = session('2026-10-14', {
+    id: 's-1',
+    kind: 'tecnico',
+    summary: { attempts: 10, successes: 6 },
+  });
   return {
     app: EXPORT_APP_ID,
     schemaVersion: 1,
