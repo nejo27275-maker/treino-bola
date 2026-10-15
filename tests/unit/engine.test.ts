@@ -6,7 +6,7 @@ import {
   MIN_EFFECTIVE_ATTEMPTS,
   runEngine,
 } from '../../src/core/engine.ts';
-import { nextDifficulty, summarizeRounds } from '../../src/core/scoring.ts';
+import { nextDifficulty, nextStoredLevel, summarizeRounds } from '../../src/core/scoring.ts';
 import type { RoundLog } from '../../src/core/types.ts';
 import { profile, result, session } from './helpers.ts';
 
@@ -31,6 +31,27 @@ describe('motor adaptativo — avaliação de fundamentos', () => {
     assert.equal(a.status, 'avaliado');
     assert.equal(a.level, 'baixo');
     assert.ok(a.score !== null && a.score < 0.5);
+  });
+
+  test('várias sessões no mesmo dia: a tendência segue o horário, não o id', () => {
+    const at = (h: string, id: string, ok: number) =>
+      result('passe', 10, ok, {
+        source: 'simulador',
+        sessionId: id,
+        createdAt: `2026-10-14T${h}:00:00.000Z`,
+      });
+    // Ids em ordem alfabética inversa ao horário: zzz (08h), mmm (09h), aaa (20h, a melhor).
+    const a = assessSkill(
+      'passe',
+      [at('20', 'aaa', 9), at('08', 'zzz', 5), at('09', 'mmm', 5)],
+      [],
+      TODAY,
+    );
+    assert.deepEqual(
+      a.sessionRates.map((r) => r.sessionId),
+      ['zzz', 'mmm', 'aaa'],
+    );
+    assert.equal(a.trend, 'melhorando');
   });
 
   test('autoavaliação sozinha não vira medição', () => {
@@ -241,5 +262,26 @@ describe('pontuação e dificuldade progressiva', () => {
     assert.equal(nextDifficulty(1, summarizeRounds(rounds(10, 0))).level, 1);
     const few = nextDifficulty(2, summarizeRounds(rounds(5, 5)));
     assert.equal(few.changed, false);
+  });
+
+  test('nível salvo só muda na direção que a sessão comprova', () => {
+    const bad = summarizeRounds(rounds(10, 2));
+    const good = summarizeRounds(rounds(10, 9));
+    // No próprio nível: regra normal.
+    assert.equal(nextStoredLevel(3, 3, good).level, 4);
+    assert.equal(nextStoredLevel(3, 3, bad).level, 2);
+    // Ir mal num nível escolhido ACIMA não sobe (nem mexe) o nível salvo.
+    const failAbove = nextStoredLevel(1, 5, bad);
+    assert.equal(failAbove.level, 1);
+    assert.equal(failAbove.changed, false);
+    assert.match(failAbove.reason, /nível salvo continua 1/);
+    // Ir bem num nível ACIMA promove para um acima do jogado.
+    const winAbove = nextStoredLevel(1, 3, good);
+    assert.deepEqual([winAbove.level, winAbove.changed], [4, true]);
+    // Ir bem num nível ABAIXO não muda; ir mal abaixo rebaixa para um abaixo do jogado.
+    assert.equal(nextStoredLevel(4, 1, good).level, 4);
+    assert.equal(nextStoredLevel(4, 3, bad).level, 2);
+    // Poucas rodadas: nada muda.
+    assert.equal(nextStoredLevel(2, 4, summarizeRounds(rounds(5, 5))).changed, false);
   });
 });

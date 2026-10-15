@@ -2,7 +2,7 @@
  * Controladores de cada modalidade do simulador. Cada um desenha a rodada, recebe a
  * interação (toque, teclado ou botões) e entrega o resultado calculado pelo motor.
  */
-import { angleOf, dist, sub, vec, type Vec } from '../../core/geometry.ts';
+import { angleOf, clampForward, dist, sub, vec, type Vec } from '../../core/geometry.ts';
 import type { RoundResult } from '../../core/sim/common.ts';
 import {
   DECISION_LABEL,
@@ -91,28 +91,81 @@ function timeBar(
   return { el, stop };
 }
 
+/** Sinal que termina quando a rodada acaba (resposta dada) ou é cancelada. */
+const roundEnds = new WeakMap<RoundContext, AbortController>();
+function roundEnd(rc: RoundContext): AbortController {
+  let controller = roundEnds.get(rc);
+  if (!controller) {
+    const created = new AbortController();
+    rc.signal.addEventListener('abort', () => created.abort(), { once: true });
+    roundEnds.set(rc, created);
+    controller = created;
+  }
+  return controller;
+}
+
 function once(rc: RoundContext): (result: RoundResult, choice?: string) => boolean {
   let finished = false;
   return (result, choice) => {
     if (finished || rc.signal.aborted) return false;
     finished = true;
+    roundEnd(rc).abort(); // atalhos de teclado e toques no campo param aqui
     rc.done(result, choice);
     return true;
   };
 }
 
+/**
+ * Atalhos de teclado da rodada. Só valem enquanto a rodada está aberta e com o foco no
+ * simulador (ou em lugar nenhum); Enter/Espaço em um botão ou link focado mantêm a ação dele,
+ * campos de texto e diálogos abertos não são afetados.
+ */
 function keyHandler(rc: RoundContext, map: Record<string, () => void>): void {
+  const signal = roundEnd(rc).signal;
+  if (signal.aborted) return;
   const onKey = (e: KeyboardEvent) => {
-    const target = e.target as HTMLElement | null;
-    if (target && ['INPUT', 'SELECT', 'TEXTAREA'].includes(target.tagName)) return;
+    if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
     const fn = map[e.key];
-    if (fn) {
-      e.preventDefault();
-      fn();
-    }
+    if (!fn) return;
+    if (document.getElementById('dialog-root')?.childElementCount) return;
+    const active = document.activeElement;
+    if (active && active !== document.body && !rc.stage.contains(active)) return;
+    const target = e.target as HTMLElement | null;
+    if (target?.closest('input, select, textarea, [contenteditable="true"]')) return;
+    if ((e.key === 'Enter' || e.key === ' ') && target?.closest('button, a, summary, [role="tab"]'))
+      return;
+    e.preventDefault();
+    fn();
   };
-  window.addEventListener('keydown', onKey);
-  rc.signal.addEventListener('abort', () => window.removeEventListener('keydown', onKey));
+  window.addEventListener('keydown', onKey, { signal });
+}
+
+/**
+ * Toque curto no elemento (sem arrastar): rolar a página com o dedo sobre o campo não dispara
+ * a ação. Para o mouse, vale o clique.
+ */
+function onTap(el: Element, signal: AbortSignal, cb: (e: PointerEvent) => void): void {
+  let start: { x: number; y: number; id: number } | null = null;
+  el.addEventListener(
+    'pointerdown',
+    (e) => {
+      const ev = e as PointerEvent;
+      start = { x: ev.clientX, y: ev.clientY, id: ev.pointerId };
+    },
+    { signal },
+  );
+  el.addEventListener('pointercancel', () => (start = null), { signal });
+  el.addEventListener(
+    'pointerup',
+    (e) => {
+      const ev = e as PointerEvent;
+      const s0 = start;
+      start = null;
+      if (!s0 || s0.id !== ev.pointerId) return;
+      if (Math.hypot(ev.clientX - s0.x, ev.clientY - s0.y) <= 10) cb(ev);
+    },
+    { signal },
+  );
 }
 
 // ——— A: Passe pela brecha ———
@@ -170,26 +223,37 @@ function runPass(rc: RoundContext): void {
   });
   const setAngleFromPoint = (p: Vec | null) => {
     if (!p || locked) return;
-    const a = angleOf(sub(p, sc.passer));
-    // Limita a direções para a frente/lados (sem passar para trás do próprio jogador).
-    angle = Math.max(-Math.PI + 0.05, Math.min(-0.05, a));
+    angle = clampForward(angleOf(sub(p, sc.passer)));
     drawAim();
   };
-  let dragging = false;
-  view.svg.addEventListener('pointerdown', (e) => {
-    dragging = true;
-    view.svg.setPointerCapture?.(e.pointerId);
-    setAngleFromPoint(view.toField(e.clientX, e.clientY));
-  });
-  view.svg.addEventListener('pointermove', (e) => {
-    if (dragging) setAngleFromPoint(view.toField(e.clientX, e.clientY));
-  });
-  view.svg.addEventListener('pointerup', () => {
-    dragging = false;
-  });
+  // Toque aponta; arrastar na horizontal ajusta. Arrastar na vertical rola a página.
+  const ended = roundEnd(rc).signal;
+  onTap(view.svg, ended, (e) => setAngleFromPoint(view.toField(e.clientX, e.clientY)));
+  let drag: { x: number; y: number; id: number; aiming: boolean } | null = null;
+  view.svg.addEventListener(
+    'pointerdown',
+    (e) => (drag = { x: e.clientX, y: e.clientY, id: e.pointerId, aiming: false }),
+    { signal: ended },
+  );
+  view.svg.addEventListener(
+    'pointermove',
+    (e) => {
+      if (!drag || drag.id !== e.pointerId) return;
+      const dx = e.clientX - drag.x;
+      const dy = e.clientY - drag.y;
+      if (!drag.aiming && Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) {
+        drag.aiming = true;
+        view.svg.setPointerCapture?.(e.pointerId);
+      }
+      if (drag.aiming) setAngleFromPoint(view.toField(e.clientX, e.clientY));
+    },
+    { signal: ended },
+  );
+  for (const type of ['pointerup', 'pointercancel'] as const)
+    view.svg.addEventListener(type, () => (drag = null), { signal: ended });
   const rotate = (deltaDeg: number) => {
     if (locked) return;
-    angle = Math.max(-Math.PI + 0.05, Math.min(-0.05, angle + (deltaDeg * Math.PI) / 180));
+    angle = clampForward(angle + (deltaDeg * Math.PI) / 180);
     drawAim();
   };
   const passBtn = button('Passar', () => void pass(), { variant: 'primary', big: true });
@@ -701,7 +765,8 @@ function runShot(rc: RoundContext): void {
     }
     grid.querySelectorAll('button').forEach((b) => ((b as HTMLButtonElement).disabled = true));
   };
-  svg.addEventListener('pointerdown', (e) => {
+  // Chuta no toque (soltar o dedo sem arrastar), não ao encostar: rolar a página não chuta.
+  onTap(svg, roundEnd(rc).signal, (e) => {
     const ctm = svg.getScreenCTM();
     if (!ctm) return;
     const pt = svg.createSVGPoint();

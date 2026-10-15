@@ -843,7 +843,8 @@ input[type='range'] {
   border-radius: var(--radius);
   overflow: hidden;
   background: var(--pitch);
-  touch-action: none;
+  /* Arrastar na vertical rola a página; toques e arrastos horizontais ficam com o simulador. */
+  touch-action: pan-y;
 }
 
 .field-svg {

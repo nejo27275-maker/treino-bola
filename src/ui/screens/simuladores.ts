@@ -2,7 +2,7 @@
 import { percent, millis } from '../../core/format.ts';
 import { clamp } from '../../core/geometry.ts';
 import { freshSeed } from '../../core/rng.ts';
-import { nextDifficulty, summarizeRounds } from '../../core/scoring.ts';
+import { nextStoredLevel, summarizeRounds } from '../../core/scoring.ts';
 import { logSimulator } from '../../core/sessionLog.ts';
 import type { RoundResult } from '../../core/sim/common.ts';
 import { SIM_MODES, SIM_MODE_ORDER, isSimModeId, roundSeed } from '../../core/sim/index.ts';
@@ -155,6 +155,7 @@ export async function simulatorScreen(
   };
 
   const startSession = () => {
+    ending = false;
     rounds = [];
     attemptIndex = 0;
     startedAt = ctx.now();
@@ -259,11 +260,16 @@ export async function simulatorScreen(
     if (ok) void endSession();
   };
 
+  /** Evita salvar a mesma sessão duas vezes (toque duplo em "Ver resultado"). */
+  let ending = false;
   const endSession = async () => {
+    if (ending) return;
+    ending = true;
     roundAbort?.abort();
     running = false;
     const summary = summarizeRounds(rounds);
-    const change = nextDifficulty(level, summary);
+    const storedLevel = levels[mode];
+    const change = nextStoredLevel(storedLevel, level, summary);
     const status = h('p', { role: 'status', class: 'small' });
     let sessionId: string | null = null;
     if (summary.attempts > 0 && startedAt) {
@@ -279,7 +285,7 @@ export async function simulatorScreen(
         await ctx.repo.saveSession(logged.session, logged.results);
         sessionId = logged.session.id;
         saved = true;
-        if (change.changed) {
+        if (change.changed && change.level !== storedLevel) {
           const updated = { ...(await ctx.repo.getSimLevels()), [mode]: change.level };
           await ctx.repo.saveSimLevels(updated);
           levels[mode] = change.level;
@@ -290,7 +296,8 @@ export async function simulatorScreen(
       }
     }
     const playedLevel = level;
-    if (change.changed) level = change.level;
+    // A próxima sessão começa no nível salvo (atualizado ou não por esta sessão).
+    level = levels[mode];
     const rate = summary.attempts ? summary.successes / summary.attempts : 0;
     replaceChildren(
       stage,

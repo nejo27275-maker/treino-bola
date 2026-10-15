@@ -95,6 +95,11 @@ export interface PlanBlock {
   simMode?: SimModeId;
   why: string;
   optional?: boolean;
+  /**
+   * Atividade guiada com duração própria (aquecimento, treino físico, atividade mental, teste,
+   * simulador): os minutos são os da atividade e não podem ser encurtados pelo plano.
+   */
+  fixed?: boolean;
 }
 
 export interface PlanDay {
@@ -247,7 +252,27 @@ function intensityFor(phase: PlanPhase): PlanIntensity {
   }
 }
 
-function item(
+/** Atividade guiada: usa a duração real da atividade (o temporizador dela não encolhe). */
+function guided(
+  kind: BlockKind,
+  it: CatalogItem | null,
+  why: string,
+  extra: Partial<PlanBlock> = {},
+): PlanBlock | null {
+  if (!it) return null;
+  return {
+    kind,
+    label: it.nome,
+    minutes: it.minutes,
+    activityId: it.id,
+    why,
+    fixed: true,
+    ...extra,
+  };
+}
+
+/** Exercício técnico: o volume se adapta ao tempo do dia (menos séries cabem em menos tempo). */
+function flexible(
   kind: BlockKind,
   it: CatalogItem | null,
   minutes: number,
@@ -258,24 +283,62 @@ function item(
   return { kind, label: it.nome, minutes, activityId: it.id, why, ...extra };
 }
 
-function fit(blocks: (PlanBlock | null)[], budget: number): PlanBlock[] {
-  const out: PlanBlock[] = [];
+/** Simulador: uma sessão de 10 rodadas leva cerca de 5 minutos. */
+function simBlock(skill: SkillId, why: string, extra: Partial<PlanBlock> = {}): PlanBlock | null {
+  const mode = SKILLS[skill].simulador;
+  if (!mode) return null;
+  return {
+    kind: 'simulador',
+    label: `Simulador: ${SKILLS[skill].curto}`,
+    minutes: 5,
+    activityId: mode,
+    simMode: mode,
+    skill,
+    why,
+    fixed: true,
+    ...extra,
+  };
+}
+
+/** Exercícios técnicos encurtados abaixo disso deixam de fazer sentido. */
+const MIN_FLEX_MINUTES = 4;
+/**
+ * Uma atividade guiada obrigatória pode passar até 2 minutos do tempo do dia: o tempo
+ * disponível é aproximado, e cortar um teste ou aquecimento por 1 minuto ajudaria menos.
+ */
+const FIXED_TOLERANCE_MINUTES = 2;
+
+/**
+ * Encaixa os blocos no tempo do dia, na ordem de prioridade:
+ * - o primeiro bloco sempre entra;
+ * - blocos opcionais só entram se couberem inteiros; guiados obrigatórios têm 2 min de folga;
+ * - o exercício técnico pode ser encurtado (até 4 min); atividades guiadas, não;
+ * - o que não couber fica de fora (e é informado no dia), sem impedir blocos seguintes menores.
+ */
+function fit(
+  blocks: (PlanBlock | null)[],
+  budget: number,
+): { kept: PlanBlock[]; dropped: PlanBlock[] } {
+  const kept: PlanBlock[] = [];
+  const dropped: PlanBlock[] = [];
   let used = 0;
   for (const block of blocks) {
     if (!block) continue;
-    if (used + block.minutes > budget && out.length > 0) {
-      if (block.optional) continue;
-      const remaining = budget - used;
-      if (remaining >= 4) {
-        out.push({ ...block, minutes: remaining });
-        used = budget;
-      }
+    const limit = block.fixed && !block.optional ? budget + FIXED_TOLERANCE_MINUTES : budget;
+    if (kept.length === 0 || used + block.minutes <= limit) {
+      kept.push(block);
+      used += block.minutes;
       continue;
     }
-    out.push(block);
-    used += block.minutes;
+    const remaining = budget - used;
+    if (!block.optional && !block.fixed && remaining >= MIN_FLEX_MINUTES) {
+      kept.push({ ...block, minutes: remaining });
+      used = budget;
+      continue;
+    }
+    if (!block.optional) dropped.push(block);
   }
-  return out;
+  return { kept, dropped };
 }
 
 export function buildPlan(input: PlanInput): Plan {
@@ -318,33 +381,38 @@ export function buildPlan(input: PlanInput): Plan {
     if (isToday && engine.wellbeing.level === 'atencao' && intensity === 'moderada')
       intensity = 'leve';
     const budget = budgetMinutes(profile, intensity);
+    // Na véspera o conteúdo é leve por natureza (pouca técnica e preparação mental), então pode
+    // usar todo o tempo disponível — exceto se hoje o bem-estar pediu uma sessão mais curta.
+    const dayBudget =
+      phase === 'competicao'
+        ? Number.POSITIVE_INFINITY
+        : phase === 'vespera' && !(isToday && engine.wellbeing.level !== 'ok')
+          ? budgetMinutes(profile, 'moderada')
+          : budget;
     const dayNotes: string[] = [];
     let blocks: (PlanBlock | null)[] = [];
-    const warmup = item(
+    const warmup = guided(
       'aquecimento',
       catalog.workout('aquecimento'),
-      5,
       'Prepara músculos e articulações e reduz o risco de lesão.',
     );
 
     if (phase === 'competicao') {
+      // No dia do jogo, rotina e aquecimento nunca são encurtados pelo limite de tempo de treino.
       blocks = [
-        item(
+        guided(
           'mental',
           catalog.mental('rotina'),
-          5,
           'Sua rotina pré-jogo ajuda a entrar concentrado e tranquilo.',
         ),
-        item(
+        guided(
           'aquecimento',
           catalog.workout('aquecimento_jogo'),
-          12,
           'Aquecimento curto antes do jogo, sem gastar energia.',
         ),
-        item(
+        guided(
           'mental',
           catalog.mental('respiracao'),
-          3,
           'Respiração calma antes de entrar e depois de um erro.',
           { optional: true },
         ),
@@ -357,14 +425,16 @@ export function buildPlan(input: PlanInput): Plan {
       );
     } else if (phase === 'vespera') {
       const t = tech[0];
-      // O tempo é dividido para sempre caber aquecimento, familiarização e revisão da rotina.
-      const available = budgetMinutes(profile, 'moderada');
-      const warmupMinutes = available >= 15 ? 5 : 3;
-      const techMinutes = Math.min(8, Math.max(4, available - warmupMinutes - 3));
+      const routine = guided('mental', catalog.mental('rotina'), 'Revise a rotina de amanhã.');
+      // A familiarização técnica usa o tempo que sobra depois do aquecimento e da rotina.
+      const techMinutes = Math.min(
+        8,
+        Math.max(MIN_FLEX_MINUTES, dayBudget - (warmup?.minutes ?? 0) - (routine?.minutes ?? 0)),
+      );
       blocks = [
-        warmup ? { ...warmup, minutes: warmupMinutes } : null,
+        warmup,
         t
-          ? item(
+          ? flexible(
               'tecnico',
               catalog.pickExercise(t.skill, { difficulty: 1, materials, space }),
               techMinutes,
@@ -372,11 +442,10 @@ export function buildPlan(input: PlanInput): Plan {
               { skill: t.skill },
             )
           : null,
-        item('mental', catalog.mental('rotina'), 3, 'Revise a rotina de amanhã.'),
-        item(
+        routine,
+        guided(
           'mental',
           catalog.mental('visualizacao'),
-          4,
           'Visualize boas jogadas: prepara a atenção sem cansar o corpo.',
           { optional: true },
         ),
@@ -389,24 +458,15 @@ export function buildPlan(input: PlanInput): Plan {
     } else if (phase === 'recuperacao' || phase === 'descanso') {
       const r = reading[0];
       blocks = [
-        item(
+        guided(
           'fisico',
           catalog.workout('mobilidade'),
-          phase === 'descanso' ? 5 : 8,
           'Mobilidade leve ajuda a recuperar sem impacto.',
         ),
-        r && r.skill
-          ? ({
-              kind: 'simulador',
-              label: `Simulador: ${SKILLS[r.skill].curto}`,
-              minutes: 5,
-              activityId: SKILLS[r.skill].simulador ?? 'decisao_rapida',
-              simMode: SKILLS[r.skill].simulador,
-              skill: r.skill,
-              why: 'Leitura de jogo treina a cabeça sem cansar as pernas.',
-            } satisfies PlanBlock)
-          : null,
-        item('mental', catalog.mental('respiracao'), 3, 'Respiração para relaxar e recuperar.'),
+        r ? simBlock(r.skill, 'Leitura de jogo treina a cabeça sem cansar as pernas.') : null,
+        guided('mental', catalog.mental('respiracao'), 'Respiração para relaxar e recuperar.', {
+          optional: true,
+        }),
       ];
       if (phase === 'descanso')
         dayNotes.push('Dia de descanso: priorize sono, alimentação e hidratação.');
@@ -415,87 +475,79 @@ export function buildPlan(input: PlanInput): Plan {
       const pending = SKILL_ORDER.filter(
         (s) => SKILLS[s].medidoPorAcerto && engine.assessments[s].status === 'pendente',
       );
-      const focusFirst = [...(profile?.focos ?? []).filter((s) => pending.includes(s)), ...pending];
+      // Focos do perfil primeiro, sem repetir o mesmo teste.
+      const focusFirst = [
+        ...new Set([...(profile?.focos ?? []).filter((s) => pending.includes(s)), ...pending]),
+      ];
       const techPending = focusFirst.filter((s) => SKILLS[s].grupo === 'tecnica');
       const readPending = focusFirst.filter((s) => SKILLS[s].grupo === 'leitura');
-      const testBlocks: (PlanBlock | null)[] = [];
-      for (const s of techPending.slice(0, 2)) {
-        testBlocks.push(
-          item(
-            'teste',
-            catalog.pickTest(s, materials),
-            8,
-            `Linha de base de ${SKILLS[s].curto.toLowerCase()}: sem ela, o motor não sabe o que priorizar.`,
-            { skill: s },
-          ),
+      const testFor = (s: SkillId) =>
+        guided(
+          'teste',
+          catalog.pickTest(s, materials),
+          `Linha de base de ${SKILLS[s].curto.toLowerCase()}: sem ela, o motor não sabe o que priorizar.`,
+          { skill: s },
         );
-      }
-      for (const s of readPending.slice(0, 1)) {
-        const mode = SKILLS[s].simulador;
-        if (mode) {
-          testBlocks.push({
-            kind: 'simulador',
-            label: `Simulador: ${SKILLS[s].curto}`,
-            minutes: 5,
-            activityId: mode,
-            simMode: mode,
-            skill: s,
-            why: 'Medição automática da leitura de jogo (10 rodadas).',
-          });
-        }
-      }
-      blocks = [warmup, ...testBlocks];
-      dayNotes.push('Faça os testes com calma: o objetivo é medir, não acertar tudo.');
-    } else {
-      // desenvolvimento / manutenção
-      const t = tech[devIndex % Math.max(1, tech.length)];
-      const r = reading[devIndex % Math.max(1, reading.length)];
-      const physicalKind: WorkoutKind = devIndex % 2 === 0 ? 'coordenacao' : 'core';
-      const nearEvent = dte !== null && dte <= 3;
+      const [firstTech, secondTech] = techPending;
+      const firstRead = readPending[0];
+      // Leitura de jogo entre os testes: mede outra área sem cansar as pernas.
       blocks = [
         warmup,
-        t
-          ? item(
-              'tecnico',
-              catalog.pickExercise(t.skill, {
-                difficulty: t.difficulty,
-                materials,
-                space,
-                focusError: t.focusError,
-              }),
-              Math.max(6, Math.round(budget * 0.4)),
-              t.why,
-              { skill: t.skill },
-            )
+        firstTech ? testFor(firstTech) : null,
+        firstRead
+          ? simBlock(firstRead, 'Medição automática da leitura de jogo (10 rodadas).')
           : null,
-        r && SKILLS[r.skill].simulador
-          ? ({
-              kind: 'simulador',
-              label: `Simulador: ${SKILLS[r.skill].curto}`,
-              minutes: 5,
-              activityId: SKILLS[r.skill].simulador as SimModeId,
-              simMode: SKILLS[r.skill].simulador,
-              skill: r.skill,
-              why: r.why,
-            } satisfies PlanBlock)
-          : null,
+        secondTech ? testFor(secondTech) : null,
+      ];
+      dayNotes.push('Faça os testes com calma: o objetivo é medir, não acertar tudo.');
+    } else {
+      // desenvolvimento / manutenção: técnica sempre; leitura e físico se alternam entre os dias.
+      const t = tech[devIndex % Math.max(1, tech.length)];
+      const r = reading[devIndex % Math.max(1, reading.length)];
+      const physicalKind: WorkoutKind = devIndex % 4 < 2 ? 'coordenacao' : 'core';
+      const nearEvent = dte !== null && dte <= 3;
+      const technical = t
+        ? flexible(
+            'tecnico',
+            catalog.pickExercise(t.skill, {
+              difficulty: t.difficulty,
+              materials,
+              space,
+              focusError: t.focusError,
+            }),
+            Math.max(6, Math.round(budget * 0.4)),
+            t.why,
+            { skill: t.skill },
+          )
+        : null;
+      const readingBlock = r ? simBlock(r.skill, r.why) : null;
+      const physical =
         intensity === 'moderada'
-          ? item(
+          ? guided(
               'fisico',
               catalog.workout(nearEvent ? 'agilidade' : physicalKind),
-              8,
               nearEvent
                 ? 'Agilidade em volume baixo: rapidez sem acumular cansaço perto do jogo.'
                 : physicalKind === 'core'
                   ? 'Estabilidade do tronco ajuda no equilíbrio e na proteção da bola.'
                   : 'Coordenação melhora o controle do corpo com a bola.',
-              { optional: true },
             )
-          : null,
-        item(
+          : null;
+      const physicalFirst = devIndex % 2 === 1 && physical !== null;
+      blocks = [
+        warmup,
+        technical,
+        physicalFirst ? physical : readingBlock,
+        physicalFirst
+          ? readingBlock
+            ? { ...readingBlock, optional: true }
+            : null
+          : physical
+            ? { ...physical, optional: true }
+            : null,
+        guided(
           'mental',
           catalog.mental(devIndex % 2 === 0 ? 'respiracao' : 'reset_erro'),
-          3,
           'Treino mental curto para manter o foco nos lances.',
           { optional: true },
         ),
@@ -503,13 +555,17 @@ export function buildPlan(input: PlanInput): Plan {
       devIndex++;
     }
 
-    // No dia do jogo, rotina e aquecimento não são encurtados pelo limite de tempo de treino.
-    // Na véspera, o conteúdo já é leve (pouca técnica e preparação mental): usa todo o tempo
-    // disponível para que a revisão da rotina não seja cortada.
-    const finalBlocks =
-      phase === 'competicao'
-        ? fit(blocks, Number.POSITIVE_INFINITY)
-        : fit(blocks, phase === 'vespera' ? budgetMinutes(profile, 'moderada') : budget);
+    const { kept: finalBlocks, dropped } = fit(blocks, dayBudget);
+    if (dropped.length) {
+      const onlyMental = dropped.every((b) => b.kind === 'mental');
+      dayNotes.push(
+        `Não coube no tempo de hoje: ${dropped.map((b) => b.label).join(', ')}. ${
+          onlyMental
+            ? 'Se puder, faça antes de dormir: não exige esforço físico.'
+            : 'Se tiver mais tempo, faça depois; senão, fica para outro dia.'
+        }`,
+      );
+    }
     const minutes = finalBlocks.reduce((sum, b) => sum + b.minutes, 0);
     const completedSessions = sessions.filter((s) => s.date === date).length;
     let title = PHASE_LABEL[phase];

@@ -80,31 +80,63 @@ describe('planejador até o interclasse', () => {
     assert.equal(eve.phase, 'vespera');
     assert.equal(eve.intensity, 'leve');
     assert.ok(!eve.blocks.some((b) => b.kind === 'fisico'));
-    // Familiarização técnica curta e a revisão da rotina pré-jogo cabem no tempo padrão.
+    // Familiarização técnica curta e a revisão da rotina pré-jogo cabem no tempo padrão;
+    // a visualização (opcional) fica para quem tem mais tempo.
     assert.deepEqual(
-      eve.blocks.map((b) => b.kind),
-      ['aquecimento', 'tecnico', 'mental', 'mental'],
+      eve.blocks.map((b) => b.activityId),
+      ['aquecimento-dinamico', eve.blocks[1]!.activityId, 'rotina-pre-jogo'],
     );
-    assert.ok(eve.blocks.some((b) => b.activityId === 'rotina-pre-jogo'));
+    assert.equal(eve.blocks[1]!.kind, 'tecnico');
     assert.ok(eve.minutes <= 20, `${eve.minutes} min`);
     assert.equal(p.days.find((d) => d.date === '2026-10-18')!.phase, 'recuperacao');
   });
 
-  test('com pouco tempo, a véspera mantém a rotina e corta primeiro a visualização', () => {
-    for (const minutes of [10, 12, 15]) {
-      const p = plan('2026-10-14', {
+  test('com pouco tempo, a véspera corta a visualização e, se preciso, indica a rotina para a noite', () => {
+    const eveWith = (minutes: number) =>
+      plan('2026-10-14', {
         results: baselineResults(),
         profile: profile({ minutosDisponiveis: minutes }),
-      });
-      const eve = p.days.find((d) => d.date === '2026-10-19')!;
-      assert.ok(eve.minutes <= minutes, `${minutes}: ${eve.minutes} min`);
-      assert.deepEqual(
-        eve.blocks.map((b) => b.kind),
-        ['aquecimento', 'tecnico', 'mental'],
-        `${minutes} min`,
-      );
-      assert.ok(eve.blocks.some((b) => b.activityId === 'rotina-pre-jogo'));
+      }).days.find((d) => d.date === '2026-10-19')!;
+    const fifteen = eveWith(15);
+    assert.ok(fifteen.minutes <= 15, `${fifteen.minutes} min`);
+    assert.deepEqual(
+      fifteen.blocks.map((b) => b.kind),
+      ['aquecimento', 'tecnico', 'mental'],
+    );
+    const ten = eveWith(10);
+    assert.ok(!ten.blocks.some((b) => b.activityId === 'rotina-pre-jogo'));
+    assert.ok(
+      ten.notes.some((n) => n.includes('Minha rotina pré-jogo') && n.includes('antes de dormir')),
+      ten.notes.join(' | '),
+    );
+  });
+
+  test('atividades guiadas usam a duração real e nunca são encurtadas', () => {
+    for (const minutes of [10, 15, 20, 30]) {
+      const p = plan('2026-10-14', { profile: profile({ minutosDisponiveis: minutes }) });
+      for (const d of p.days) {
+        for (const b of d.blocks) {
+          if (b.kind === 'aquecimento' && b.activityId === 'aquecimento-dinamico')
+            assert.equal(b.minutes, 6, `${minutes}/${d.date}`);
+          if (b.activityId === 'rotina-pre-jogo') assert.equal(b.minutes, 5);
+          if (b.kind === 'simulador') assert.equal(b.minutes, 5);
+        }
+        // O dia passa do tempo disponível no máximo pela folga de 2 min (exceto o dia do jogo).
+        if (d.phase !== 'competicao')
+          assert.ok(d.minutes <= minutes + 2, `${d.date}: ${d.minutes}`);
+      }
     }
+  });
+
+  test('dia de avaliação não repete o mesmo teste e prioriza os focos', () => {
+    const p = plan('2026-10-14', {
+      profile: profile({ focos: ['primeiro_toque', 'percepcao'], minutosDisponiveis: 30 }),
+    });
+    const today = p.days[0]!;
+    const ids = today.blocks.map((b) => b.activityId);
+    assert.equal(new Set(ids).size, ids.length, ids.join(', '));
+    assert.equal(today.blocks.find((b) => b.kind === 'teste')?.skill, 'primeiro_toque');
+    assert.equal(today.blocks.find((b) => b.kind === 'simulador')?.skill, 'percepcao');
   });
 
   test('não prescreve treino intenso todos os dias', () => {
@@ -186,7 +218,8 @@ describe('planejador até o interclasse', () => {
     const p = plan('2026-10-14', { profile: null, competition: null });
     assert.equal(p.mode, 'manutencao');
     assert.equal(p.days.length, 7);
-    assert.ok(p.days.every((d) => d.minutes <= 20));
+    // 20 min padrão + até 2 min de folga para não cortar uma atividade guiada.
+    assert.ok(p.days.every((d) => d.minutes <= 22));
   });
 
   test('marca sessões já registradas no dia', () => {
@@ -200,5 +233,8 @@ test('no dia da competição o aquecimento não é encurtado pelo limite de temp
     profile: profile({ minutosDisponiveis: 10, preferenciaSessao: 'curtas' }),
   }).days[0]!;
   const warmup = day.blocks.find((b) => b.kind === 'aquecimento');
-  assert.equal(warmup?.minutes, 12);
+  // Duração real do aquecimento pré-jogo guiado, mesmo com só 10 min disponíveis.
+  assert.equal(warmup?.activityId, 'aquecimento-pre-jogo');
+  assert.equal(warmup?.minutes, 10);
+  assert.ok(day.blocks.some((b) => b.activityId === 'rotina-pre-jogo'));
 });

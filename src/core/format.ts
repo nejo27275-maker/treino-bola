@@ -50,3 +50,10 @@ export function bytes(n: number): string {
   if (n < 1024 * 1024 * 1024) return `${decimal(n / (1024 * 1024), 1)} MB`;
   return `${decimal(n / (1024 * 1024 * 1024), 2)} GB`;
 }
+
+/** Hora local (HH:MM) de um instante ISO; vazio se a data for inválida. */
+export function localTime(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}

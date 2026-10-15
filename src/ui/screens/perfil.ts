@@ -102,7 +102,10 @@ export async function perfilScreen(ctx: AppContext): Promise<Screen> {
   const minutos = choiceGroup<string>(
     'Tempo por dia para treinar',
     'minutos',
-    MINUTE_OPTIONS.map((m) => ({ value: String(m), label: `${m} min` })),
+    // Um valor importado fora da lista (ex.: 25) continua disponível em vez de virar 20.
+    [...new Set([...MINUTE_OPTIONS, p.minutosDisponiveis])]
+      .sort((a, b) => a - b)
+      .map((m) => ({ value: String(m), label: `${m} min` })),
     String(p.minutosDisponiveis),
     false,
   );

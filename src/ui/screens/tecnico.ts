@@ -510,7 +510,10 @@ export async function exerciseSessionScreen(ctx: AppContext, id: string): Promis
       placeholder: 'Opcional: como foi, o que sentiu, o que quer ajustar.',
     });
     const saveBtn = button('Salvar sessão', () => void save(true), { variant: 'primary' });
+    let saving = false;
     const save = async (counted: boolean) => {
+      if (saving) return; // toque duplo não salva duas vezes
+      saving = true;
       saveBtn.disabled = true;
       const discomfortValue = Number(
         (discomfort.querySelector('input:checked') as HTMLInputElement | null)?.value ?? 0,
@@ -524,7 +527,9 @@ export async function exerciseSessionScreen(ctx: AppContext, id: string): Promis
         attempts,
         successes,
         errorTags,
-        seriesDone: Math.floor(attempts / e.repeticoes),
+        // Sem contagem, vale a palavra do jogador: ele tocou em "Concluir" e escolheu salvar
+        // como concluído. Com contagem, as séries completas vêm das tentativas registradas.
+        seriesDone: counted ? Math.floor(attempts / e.repeticoes) : e.series,
         seriesTotal: e.series,
         ...(rpeSelect.value !== '' ? { rpe: Number(rpeSelect.value) } : {}),
         discomfort: discomfortValue,
@@ -537,6 +542,7 @@ export async function exerciseSessionScreen(ctx: AppContext, id: string): Promis
         ctx.toast('Sessão salva no histórico.', 'sucesso');
         renderSaved(logged.session.id, discomfortValue);
       } catch (error) {
+        saving = false;
         saveBtn.disabled = false;
         statusEl.textContent = error instanceof Error ? error.message : String(error);
         ctx.toast('Não foi possível salvar. Seus dados continuam na tela.', 'erro');

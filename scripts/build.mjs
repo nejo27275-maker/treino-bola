@@ -78,8 +78,9 @@ async function buildServiceWorker() {
     path.join(dist, 'build-info.json'),
     JSON.stringify(
       {
+        // Sem data/hora do build: um novo build sem mudanças gera a mesma versão (o aparelho
+        // não baixa tudo de novo à toa).
         mode: isDev ? 'development' : 'production',
-        builtAt: new Date().toISOString(),
         pose: await poseInfo(),
       },
       null,

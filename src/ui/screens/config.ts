@@ -171,7 +171,8 @@ export async function configScreen(ctx: AppContext): Promise<Screen> {
         : 'mesclar';
     try {
       const summary = await ctx.repo.importData(data, mode);
-      if (data.settings && mode === 'substituir') await ctx.saveSettings(data.settings);
+      // Substituir troca também as configurações: as do arquivo ou, sem elas, as padrão.
+      if (mode === 'substituir') await ctx.saveSettings(await ctx.repo.getSettings());
       ctx.toast(
         `Importado: ${summary.sessions} sessão(ões), ${summary.results} resultado(s), ${summary.videoAnalyses} análise(s). Ignorados (já existiam): ${summary.skipped}.`,
         'sucesso',

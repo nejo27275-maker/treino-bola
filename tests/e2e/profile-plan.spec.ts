@@ -59,7 +59,7 @@ test('plano de 14/10/2026: sete dias até o interclasse de terça, 20/10', async
   await expect(days.nth(6)).toContainText('terça-feira, 20/10');
   await expect(days.nth(6)).toContainText('Dia da competição');
   await expect(days.nth(6)).toContainText('não há treino extra');
-  await expect(days.nth(6)).toContainText('Aquecimento pré-jogo12 min');
+  await expect(days.nth(6)).toContainText('Aquecimento pré-jogo10 min');
   await go(page, '#/', /Olá/);
   await expect(page.getByText('Faltam 6 dias')).toBeVisible();
 });

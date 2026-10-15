@@ -19,6 +19,9 @@ import type {
   TrainingSession,
 } from './types.ts';
 
+/** Duração máxima registrada para uma sessão (24 h). */
+export const MAX_SESSION_SEC = 86_400;
+
 export interface Logged {
   session: TrainingSession;
   results: ResultRecord[];
@@ -38,9 +41,13 @@ function baseSession(
   timing: Timing,
   extra: Partial<TrainingSession> = {},
 ): TrainingSession {
-  const durationSec =
+  // Telas abertas por muito tempo (ex.: esquecidas de um dia para o outro) não geram durações
+  // absurdas: o limite é o mesmo aceito na importação de backups.
+  const durationSec = Math.min(
+    MAX_SESSION_SEC,
     timing.activeSec ??
-    Math.max(0, Math.round((timing.endedAt.getTime() - timing.startedAt.getTime()) / 1000));
+      Math.max(0, Math.round((timing.endedAt.getTime() - timing.startedAt.getTime()) / 1000)),
+  );
   return {
     id: newId(),
     date: localDate(timing.startedAt),

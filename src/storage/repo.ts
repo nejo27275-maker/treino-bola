@@ -254,11 +254,12 @@ export class Repository {
   }
 
   async counts(): Promise<{ sessions: number; results: number; analyses: number; frames: number }> {
-    return {
-      sessions: (await this.backend.getAll('sessions')).length,
-      results: (await this.backend.getAll('results')).length,
-      analyses: (await this.backend.getAll('videoAnalyses')).length,
-      frames: (await this.backend.getAll('frames')).length,
-    };
+    const [sessions, results, analyses, frames] = await Promise.all([
+      this.backend.count('sessions'),
+      this.backend.count('results'),
+      this.backend.count('videoAnalyses'),
+      this.backend.count('frames'),
+    ]);
+    return { sessions, results, analyses, frames };
   }
 }

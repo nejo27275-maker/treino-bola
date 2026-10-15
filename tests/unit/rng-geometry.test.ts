@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import {
   angleDiff,
+  clampForward,
   distPointSegment,
   insideEllipse,
   laneDistance,
@@ -69,5 +70,16 @@ describe('geometria', () => {
     assert.ok(Math.abs(angleDiff(0.1, 2 * Math.PI - 0.1) - 0.2) < 1e-9);
     assert.equal(insideEllipse(vec(1, 0), vec(0, 0), 1, 2), true);
     assert.equal(insideEllipse(vec(1.01, 0), vec(0, 0), 1, 2), false);
+  });
+});
+
+describe('mira do passe', () => {
+  test('pontos atrás do passador vão para o lado mais próximo', () => {
+    const deg = (a: number) => Math.round((a * 180) / Math.PI);
+    assert.equal(deg(clampForward(-Math.PI / 2)), -90); // reto para o ataque
+    assert.equal(deg(clampForward(Math.PI * 0.25)), deg(-0.05)); // abaixo e à direita → direita
+    assert.equal(deg(clampForward(Math.PI * 0.75)), deg(-Math.PI + 0.05)); // abaixo e à esquerda → esquerda
+    assert.equal(deg(clampForward(Math.PI)), deg(-Math.PI + 0.05));
+    assert.equal(deg(clampForward(-Math.PI)), deg(-Math.PI + 0.05));
   });
 });

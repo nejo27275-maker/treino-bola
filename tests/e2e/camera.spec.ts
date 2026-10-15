@@ -79,6 +79,24 @@ test('@parada cena parada: calibra, mede tentativas sem movimento e salva a sér
   expect(sessions[0]?.summary).toMatchObject({ attempts: 2, successes: 0 });
 });
 
+test('@parada desligar a câmera no meio da série encerra a série: nada é salvo sozinho', async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(['camera']);
+  await openApp(page, '#/camera?tentativas=2');
+  await page.getByRole('button', { name: 'Ligar câmera' }).click();
+  await page.getByRole('tab', { name: 'Reação com movimento' }).click();
+  await page.getByRole('button', { name: 'Começar série' }).click();
+  await expect(page.locator('.stimulus.go')).toBeVisible({ timeout: 8000 });
+  await page.getByRole('button', { name: 'Desligar câmera' }).click();
+  await expect(page.getByText('Ligue a câmera para usar os modos de treino.')).toBeVisible();
+  // Tempo suficiente para a série terminar se ela continuasse sem a câmera (2 tentativas:
+  // janela de resposta 2,5 s + pausa 2,2 s + espera até 3,5 s + janela 2,5 s + pausa 2,2 s).
+  await page.waitForTimeout(15_000);
+  expect(await storedSessions(page)).toEqual([]);
+});
+
 test('@parada treino livre: a câmera é só espelho e a contagem manual é salva', async ({
   page,
   context,
@@ -132,6 +150,8 @@ test('@movimento o lado do movimento vem dos quadros reais e respeita o espelham
 
   // Sem espelhamento, o mesmo movimento aparece à esquerda.
   await facing.uncheck();
+  // Descarta o último valor exibido antes da troca (cada novo quadro sobrescreve as barras).
+  await page.waitForTimeout(500);
   const raw = await meterPeaks(page, 1500);
   expect(raw.left).toBeGreaterThan(5);
   expect(raw.right).toBe(0);

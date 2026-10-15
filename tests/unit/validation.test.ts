@@ -50,6 +50,20 @@ describe('importação de dados', () => {
     assert.equal(r.warnings.length, 0);
   });
 
+  test('sessões longas do próprio app voltam na importação (duração limitada a 24 h)', () => {
+    const data = validExport();
+    (data.sessions[0] as unknown as Record<string, unknown>).durationSec = 90_000;
+    const r = validateExport(data);
+    assert.equal(r.ok, true);
+    if (!r.ok) return;
+    assert.equal(r.data.sessions.length, 1);
+    assert.equal(r.data.sessions[0]?.durationSec, 86_400);
+    // Negativos e não numéricos continuam recusados.
+    (data.sessions[0] as unknown as Record<string, unknown>).durationSec = -5;
+    const bad = validateExport(data);
+    assert.ok(bad.ok && bad.data.sessions.length === 0);
+  });
+
   test('rejeita arquivos de outro aplicativo ou de versão futura', () => {
     assert.equal(validateExport({ app: 'outro', schemaVersion: 1 }).ok, false);
     assert.equal(validateExport({ ...validExport(), schemaVersion: 99 }).ok, false);

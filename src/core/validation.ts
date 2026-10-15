@@ -103,6 +103,11 @@ function num(v: unknown, path: string, min: number, max: number, integer = false
   return v;
 }
 
+/** Número não negativo; valores acima do limite são reduzidos ao limite (não recusados). */
+function capped(v: unknown, path: string, max: number): number {
+  return Math.min(max, num(v, path, 0, Number.POSITIVE_INFINITY));
+}
+
 function optNum(
   v: unknown,
   path: string,
@@ -230,7 +235,7 @@ export function validateSession(v: unknown, path = 'sessao'): TrainingSession {
     date: date(o.date, `${path}.date`),
     startedAt: iso(o.startedAt, `${path}.startedAt`),
     endedAt: iso(o.endedAt, `${path}.endedAt`),
-    durationSec: num(o.durationSec, `${path}.durationSec`, 0, 86_400),
+    durationSec: capped(o.durationSec, `${path}.durationSec`, 86_400),
     kind: oneOf<ActivityKind>(o.kind, ACTIVITY_KINDS, `${path}.kind`),
     activityId: str(o.activityId, `${path}.activityId`, 100),
     activityName: str(o.activityName, `${path}.activityName`, LIMITS.shortText),
@@ -347,7 +352,7 @@ export function validateAnalysis(v: unknown, path = 'analise'): VideoAnalysis {
     date: date(o.date, `${path}.date`),
     createdAt: iso(o.createdAt, `${path}.createdAt`),
     videoName: str(o.videoName, `${path}.videoName`, 200),
-    durationSec: num(o.durationSec, `${path}.durationSec`, 0, 86_400),
+    durationSec: capped(o.durationSec, `${path}.durationSec`, 86_400),
     markers,
     criteria,
     notes: str(o.notes ?? '', `${path}.notes`),

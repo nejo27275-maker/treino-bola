@@ -66,6 +66,17 @@ describe('datas de calendário', () => {
     assert.equal(run('Asia/Tokyo'), '2026-10-20');
   });
 
+  test('hora local de um instante salvo em UTC (rótulos do histórico)', () => {
+    // 22:30 em São Paulo fica salvo como 01:30Z do dia seguinte; o rótulo deve mostrar 22:30.
+    const script =
+      "import('./src/core/format.ts').then(m => console.log(m.localTime('2026-10-15T01:30:00.000Z'), JSON.stringify(m.localTime('x'))))";
+    const out = spawnSync(process.execPath, ['--input-type=module', '-e', script], {
+      env: { ...process.env, TZ: 'America/Sao_Paulo' },
+      encoding: 'utf8',
+    }).stdout.trim();
+    assert.equal(out, '22:30 ""');
+  });
+
   test('aritmética não é afetada por horário de verão', () => {
     // Nos EUA o horário de verão termina em 01/11/2026; a diferença continua sendo de dias inteiros.
     const script =

@@ -87,16 +87,25 @@ export class Router {
     void this.handle(true);
   }
 
-  /** Encerra a tela atual sem perguntar (usado ao apagar todos os dados). */
-  destroyCurrent(): void {
-    this.current?.destroy?.();
-    this.current = null;
+  /** Pergunta à tela atual se pode sair (ex.: antes de recarregar para atualizar o app). */
+  async confirmLeave(): Promise<boolean> {
+    return this.current?.canLeave ? await this.current.canLeave() : true;
   }
 
   private async handle(force = false): Promise<void> {
     if (this.ignoreNext) {
       this.ignoreNext = false;
       return;
+    }
+    // Âncoras da própria página (ex.: "#conteudo" do link "Pular para o conteúdo") não são
+    // rotas: o endereço volta para a tela atual sem recarregá-la.
+    if (location.hash && !location.hash.startsWith('#/')) {
+      const anchor = document.getElementById(decodeURIComponentSafe(location.hash.slice(1)));
+      history.replaceState(history.state, '', this.currentHash || '#/');
+      if (this.current) {
+        anchor?.focus();
+        return;
+      }
     }
     const hash = location.hash || '#/';
     if (!force && hash === this.currentHash && this.current) return;
@@ -146,6 +155,14 @@ export class Router {
       }
     };
     await run();
+  }
+}
+
+function decodeURIComponentSafe(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
   }
 }
 

@@ -93,7 +93,10 @@ function errorView(error: unknown, retry: () => void): HTMLElement {
   );
 }
 
-async function setupServiceWorker(ctx: AppContext): Promise<void> {
+async function setupServiceWorker(
+  ctx: AppContext,
+  confirmLeave: () => Promise<boolean>,
+): Promise<void> {
   if (!('serviceWorker' in navigator)) {
     ctx.pwa.swStatus = 'sem-suporte';
     ctx.notifyPwa();
@@ -119,7 +122,9 @@ async function setupServiceWorker(ctx: AppContext): Promise<void> {
     const registration = await navigator.serviceWorker.register('sw.js', { scope: './' });
     const markUpdate = (worker: ServiceWorker) => {
       ctx.pwa.updateReady = true;
-      ctx.pwa.applyUpdate = () => {
+      ctx.pwa.applyUpdate = async () => {
+        // Atualizar recarrega a página: antes, a tela atual confirma (treino não salvo).
+        if (!(await confirmLeave())) return;
         userRequestedUpdate = true;
         worker.postMessage({ type: 'SKIP_WAITING' });
       };
@@ -249,8 +254,16 @@ async function main(): Promise<void> {
 
   setupConnectivity(ctx);
   setupInstallPrompt(ctx);
+  // "Pular para o conteúdo" leva o foco à área principal sem criar uma entrada no histórico.
+  document
+    .querySelector<HTMLAnchorElement>('a[href="#conteudo"]')
+    ?.addEventListener('click', (e) => {
+      e.preventDefault();
+      outlet.focus();
+    });
+
   router.start();
-  void setupServiceWorker(ctx);
+  void setupServiceWorker(ctx, () => router.confirmLeave());
 }
 
 void main().catch((error) => {

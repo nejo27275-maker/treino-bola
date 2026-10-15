@@ -15,6 +15,8 @@ export interface Backend {
   readonly kind: 'indexeddb' | 'memoria';
   get<T>(store: StoreName, key: string): Promise<T | undefined>;
   getAll<T>(store: StoreName): Promise<T[]>;
+  /** Quantidade de registros, sem carregar os dados. */
+  count(store: StoreName): Promise<number>;
   /** Executa todas as operações em uma única transação (tudo ou nada). */
   batch(ops: BatchOp[]): Promise<void>;
   close(): void;
@@ -80,6 +82,10 @@ export class MemoryBackend implements Backend {
 
   async getAll<T>(store: StoreName): Promise<T[]> {
     return [...(this.data.get(store)?.values() ?? [])].map((v) => clone(v as T));
+  }
+
+  async count(store: StoreName): Promise<number> {
+    return this.data.get(store)?.size ?? 0;
   }
 
   async batch(ops: BatchOp[]): Promise<void> {
@@ -163,6 +169,15 @@ export class IdbBackend implements Backend {
     try {
       const tx = this.db.transaction(store, 'readonly');
       return (await promisify(tx.objectStore(store).getAll())) as T[];
+    } catch (error) {
+      throw friendlyStorageError(error);
+    }
+  }
+
+  async count(store: StoreName): Promise<number> {
+    try {
+      const tx = this.db.transaction(store, 'readonly');
+      return await promisify(tx.objectStore(store).count());
     } catch (error) {
       throw friendlyStorageError(error);
     }

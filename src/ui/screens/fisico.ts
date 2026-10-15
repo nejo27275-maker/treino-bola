@@ -107,7 +107,9 @@ export async function workoutScreen(ctx: AppContext, id: string): Promise<Screen
   let startedAt: Date | null = null;
   let activeMs = 0;
   let lastTick = 0;
-  let blocksDone = 0;
+  /** Blocos feitos até o fim do tempo; os pulados não contam como feitos. */
+  const completedBlocks = new Set<number>();
+  let blocksSkipped = 0;
   let stoppedForPain = false;
   const body = h('div', { class: 'stack' });
 
@@ -145,11 +147,12 @@ export async function workoutScreen(ctx: AppContext, id: string): Promise<Screen
     startTimer();
   };
 
-  const advance = () => {
+  const advance = (skipped = false) => {
     const block = w.blocos[index];
     if (!block) return;
     if (phase === 'bloco') {
-      blocksDone = Math.max(blocksDone, index + 1);
+      if (skipped) blocksSkipped++;
+      else completedBlocks.add(index);
       if (block.descansoSeg > 0 && index < w.blocos.length - 1) {
         phase = 'descanso';
         remaining = block.descansoSeg;
@@ -214,7 +217,7 @@ export async function workoutScreen(ctx: AppContext, id: string): Promise<Screen
         startedAt: startedAt ?? ctx.now(),
         endedAt: ctx.now(),
         activeSec: Math.round(activeMs / 1000),
-        blocksDone,
+        blocksDone: completedBlocks.size,
         blocksTotal: w.blocos.length,
         rpe: Number(rpe.value),
         discomfort: discomfortValue,
@@ -273,7 +276,7 @@ export async function workoutScreen(ctx: AppContext, id: string): Promise<Screen
       h(
         'p',
         { class: 'small muted' },
-        `Blocos concluídos: ${blocksDone} de ${w.blocos.length}. Tempo ativo: ${clock(activeMs / 1000)}.`,
+        `Blocos concluídos: ${completedBlocks.size} de ${w.blocos.length}${blocksSkipped ? ` (${blocksSkipped} pulado${blocksSkipped > 1 ? 's' : ''})` : ''}. Tempo ativo: ${clock(activeMs / 1000)}.`,
       ),
       field('Esforço percebido (0 a 10)', rpe, 'Quão puxado foi? 0 = repouso; 10 = máximo.'),
       discomfort,
@@ -455,7 +458,7 @@ export async function workoutScreen(ctx: AppContext, id: string): Promise<Screen
           'Pular',
           () => {
             if (phase === 'pausado') phase = pausedFrom;
-            advance();
+            advance(true);
           },
           { variant: 'ghost' },
         ),

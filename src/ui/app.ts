@@ -36,7 +36,7 @@ export interface PwaState {
   swStatus: 'sem-suporte' | 'inseguro' | 'registrando' | 'ativo' | 'erro' | 'desenvolvimento';
   swError?: string;
   updateReady: boolean;
-  applyUpdate?: () => void;
+  applyUpdate?: () => void | Promise<void>;
   installed: boolean;
 }
 

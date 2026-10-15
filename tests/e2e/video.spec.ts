@@ -100,7 +100,20 @@ test('vídeo: marcar momentos, capturar quadro, mapa de movimento e avaliação 
   ).toBeVisible();
   await expect(page.getByAltText(/Quadro salvo em/)).toBeVisible();
 
+  // Depois de salvar, começa uma avaliação nova: salvar de novo sem marcar nada não duplica.
+  await expect(
+    page
+      .getByRole('group', { name: 'Domínio e primeiro toque' })
+      .getByRole('radio', { name: 'Bom' }),
+  ).not.toBeChecked();
+  await expect(page.locator('main .thumbs img')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Salvar avaliação' }).click();
+  await expect(
+    page.getByText('Marque pelo menos um critério, um momento ou escreva uma observação.'),
+  ).toBeVisible();
+
   const sessions = await storedSessions(page);
+  expect(sessions).toHaveLength(1);
   expect(sessions[0]?.kind).toBe('video');
   await go(page, '#/historico', 'Histórico e evolução');
   await page.getByRole('link', { name: 'Vídeo: treino.webm' }).click();

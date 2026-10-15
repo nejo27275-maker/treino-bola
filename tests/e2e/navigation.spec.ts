@@ -106,6 +106,13 @@ test('teclado: link para pular ao conteúdo e foco no título ao trocar de tela'
   await expect(skip).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.locator('#conteudo')).toBeFocused();
+  // A tela continua a mesma (a âncora não é tratada como rota) e o endereço não muda.
+  await expect(page.locator('main h1')).toHaveText(/Olá/);
+  expect(new URL(page.url()).hash).toBe('#/');
+  // Um endereço aberto já com a âncora também mostra a tela inicial, não "Página não encontrada".
+  await page.goto('#conteudo');
+  await page.reload();
+  await expect(page.locator('main h1')).toHaveText(/Olá/);
   await page
     .getByRole('navigation', { name: 'Navegação principal' })
     .getByRole('link', { name: 'Plano' })

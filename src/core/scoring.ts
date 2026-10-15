@@ -64,3 +64,48 @@ export function nextDifficulty(current: number, summary: SessionSummary): Diffic
   }
   return { level, changed: false, reason: `Acerto de ${pct}%: nível ${level} mantido.` };
 }
+
+/**
+ * Nível salvo do jogador depois de uma sessão jogada em `played` (que pode ter sido escolhido
+ * manualmente). A regra de progressão só vale na direção que a sessão comprova:
+ * - jogou no próprio nível: regra normal (sobe com ≥ 80 %, desce com < 40 %);
+ * - jogou acima e foi bem: o nível salvo passa para um acima do jogado;
+ * - jogou abaixo e foi mal: o nível salvo passa para um abaixo do jogado;
+ * - nos demais casos (ex.: ir mal acima do próprio nível) o nível salvo não muda.
+ */
+export function nextStoredLevel(
+  stored: number,
+  played: number,
+  summary: SessionSummary,
+): DifficultyChange {
+  const current = Math.min(5, Math.max(1, Math.round(stored)));
+  const level = Math.min(5, Math.max(1, Math.round(played)));
+  const change = nextDifficulty(level, summary);
+  if (level === current) return change;
+  const keep = (why: string): DifficultyChange => ({
+    level: current,
+    changed: false,
+    reason: `${why} Seu nível salvo continua ${current}.`,
+  });
+  if (!change.changed) return keep(change.reason);
+  const above = level > current;
+  const improved = change.level > level;
+  if (above && improved && change.level > current) {
+    return {
+      level: change.level,
+      changed: true,
+      reason: `${change.reason.replace(/:.*$/, '')} no nível ${level}, acima do seu nível ${current}: seu nível passa a ser ${change.level}.`,
+    };
+  }
+  if (!above && !improved && change.level < current) {
+    return {
+      level: change.level,
+      changed: true,
+      reason: `${change.reason.replace(/:.*$/, '')} no nível ${level}, abaixo do seu nível ${current}: seu nível passa a ser ${change.level}.`,
+    };
+  }
+  const pct = Math.round((summary.successes / Math.max(1, summary.attempts)) * 100);
+  return keep(
+    `Acerto de ${pct}% no nível ${level}, escolhido ${above ? 'acima' : 'abaixo'} do seu nível ${current}.`,
+  );
+}

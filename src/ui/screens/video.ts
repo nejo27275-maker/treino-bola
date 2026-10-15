@@ -123,7 +123,8 @@ function motionChart(map: MotionMap, duration: number, onSeek: (t: number) => vo
 }
 
 export async function videoScreen(ctx: AppContext): Promise<Screen> {
-  const startedAt = ctx.now();
+  /** Início da avaliação atual (abrir um vídeo ou salvar começa uma nova). */
+  let startedAt = ctx.now();
   let objectUrl: string | null = null;
   let fileName = '';
   let markers: VideoMarker[] = [];
@@ -275,7 +276,28 @@ export async function videoScreen(ctx: AppContext): Promise<Screen> {
     frames = [];
   };
 
+  /**
+   * Começa uma nova avaliação do mesmo vídeo depois de salvar: cada avaliação salva é um
+   * registro próprio, então nada é contado duas vezes e os quadros não são compartilhados.
+   */
+  const startNewEvaluation = () => {
+    markers = [];
+    ratings = {};
+    poseSummary = null;
+    notes.value = '';
+    dirty = false;
+    for (const f of frames) URL.revokeObjectURL(f.url);
+    frames = [];
+    startedAt = ctx.now();
+    drawMarkers();
+    drawFrames();
+    drawEval();
+    void drawPoseSection();
+    overlay.getContext('2d')?.clearRect(0, 0, overlay.width, overlay.height);
+  };
+
   const resetAnalysis = () => {
+    startedAt = ctx.now();
     markers = [];
     ratings = {};
     motion = null;
@@ -778,9 +800,9 @@ export async function videoScreen(ctx: AppContext): Promise<Screen> {
     if (analysis.notes) logged.session.notes = analysis.notes;
     try {
       await ctx.repo.saveAnalysis(analysis, logged.session, logged.results, storedFrames);
-      dirty = false;
       ctx.toast('Avaliação salva.', 'sucesso');
-      saveStatus.textContent = `Avaliação salva: ${evaluated} critério(s) com evidência${storedFrames.length ? `, ${storedFrames.length} quadro(s) guardado(s)` : ''}. Origem: avaliação manual (observação de vídeo).`;
+      startNewEvaluation();
+      saveStatus.textContent = `Avaliação salva: ${evaluated} critério(s) com evidência${storedFrames.length ? `, ${storedFrames.length} quadro(s) guardado(s)` : ''}. Origem: avaliação manual (observação de vídeo). Para avaliar de novo, marque os critérios outra vez: cada avaliação salva é um registro separado.`;
       void drawHistory();
     } catch (error) {
       saveStatus.textContent = `Não foi possível salvar: ${error instanceof Error ? error.message : String(error)}`;

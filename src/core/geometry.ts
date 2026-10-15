@@ -109,3 +109,15 @@ export function round(value: number, decimals = 2): number {
   const f = 10 ** decimals;
   return Math.round(value * f) / f;
 }
+
+/**
+ * Limita a direção do passe à metade da frente (ângulos de −π a 0; −π/2 = reto para o
+ * ataque, já que o campo cresce para baixo). Um ponto atrás do passador vai para o lado mais
+ * próximo, nunca para o oposto.
+ */
+export function clampForward(a: number): number {
+  const MIN = -Math.PI + 0.05;
+  const MAX = -0.05;
+  if (a > 0) return a > Math.PI / 2 ? MIN : MAX;
+  return Math.max(MIN, Math.min(MAX, a));
+}

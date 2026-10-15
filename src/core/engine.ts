@@ -53,6 +53,8 @@ export interface ChannelEstimate {
 export interface SessionRate {
   sessionId: string;
   date: string;
+  /** Momento do registro (ISO), para ordenar várias sessões do mesmo dia. */
+  createdAt: string;
   rate: number;
   attempts: number;
   channel: EvidenceChannel;
@@ -179,10 +181,12 @@ function sessionRatesFor(results: ResultRecord[]): SessionRate[] {
       const total = current.attempts + r.attempts;
       current.rate = (current.rate * current.attempts + r.successes) / total;
       current.attempts = total;
+      if (r.createdAt < current.createdAt) current.createdAt = r.createdAt;
     } else {
       bySession.set(key, {
         sessionId: r.sessionId,
         date: r.date,
+        createdAt: r.createdAt,
         rate: r.successes / r.attempts,
         attempts: r.attempts,
         channel,
@@ -190,8 +194,12 @@ function sessionRatesFor(results: ResultRecord[]): SessionRate[] {
       });
     }
   }
-  return [...bySession.values()].sort((a, b) =>
-    a.date === b.date ? a.sessionId.localeCompare(b.sessionId) : a.date.localeCompare(b.date),
+  // Ordem cronológica: data e, no mesmo dia, horário do registro (o id só desempata).
+  return [...bySession.values()].sort(
+    (a, b) =>
+      a.date.localeCompare(b.date) ||
+      a.createdAt.localeCompare(b.createdAt) ||
+      a.sessionId.localeCompare(b.sessionId),
   );
 }
 

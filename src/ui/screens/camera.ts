@@ -91,6 +91,8 @@ export async function cameraScreen(ctx: AppContext, query: URLSearchParams): Pro
   let mode: Mode = 'livre';
   let poseDetector: PoseDetector | null = null;
   const cleanups: (() => void)[] = [];
+  /** Limpeza do modo atual (temporizadores, séries, carregamentos): roda ao trocar de modo ou desligar. */
+  const modeCleanups: (() => void)[] = [];
 
   const facingSelect = select<Facing>(
     [
@@ -140,12 +142,18 @@ export async function cameraScreen(ctx: AppContext, query: URLSearchParams): Pro
     stopLoop = null;
   };
 
+  /** Encerra tudo o que o modo atual iniciou: sem câmera, nenhuma série continua sozinha. */
+  const teardownMode = () => {
+    stopProcessing();
+    for (const fn of modeCleanups.splice(0)) fn();
+  };
+
   const updateIndicator = () => {
     ctx.setHeaderStatus('camera', camera.active ? pill('Câmera ligada', 'live') : null);
   };
 
   const stopCamera = () => {
-    stopProcessing();
+    teardownMode();
     camera.stop();
     overlay.getContext('2d')?.clearRect(0, 0, overlay.width, overlay.height);
   };
@@ -244,7 +252,7 @@ export async function cameraScreen(ctx: AppContext, query: URLSearchParams): Pro
       () => (timer.textContent = clock(watch.elapsedMs() / 1000)),
       500,
     );
-    cleanups.push(() => window.clearInterval(tick));
+    modeCleanups.push(() => window.clearInterval(tick));
     const mark = (success: boolean) => {
       if (!watch.running) watch.start();
       total++;
@@ -346,7 +354,10 @@ export async function cameraScreen(ctx: AppContext, query: URLSearchParams): Pro
       if (phaseTimer !== null) window.clearTimeout(phaseTimer);
       phaseTimer = null;
     };
-    cleanups.push(clearPhaseTimer);
+    modeCleanups.push(() => {
+      clearPhaseTimer();
+      phase = 'fim';
+    });
 
     const onSample = (sample: MotionSample, now: number) => {
       meterLeft.style.width = `${Math.min(100, sample.leftRatio * 400)}%`;
@@ -534,9 +545,6 @@ export async function cameraScreen(ctx: AppContext, query: URLSearchParams): Pro
       controls,
       button('Começar série', () => startSeries(), { variant: 'primary' }),
     );
-    cleanups.push(() => {
-      phase = 'fim';
-    });
     return card(
       { title: 'Reação com movimento (detecção automática)' },
       h(
@@ -576,10 +584,15 @@ export async function cameraScreen(ctx: AppContext, query: URLSearchParams): Pro
   // ——— Pose ao vivo (experimental) ———
   const poseMode = () => {
     const out = h('div', { class: 'small', 'aria-live': 'polite' }, 'Carregando o detector…');
+    let cancelled = false;
+    modeCleanups.push(() => {
+      cancelled = true;
+    });
     void (async () => {
       try {
         poseDetector = poseDetector ?? (await loadPoseDetector());
       } catch (error) {
+        if (cancelled) return;
         replaceChildren(
           out,
           problemCard({
@@ -591,6 +604,8 @@ export async function cameraScreen(ctx: AppContext, query: URLSearchParams): Pro
         );
         return;
       }
+      // Trocou de modo ou desligou a câmera enquanto o modelo carregava: não assume a câmera.
+      if (cancelled || !camera.active) return;
       stopProcessing();
       const octx = overlay.getContext('2d');
       stopLoop = frameLoop(video, Math.min(10, Number(fpsSelect.value)), (now) => {
@@ -654,7 +669,7 @@ export async function cameraScreen(ctx: AppContext, query: URLSearchParams): Pro
     );
   };
   const renderMode = () => {
-    stopProcessing();
+    teardownMode();
     overlay.getContext('2d')?.clearRect(0, 0, overlay.width, overlay.height);
     meterLeft.style.width = '0';
     meterRight.style.width = '0';

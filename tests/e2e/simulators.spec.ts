@@ -219,6 +219,46 @@ test('F — finalização: chute no canto livre é gol; fora da baliza é "Para 
   await expect(page.getByRole('heading', { name: 'Para fora' })).toBeVisible();
 });
 
+test('teclado: Enter ativa o botão focado (não passa a bola) e os atalhos param no fim da rodada', async ({
+  page,
+}) => {
+  await start(page, 'passe_brecha');
+  const angle = () => page.getByText(/^Direção: -?\d+°/).textContent();
+  const before = await angle();
+  const rotateLeft = page.getByRole('button', { name: /Girar a mira 3 graus para a esquerda/ });
+  await rotateLeft.focus();
+  await page.keyboard.press('Enter');
+  // Enter girou a mira (ação do botão focado) e não encerrou a rodada com um passe.
+  await expect.poll(angle).not.toBe(before);
+  await expect(page.locator('.sim-feedback')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Passar' }).click();
+  const next = page.getByRole('button', { name: /Próxima rodada|Repetir rodada/ });
+  await expect(next).toBeFocused();
+  // Depois da rodada, Enter no botão focado vai para a próxima rodada (antes era engolido).
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.sim-feedback')).toHaveCount(0);
+  await expect(page.getByText(/Rodada 2 de 10/)).toBeVisible();
+});
+
+test('toque: arrastar o dedo sobre a baliza (rolar a página) não chuta; tocar chuta', async ({
+  page,
+}) => {
+  await start(page, 'finalizacao');
+  const goalWidth = await page.evaluate(async (seed) => {
+    const { generateShot } = await import(String('./js/core/sim/finalizacao.js'));
+    const { roundSeed } = await import(String('./js/core/sim/index.js'));
+    return generateShot(roundSeed(seed, 'finalizacao', 0), 1, 'nao_sei').goal.width;
+  }, SEED);
+  const p = await svgToScreen(page, goalWidth * 0.12, 0.3);
+  await page.mouse.move(p.x, p.y);
+  await page.mouse.down();
+  await page.mouse.move(p.x, p.y + 40, { steps: 5 });
+  await page.mouse.up();
+  await expect(page.locator('.sim-feedback')).toHaveCount(0);
+  await page.mouse.click(p.x, p.y);
+  await expect(page.locator('.sim-feedback h2')).toBeVisible();
+});
+
 test('mesma semente reproduz exatamente o mesmo cenário; outra semente muda', async ({ page }) => {
   const snapshot = async (seed: number) => {
     await page.goto('about:blank');

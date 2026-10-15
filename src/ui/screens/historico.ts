@@ -1,6 +1,6 @@
 /** Histórico e evolução: sessões, gráficos por fundamento, simuladores e comparação. */
 import { formatDayMonth, formatLong } from '../../core/dates.ts';
-import { clock, millis, percent } from '../../core/format.ts';
+import { clock, localTime, millis, percent } from '../../core/format.ts';
 import { SIM_MODES, SIM_MODE_ORDER, isSimModeId } from '../../core/sim/index.ts';
 import { SKILLS, SKILL_ORDER, SOURCE_INFO } from '../../core/skills.ts';
 import type { TrainingSession } from '../../core/types.ts';
@@ -242,7 +242,7 @@ function compareView(snap: Snapshot): HTMLElement {
   let aSelect: HTMLSelectElement;
   let bSelect: HTMLSelectElement;
   const label = (s: TrainingSession) =>
-    `${formatDayMonth(s.date)} ${s.startedAt.slice(11, 16)} — ${s.summary?.successes}/${s.summary?.attempts}`;
+    `${formatDayMonth(s.date)} ${localTime(s.startedAt)} — ${s.summary?.successes}/${s.summary?.attempts}`;
   const drawSelects = () => {
     const list = byActivity.get(activitySelect.value) ?? [];
     aSelect = select(
@@ -399,11 +399,7 @@ export async function sessionDetailScreen(ctx: AppContext, id: string): Promise<
       h(
         'ul',
         { class: 'small' },
-        h(
-          'li',
-          null,
-          `Início: ${new Date(s.startedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · duração ativa ${clock(s.durationSec)}`,
-        ),
+        h('li', null, `Início: ${localTime(s.startedAt)} · duração ativa ${clock(s.durationSec)}`),
         h(
           'li',
           null,
