@@ -519,7 +519,7 @@ export function buildPlan(input: PlanInput): Plan {
       const t = tech[devIndex % Math.max(1, tech.length)];
       const r = reading[devIndex % Math.max(1, reading.length)];
       const physicalKind = PHYSICAL_ROTATION[devIndex % PHYSICAL_ROTATION.length] ?? 'coordenacao';
-      const nearEvent = dte !== null && dte <= 3;
+      const nearEvent = dte !== null && dte >= 0 && dte <= 3;
       const technical = t
         ? flexible(
             'tecnico',
