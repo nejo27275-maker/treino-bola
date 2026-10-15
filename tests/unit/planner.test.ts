@@ -202,6 +202,17 @@ describe('planejador até o interclasse', () => {
       'forca-peso-corporal',
       'aceleracao-curta',
     ]);
+    const physicalBlocks = p.days.flatMap((day) =>
+      day.blocks.filter((block) => rotatedIds.has(block.activityId)),
+    );
+    assert.match(
+      physicalBlocks.find((block) => block.activityId === 'forca-peso-corporal')?.why ?? '',
+      /força funcional/i,
+    );
+    assert.match(
+      physicalBlocks.find((block) => block.activityId === 'aceleracao-curta')?.why ?? '',
+      /arrancadas curtas/i,
+    );
   });
 
   test('plano curto não pula capacidades quando o bloco físico opcional não cabe', () => {
