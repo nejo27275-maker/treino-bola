@@ -180,6 +180,7 @@ test('simuladores: descrição da cena em texto, sem revelar o que está escondi
   await page.getByRole('button', { name: 'Começar sessão' }).click();
   await page.getByText('Descrição da cena em texto').click();
   const people = page.locator('.scene-description li', { hasNotText: 'Parte do campo' });
+  await expect(people.first()).toBeVisible();
   const before = await people.count();
   // Quando a bola chega, a parte de trás some do desenho e da descrição.
   await expect(page.locator('.scene-description')).toContainText('Parte do campo está escondida', {
