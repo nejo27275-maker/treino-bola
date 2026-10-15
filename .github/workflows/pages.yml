@@ -1,0 +1,46 @@
+# Publicação MANUAL no GitHub Pages (aba Actions → "Publicar no GitHub Pages" → Run workflow).
+# Antes, em Settings → Pages, escolha "Source: GitHub Actions". O site fica em
+# https://<usuário>.github.io/<repositório>/ — o app usa só caminhos relativos.
+name: Publicar no GitHub Pages
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Instalar ferramentas de desenvolvimento
+        run: npm install --no-audit --no-fund
+      # Opcional: detector de pose (baixa o MediaPipe e o modelo). Confira a licença do modelo
+      # antes de publicar (docs/VISAO_COMPUTACIONAL.md) e descomente a linha abaixo.
+      # - run: npm run pose:prepare
+      - name: Build de produção
+        run: npm run build
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

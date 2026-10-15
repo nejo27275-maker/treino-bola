@@ -1,0 +1,35 @@
+# Verificação completa (tipos, lint, formatação, testes unitários, build e testes de interface).
+# Roda em pull requests e sob demanda (aba Actions → "Verificação" → Run workflow).
+name: Verificação
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Instalar ferramentas de desenvolvimento
+        run: npm install --no-audit --no-fund
+      - name: Instalar o Chromium do Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Verificar tudo
+        run: npm run check
+        env:
+          CI: 'true'
+      - name: Relatório dos testes de interface (em caso de falha)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

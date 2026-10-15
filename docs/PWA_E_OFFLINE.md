@@ -46,7 +46,8 @@ resultado é salvo.
   próprio site são atendidos primeiro pelo cache; navegações recebem o `index.html` guardado.
 - Nada de outros domínios é interceptado ou guardado.
 - Arquivos opcionais de pose (`vendor/` e `models/`) ficam em um cache separado
-  (`cfa-opcional-v1`) e só são guardados quando o jogador pede.
+  (`cfa-opcional-<versão dos arquivos>`) e só são guardados quando o jogador pede; versões antigas
+  são apagadas quando uma nova versão do app é ativada.
 
 ## Atualizações
 

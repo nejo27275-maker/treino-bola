@@ -81,6 +81,9 @@ desconforto moderado, esforço ≥ 8 no último dia ou três dias seguidos de es
   incompletas.
 - Progressão (`src/core/scoring.ts`): com pelo menos 8 tentativas, ≥ 80 % de acerto sobe um nível
   e < 40 % desce um nível (níveis 1 a 5).
+- O **nível salvo** só muda na direção que a sessão comprova: jogando no próprio nível vale a
+  regra acima; ir bem num nível escolhido acima promove para um acima do jogado; ir mal num nível
+  abaixo rebaixa; ir mal acima (ou bem abaixo) não muda nada — a tela explica o porquê.
 
 ## 5. Plano até a competição
 
@@ -97,7 +100,18 @@ competição padrão é o interclasse de **20/10/2026** e pode ser trocada em Pl
 | hoje, se faltam testes de base (≥ 3 fundamentos centrais pendentes) | Avaliação inicial (testes de linha de base)                                                            | moderada    |
 | demais dias                                                         | Desenvolvimento: técnica prioritária pelo motor + leitura de jogo + físico moderado                    | moderada    |
 
-- O tempo de cada dia respeita o tempo disponível do perfil (padrão 20 min; dias leves ≈ 60 %).
+- **Minutos honestos:** aquecimentos, treinos físicos, atividades mentais, testes de linha de
+  base e simuladores entram com a **duração real** da atividade guiada (ex.: aquecimento dinâmico
+  6 min, aquecimento pré-jogo 10 min, rotina pré-jogo 5 min, simulador ≈ 5 min) e nunca são
+  encurtados; só o exercício técnico se ajusta ao tempo (menos séries, mínimo 4 min).
+- O dia cabe no tempo disponível do perfil (padrão 20 min; dias leves ≈ 60 %), com folga de até
+  2 min para não cortar uma atividade guiada obrigatória. O que não couber aparece como aviso no
+  dia ("Não coube no tempo de hoje: …"), com a sugestão de fazer depois — a parte mental, antes
+  de dormir.
+- Na **véspera**, o tempo disponível inteiro pode ser usado (o conteúdo é leve): aquecimento,
+  familiarização técnica curta e revisão da rotina pré-jogo; a visualização é opcional.
+- Nos dias de desenvolvimento, técnica sempre; leitura de jogo (simulador) e físico se alternam
+  como segundo bloco, e o outro entra se sobrar tempo.
 - Se hoje o bem-estar pede descanso ou sessão leve, o plano de hoje muda automaticamente.
 - Competição a mais de 21 dias: mostra as próximas duas semanas.
 - **Evento que já passou:** o aplicativo avisa que a data passou, não mostra datas antigas como

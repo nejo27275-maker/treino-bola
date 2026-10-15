@@ -92,9 +92,15 @@ relação validada entre esses ângulos e acertar um passe ou um domínio.
 Os arquivos **não** fazem parte do repositório. Com internet:
 
 ```bash
-npm run pose:prepare      # baixa @mediapipe/tasks-vision (npm) e o modelo pose_landmarker_lite
+npm run pose:prepare      # baixa @mediapipe/tasks-vision 0.10.21 (npm) e o modelo pose_landmarker_lite
 npm run build             # o build registra em build-info.json que o detector está disponível
 ```
+
+A versão do pacote é **fixada** (o npm confere a integridade do pacote baixado); para outra,
+use `node scripts/prepare-pose.mjs --version X.Y.Z`. O script imprime o SHA-256 do pacote e do
+modelo: anote-os e, nas próximas instalações, passe `--tarball-sha256 <hash>` e
+`--model-sha256 <hash>` para que arquivos diferentes sejam recusados. Pacotes com links
+simbólicos ou entradas especiais também são recusados.
 
 Sem internet, com os arquivos já baixados:
 
@@ -111,10 +117,12 @@ de conteúdo (CSP) da página, que já permite `wasm-unsafe-eval` para o WebAsse
 
 ### Offline
 
-Os arquivos de pose ficam **fora** do pré-cache do aplicativo (são grandes e opcionais). Na tela
-de vídeo, depois de carregar o detector, eles podem ser guardados em um cache separado. O
-aplicativo **não** afirma que a pose funciona offline enquanto esses arquivos não estiverem
-guardados no aparelho.
+Os arquivos de pose ficam **fora** do pré-cache do aplicativo (são grandes e opcionais). Em
+**Mais → Configurações → Visão computacional local**, o botão "Guardar o detector para uso
+offline" baixa todos os arquivos e só confirma se todos vieram. O cache tem o nome da versão dos
+arquivos (`cfa-opcional-<versão>`): quando o servidor publica outra versão do detector, o service
+worker apaga a antiga na ativação. O aplicativo **não** afirma que a pose funciona offline
+enquanto esses arquivos não estiverem guardados no aparelho.
 
 ### Estado de validação
 

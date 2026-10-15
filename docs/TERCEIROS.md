@@ -11,10 +11,10 @@ fonte do sistema) nem scripts externos. Os ícones são gerados por `scripts/mak
 Só presente se alguém executar `npm run pose:prepare` antes do build (não incluído no
 repositório):
 
-| Item                                                      | Origem                                        | Licença                                                                                                                                            |
-| --------------------------------------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@mediapipe/tasks-vision` (`vision_bundle.mjs` + `wasm/`) | registro npm (Google AI Edge / MediaPipe)     | Apache License 2.0 — o script copia o arquivo de licença do pacote para `public/vendor/mediapipe/` e registra o campo `license` em `manifest.json` |
-| `pose_landmarker_lite.task`                               | `storage.googleapis.com/mediapipe-models/...` | Verifique o model card oficial antes de redistribuir publicamente (detalhes em [VISAO_COMPUTACIONAL.md](VISAO_COMPUTACIONAL.md))                   |
+| Item                                                              | Origem                                                             | Licença                                                                                                                                            |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@mediapipe/tasks-vision` 0.10.21 (`vision_bundle.mjs` + `wasm/`) | registro npm (Google AI Edge / MediaPipe), versão fixada no script | Apache License 2.0 — o script copia o arquivo de licença do pacote para `public/vendor/mediapipe/` e registra o campo `license` em `manifest.json` |
+| `pose_landmarker_lite.task`                                       | `storage.googleapis.com/mediapipe-models/...`                      | Verifique o model card oficial antes de redistribuir publicamente (detalhes em [VISAO_COMPUTACIONAL.md](VISAO_COMPUTACIONAL.md))                   |
 
 Tamanho aproximado: alguns megabytes (o modelo "lite" é o menor dos três disponíveis). Os
 arquivos não entram no pré-cache do aplicativo.
