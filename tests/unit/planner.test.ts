@@ -181,6 +181,33 @@ describe('planejador até o interclasse', () => {
     ]);
   });
 
+  test('plano curto não pula capacidades quando o bloco físico opcional não cabe', () => {
+    const p = plan('2026-10-12', {
+      competition: { nome: 'Copa distante', data: '2026-12-01' },
+      results: baselineResults('2026-10-11'),
+      profile: profile({ minutosDisponiveis: 20, preferenciaSessao: 'longas' }),
+    });
+    const rotated = new Set([
+      'coordenacao-escada',
+      'core-estabilidade',
+      'equilibrio-propriocepcao',
+      'forca-peso-corporal',
+      'aceleracao-curta',
+    ]);
+    const physicalIds = p.days.flatMap((day) =>
+      day.blocks
+        .filter((block) => block.kind === 'fisico' && rotated.has(block.activityId))
+        .map((block) => block.activityId),
+    );
+    assert.deepEqual(physicalIds.slice(0, 5), [
+      'coordenacao-escada',
+      'core-estabilidade',
+      'equilibrio-propriocepcao',
+      'forca-peso-corporal',
+      'aceleracao-curta',
+    ]);
+  });
+
   test('evento passado não mantém o treino preso ao modo de proximidade da competição', () => {
     const p = plan('2026-10-22', {
       results: baselineResults(),
