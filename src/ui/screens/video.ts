@@ -68,6 +68,17 @@ function problemCard(p: MediaProblem): HTMLElement {
   );
 }
 
+/** Resumo salvo da análise de pose, sempre identificado como automático e experimental. */
+function poseSummaryLine(sum: Record<string, number>): HTMLElement {
+  const parts = [
+    `${sum.quadros ?? 0} quadro(s), ${sum.quadrosConfiaveis ?? 0} confiável(is)`,
+    sum.inclinacaoMedia !== undefined ? `tronco ${decimal(sum.inclinacaoMedia, 1)}°` : null,
+    sum.variacaoTronco !== undefined ? `variação ${decimal(sum.variacaoTronco, 1)}°` : null,
+    sum.flexaoJoelhos !== undefined ? `joelhos ${decimal(sum.flexaoJoelhos, 1)}°` : null,
+  ].filter(Boolean);
+  return h('p', { class: 'small' }, `Pose (automática, experimental): ${parts.join(' · ')}.`);
+}
+
 function motionChart(map: MotionMap, duration: number, onSeek: (t: number) => void): SVGSVGElement {
   const W = 320;
   const H = 90;
@@ -546,9 +557,19 @@ export async function videoScreen(ctx: AppContext): Promise<Screen> {
       return null;
     }
   };
+  let poseBusy = false;
   const analyzeFrame = async () => {
+    if (poseBusy) return;
+    poseBusy = true;
+    try {
+      await analyzeFrameNow();
+    } finally {
+      poseBusy = false;
+    }
+  };
+  const analyzeFrameNow = async () => {
     const det = await ensureDetector();
-    if (!det || !objectUrl) return;
+    if (!det || !objectUrl || detector !== det) return;
     video.pause();
     const lms = det.detect(video, performance.now());
     const octx = overlay.getContext('2d');
@@ -579,14 +600,27 @@ export async function videoScreen(ctx: AppContext): Promise<Screen> {
     );
   };
   const analyzeSegment = async () => {
+    if (poseBusy) return;
+    poseBusy = true;
+    try {
+      await analyzeSegmentNow();
+    } finally {
+      poseBusy = false;
+    }
+  };
+  const analyzeSegmentNow = async () => {
     const det = await ensureDetector();
-    if (!det || !objectUrl) return;
+    const src = objectUrl;
+    if (!det || !src) return;
     video.pause();
     const start = video.currentTime;
     const end = Math.min(video.duration, start + 3);
     const series: PoseMetric[][] = [];
+    replaceChildren(poseBox, h('p', { class: 'small' }, 'Analisando o trecho…'));
     for (let t = start; t <= end; t += 0.3) {
       await seekTo(video, t).catch(() => {});
+      // Saiu da tela ou trocou de vídeo no meio da análise: descarta o trecho.
+      if (objectUrl !== src || detector !== det) return;
       const lms = det.detect(video, performance.now());
       if (lms)
         series.push(computePoseMetrics(lms, (video.videoWidth || 16) / (video.videoHeight || 9)));
@@ -700,7 +734,12 @@ export async function videoScreen(ctx: AppContext): Promise<Screen> {
       return;
     }
     const evaluated = Object.values(ratings).filter((r) => r !== 'nao_visivel').length;
-    if (Object.keys(ratings).length === 0 && markers.length === 0 && !notes.value.trim()) {
+    if (
+      Object.keys(ratings).length === 0 &&
+      markers.length === 0 &&
+      !notes.value.trim() &&
+      !poseSummary
+    ) {
       saveStatus.textContent =
         'Marque pelo menos um critério, um momento ou escreva uma observação.';
       return;
@@ -805,6 +844,7 @@ export async function videoScreen(ctx: AppContext): Promise<Screen> {
               )
             : null,
           a.notes ? h('p', { class: 'small' }, a.notes) : null,
+          a.poseSummary ? poseSummaryLine(a.poseSummary) : null,
           thumbs.length ? h('div', { class: 'row' }, thumbs) : null,
           h(
             'div',

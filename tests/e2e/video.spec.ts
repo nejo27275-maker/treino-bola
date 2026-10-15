@@ -115,13 +115,11 @@ test('vídeo: arquivo que não é vídeo e vídeo corrompido mostram mensagens c
     .locator('#video-galeria')
     .setInputFiles({ name: 'notas.txt', mimeType: 'text/plain', buffer: Buffer.from('oi') });
   await expect(page.getByRole('heading', { name: 'Este arquivo não é um vídeo' })).toBeVisible();
-  await page
-    .locator('#video-galeria')
-    .setInputFiles({
-      name: 'quebrado.webm',
-      mimeType: 'video/webm',
-      buffer: Buffer.from('isto não é um webm de verdade'),
-    });
+  await page.locator('#video-galeria').setInputFiles({
+    name: 'quebrado.webm',
+    mimeType: 'video/webm',
+    buffer: Buffer.from('isto não é um webm de verdade'),
+  });
   await expect(
     page.getByRole('heading', { name: /Formato não suportado|Vídeo corrompido/ }),
   ).toBeVisible({ timeout: 15_000 });

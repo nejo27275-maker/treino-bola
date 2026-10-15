@@ -499,7 +499,8 @@ export function buildPlan(input: PlanInput): Plan {
     }
 
     // No dia do jogo, rotina e aquecimento não são encurtados pelo limite de tempo de treino.
-    const finalBlocks = phase === 'competicao' ? fit(blocks, Number.POSITIVE_INFINITY) : fit(blocks, budget);
+    const finalBlocks =
+      phase === 'competicao' ? fit(blocks, Number.POSITIVE_INFINITY) : fit(blocks, budget);
     const minutes = finalBlocks.reduce((sum, b) => sum + b.minutes, 0);
     const completedSessions = sessions.filter((s) => s.date === date).length;
     let title = PHASE_LABEL[phase];

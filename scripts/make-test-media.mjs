@@ -19,7 +19,8 @@ const FPS = 15;
 function frame(fill, block) {
   const y = Buffer.alloc(W * H, fill);
   if (block) {
-    for (let r = block.y; r < block.y + block.h; r++) y.fill(block.value, r * W + block.x, r * W + block.x + block.w);
+    for (let r = block.y; r < block.y + block.h; r++)
+      y.fill(block.value, r * W + block.x, r * W + block.x + block.w);
   }
   const chroma = Buffer.alloc((W / 2) * (H / 2) * 2, 128);
   return Buffer.concat([Buffer.from('FRAME\n'), y, chroma]);
