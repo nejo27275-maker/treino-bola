@@ -604,8 +604,7 @@ export function buildPlan(input: PlanInput): Plan {
     const { kept: finalBlocks, dropped } = fit(blocks, dayBudget);
     if (
       finalBlocks.some(
-        (block) =>
-          block.kind === 'fisico' && ROTATING_PHYSICAL_ACTIVITY_IDS.has(block.activityId),
+        (block) => block.kind === 'fisico' && ROTATING_PHYSICAL_ACTIVITY_IDS.has(block.activityId),
       )
     ) {
       // Se o bloco opcional não couber no tempo, não avançamos para a próxima capacidade.
