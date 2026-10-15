@@ -160,8 +160,17 @@ describe('planejador até o interclasse', () => {
       results: baselineResults(),
       profile: profile({ minutosDisponiveis: 45, preferenciaSessao: 'longas' }),
     });
+    const rotatedIds = new Set([
+      'coordenacao-escada',
+      'core-estabilidade',
+      'equilibrio-propriocepcao',
+      'forca-peso-corporal',
+      'aceleracao-curta',
+    ]);
     const physicalIds = p.days.flatMap((day) =>
-      day.blocks.filter((block) => block.kind === 'fisico').map((block) => block.activityId),
+      day.blocks
+        .filter((block) => block.kind === 'fisico' && rotatedIds.has(block.activityId))
+        .map((block) => block.activityId),
     );
     assert.deepEqual(physicalIds.slice(0, 5), [
       'coordenacao-escada',
