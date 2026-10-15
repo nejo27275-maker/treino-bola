@@ -49,7 +49,13 @@ export const PoseLandmarker = {
 };
 `;
 
-async function withPoseInstalled(page: Page, bundle: string | null): Promise<void> {
+const WASM_FILES = ['vision_wasm_internal.js', 'vision_wasm_internal.wasm'];
+
+async function withPoseInstalled(
+  page: Page,
+  bundle: string | null,
+  opts: { missingWasm?: boolean } = {},
+): Promise<void> {
   await page.route('**/build-info.json', (route) =>
     route.fulfill({
       json: {
@@ -59,7 +65,7 @@ async function withPoseInstalled(page: Page, bundle: string | null): Promise<voi
           available: true,
           package: '@mediapipe/tasks-vision',
           version: 'SIMULADA',
-          files: [],
+          files: WASM_FILES,
         },
       },
     }),
@@ -68,6 +74,12 @@ async function withPoseInstalled(page: Page, bundle: string | null): Promise<voi
     bundle === null
       ? route.fulfill({ status: 404, body: 'Não encontrado' })
       : route.fulfill({ body: bundle, contentType: 'text/javascript; charset=utf-8' }),
+  );
+  // Demais arquivos opcionais: conteúdo fictício, só para exercitar o cache offline.
+  await page.route(/\/(vendor\/mediapipe\/(manifest\.json|wasm\/.+)|models\/.+\.task)$/, (route) =>
+    opts.missingWasm && route.request().url().includes('/wasm/')
+      ? route.fulfill({ status: 404, body: 'Não encontrado' })
+      : route.fulfill({ body: 'arquivo fictício', contentType: 'application/octet-stream' }),
   );
 }
 
@@ -197,4 +209,36 @@ test('pose: sem os arquivos instalados, a tela informa e não oferece a análise
   const poseCard = page.locator('main .card', { hasText: 'Pose corporal (experimental)' });
   await expect(poseCard.getByText(/Detector de pose não instalado neste servidor/)).toBeVisible();
   await expect(poseCard.getByRole('button', { name: 'Analisar pose neste quadro' })).toHaveCount(0);
+});
+
+test('pose: guardar o detector para uso offline só confirma quando todos os arquivos vieram', async ({
+  page,
+}) => {
+  await withPoseInstalled(page, STUB, { missingWasm: true });
+  await openApp(page, '#/config');
+  const box = page.locator('main .card', { hasText: 'Visão computacional local' });
+  await expect(box.getByText(/ainda não estão guardados neste aparelho/)).toBeVisible();
+  await box.getByRole('button', { name: 'Guardar o detector para uso offline' }).click();
+  await expect(
+    page.getByText(/Não foi possível guardar: Falha ao baixar vendor\/mediapipe\/wasm/),
+  ).toBeVisible();
+  expect(await page.evaluate(() => caches.has('cfa-opcional-v1'))).toBe(false);
+
+  await page.unroute(/\/(vendor\/mediapipe\/(manifest\.json|wasm\/.+)|models\/.+\.task)$/);
+  await withPoseInstalled(page, STUB);
+  await box.getByRole('button', { name: 'Guardar o detector para uso offline' }).click();
+  await expect(page.getByText('Detector guardado (5 arquivos).')).toBeVisible();
+  await expect(
+    box.getByText(/guardados neste aparelho: a pose também funciona offline/),
+  ).toBeVisible();
+  const keys = await page.evaluate(async () =>
+    (await (await caches.open('cfa-opcional-v1')).keys()).map((r) => new URL(r.url).pathname),
+  );
+  expect(keys.sort()).toEqual([
+    '/treino-bola/models/pose_landmarker_lite.task',
+    '/treino-bola/vendor/mediapipe/manifest.json',
+    '/treino-bola/vendor/mediapipe/vision_bundle.mjs',
+    '/treino-bola/vendor/mediapipe/wasm/vision_wasm_internal.js',
+    '/treino-bola/vendor/mediapipe/wasm/vision_wasm_internal.wasm',
+  ]);
 });

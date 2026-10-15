@@ -188,23 +188,47 @@ export function drawPose(
   }
 }
 
-/** Guarda os arquivos do detector no cache opcional para uso offline. */
-export async function cachePoseFiles(files: string[]): Promise<number> {
-  if (typeof caches === 'undefined') throw new Error('Cache offline indisponível neste navegador.');
-  const cache = await caches.open('cfa-opcional-v1');
-  const paths = [
+/** Cache separado (o service worker o consulta para vendor/ e models/). */
+const OPTIONAL_CACHE = 'cfa-opcional-v1';
+
+function poseFilePaths(files: string[]): string[] {
+  return [
     POSE_FILES.bundle,
     POSE_FILES.model,
     POSE_FILES.manifest,
     ...files.map((f) => `${POSE_FILES.wasmDir}/${f}`),
   ];
-  let stored = 0;
+}
+
+/**
+ * Guarda os arquivos do detector no cache opcional para uso offline. Só grava se TODOS os
+ * arquivos forem baixados; devolve quantos foram guardados.
+ */
+export async function cachePoseFiles(files: string[]): Promise<number> {
+  if (typeof caches === 'undefined') throw new Error('Cache offline indisponível neste navegador.');
+  const paths = poseFilePaths(files);
+  const responses: [string, Response][] = [];
   for (const path of paths) {
     const res = await fetch(url(path), { cache: 'no-store' });
-    if (res.ok) {
-      await cache.put(url(path), res);
-      stored++;
-    }
+    if (!res.ok) throw new Error(`Falha ao baixar ${path} (HTTP ${res.status}).`);
+    responses.push([url(path), res]);
   }
-  return stored;
+  const cache = await caches.open(OPTIONAL_CACHE);
+  for (const [key, res] of responses) await cache.put(key, res);
+  return responses.length;
+}
+
+/** Indica se todos os arquivos do detector já estão no cache opcional deste aparelho. */
+export async function isPoseCached(files: string[]): Promise<boolean> {
+  if (typeof caches === 'undefined') return false;
+  try {
+    if (!(await caches.has(OPTIONAL_CACHE))) return false;
+    const cache = await caches.open(OPTIONAL_CACHE);
+    for (const path of poseFilePaths(files)) {
+      if (!(await cache.match(url(path)))) return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
 }

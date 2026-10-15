@@ -174,6 +174,17 @@ const E = {
     texto: 'Demorou para decidir',
     correcao: 'Deixe a bola pronta e o corpo aberto para todas as opções antes do sinal.',
   },
+  evitou_pe_fraco: {
+    tag: 'evitou_pe_fraco',
+    texto: 'Ajeitou o corpo para usar só o pé preferido',
+    correcao:
+      'Decida antes do passe qual pé vai receber e mantenha a escolha; comece mais devagar com o pé menos usado.',
+  },
+  mesmo_pe: {
+    tag: 'mesmo_pe',
+    texto: 'Tocou duas vezes seguidas com o mesmo pé',
+    correcao: 'Reduza a velocidade e conte o ritmo em voz baixa: "direito, esquerdo, direito…".',
+  },
 } satisfies Record<string, CommonError>;
 
 export const EXERCISES: Exercise[] = [
@@ -209,6 +220,68 @@ export const EXERCISES: Exercise[] = [
       'Afaste-se para 5 ou 6 passos, passe mais forte, alterne os pés a cada recepção ou receba com a sola (futsal).',
     semMaterial:
       'Sem parede: jogue a bola para cima com as mãos e amorteça a queda com o pé, a coxa ou o peito; ou peça para alguém passar a bola.',
+  },
+  {
+    id: 'dominio-dois-pes',
+    nome: 'Domínio com os dois pés',
+    skills: ['primeiro_toque', 'passe'],
+    nivel: 1,
+    duracaoMin: 10,
+    materiais: ['bola', 'parede'],
+    espacoMin: 'pequeno',
+    objetivo:
+      'Receber e controlar com o pé direito e com o esquerdo com a mesma segurança, para não depender de um lado só no jogo.',
+    organizacao:
+      'Parede lisa a 3 ou 4 passos. Marque mentalmente um ponto à sua frente onde a bola deve parar.',
+    instrucoes: [
+      'Antes de cada passe, diga baixinho qual pé vai receber: "direito" ou "esquerdo".',
+      'Passe na parede com a parte interna do pé, com força média.',
+      'Receba com o pé anunciado, deixando a bola a até um passo à sua frente.',
+      'Faça a série inteira alternando: uma recepção com o direito, a seguinte com o esquerdo.',
+      'Marque "Acerto" quando a bola parar controlada com o pé anunciado; senão, "Erro".',
+    ],
+    volume: '3 séries de 10 recepções (5 com cada pé)',
+    series: 3,
+    repeticoes: 10,
+    pausaSeg: 40,
+    criterioSucesso:
+      'A bola para a até um passo de você, recebida com o pé anunciado, sem precisar de um segundo toque.',
+    errosComuns: [E.evitou_pe_fraco, E.pe_rigido, E.corpo_desalinhado],
+    maisFacil:
+      'Fique a 2 passos da parede, passe mais fraco e faça 3 recepções seguidas com o mesmo pé antes de trocar.',
+    maisDificil:
+      'Afaste-se para 5 passos, receba de primeira já orientando para o lado e só depois troque de pé.',
+    semMaterial:
+      'Sem parede: jogue a bola para cima com as mãos e amorteça a queda alternando os pés, ou peça para alguém passar.',
+  },
+  {
+    id: 'alternancia-pes',
+    nome: 'Alternância de pés (toques alternados)',
+    skills: ['conducao', 'primeiro_toque', 'agilidade'],
+    nivel: 1,
+    duracaoMin: 8,
+    materiais: ['bola'],
+    espacoMin: 'pequeno',
+    objetivo:
+      'Tocar a bola alternando os pés com ritmo e sem olhar o tempo todo para ela, base para conduzir e driblar com os dois lados.',
+    organizacao: 'Espaço de 2 × 2 passos, de preferência em piso liso ou grama baixa.',
+    instrucoes: [
+      'Coloque a bola entre os pés, com os joelhos levemente flexionados.',
+      'Toque a bola de um pé para o outro com a parte interna ("tic-tac"), sem deixá-la parar.',
+      'Mantenha o ritmo: direito, esquerdo, direito… sempre com o peso do corpo na ponta dos pés.',
+      'A cada 5 toques, levante o olhar para a frente por um instante.',
+      'Cada tentativa é uma sequência de 20 toques alternados: marque "Acerto" se terminou sem perder a bola nem repetir o pé; senão, "Erro".',
+    ],
+    volume: '3 séries de 6 sequências de 20 toques',
+    series: 3,
+    repeticoes: 6,
+    pausaSeg: 30,
+    criterioSucesso:
+      'Sequência de 20 toques alternados sem a bola escapar mais de meio passo e sem dois toques seguidos com o mesmo pé.',
+    errosComuns: [E.mesmo_pe, E.toque_longo, E.olhar_baixo],
+    maisFacil: 'Faça 10 toques por sequência, devagar, olhando para a bola.',
+    maisDificil:
+      'Ande para a frente e para trás tocando a bola, depois alterne sola e parte interna ("sola, interna, sola").',
   },
   {
     id: 'dominio-aereo',

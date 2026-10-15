@@ -3,7 +3,12 @@ import { localDate } from '../../core/dates.ts';
 import { bytes } from '../../core/format.ts';
 import { MAX_IMPORT_BYTES, parseImportText, type ExportData } from '../../core/validation.ts';
 import type { Settings } from '../../core/types.ts';
-import { checkPoseAvailability, type PoseAvailability } from '../../media/pose.ts';
+import {
+  cachePoseFiles,
+  checkPoseAvailability,
+  isPoseCached,
+  type PoseAvailability,
+} from '../../media/pose.ts';
 import type { AppContext } from '../app.ts';
 import { button, card, field, linkButton, pageHeader, pill, select } from '../components.ts';
 import { h, replaceChildren } from '../dom.ts';
@@ -322,12 +327,53 @@ export async function configScreen(ctx: AppContext): Promise<Screen> {
   cleanups.push(ctx.onPwaChange(drawPwa));
 
   // ——— Visão computacional ———
-  const poseBox = h('p', { class: 'small', 'aria-live': 'polite' }, 'Verificando…');
-  void checkPoseAvailability().then((a: PoseAvailability) => {
-    poseBox.textContent = a.available
-      ? `Detector de pose instalado (experimental): ${a.detail}`
-      : `Detector de pose não instalado neste servidor: ${a.detail}. O restante do aplicativo funciona normalmente; veja docs/VISAO_COMPUTACIONAL.md.`;
-  });
+  const poseBox = h('div', { class: 'stack', 'aria-live': 'polite' }, 'Verificando…');
+  const drawPoseBox = async (a: PoseAvailability) => {
+    if (!a.available) {
+      replaceChildren(
+        poseBox,
+        h(
+          'p',
+          { class: 'small' },
+          `Detector de pose não instalado neste servidor: ${a.detail}. O restante do aplicativo funciona normalmente; veja docs/VISAO_COMPUTACIONAL.md.`,
+        ),
+      );
+      return;
+    }
+    const files = a.files ?? [];
+    const cached = await isPoseCached(files);
+    replaceChildren(
+      poseBox,
+      h('p', { class: 'small' }, `Detector de pose instalado (experimental): ${a.detail}.`),
+      h(
+        'p',
+        { class: 'small' },
+        cached
+          ? 'Arquivos do detector guardados neste aparelho: a pose também funciona offline.'
+          : 'Os arquivos do detector (alguns megabytes) ainda não estão guardados neste aparelho: sem internet, a pose não funciona.',
+      ),
+      cached
+        ? null
+        : button(
+            'Guardar o detector para uso offline',
+            async () => {
+              try {
+                const n = await cachePoseFiles(files);
+                ctx.toast(`Detector guardado (${n} arquivos).`, 'sucesso');
+              } catch (error) {
+                ctx.toast(
+                  `Não foi possível guardar: ${error instanceof Error ? error.message : String(error)}`,
+                  'erro',
+                  6000,
+                );
+              }
+              await drawPoseBox(a);
+            },
+            { small: true },
+          ),
+    );
+  };
+  void checkPoseAvailability().then(drawPoseBox);
 
   const el = h(
     'div',

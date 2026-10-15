@@ -43,6 +43,20 @@ export default defineConfig({
       },
     },
     {
+      name: 'camera-movimento',
+      testMatch: /camera\.spec\.ts/,
+      grep: /@movimento/,
+      use: {
+        launchOptions: {
+          args: [
+            '--use-fake-ui-for-media-stream',
+            '--use-fake-device-for-media-stream',
+            `--use-file-for-fake-video-capture=${fakeVideo('movimento-esquerda.y4m')}`,
+          ],
+        },
+      },
+    },
+    {
       name: 'camera-padrao',
       testMatch: /camera\.spec\.ts/,
       grep: /@padrao/,

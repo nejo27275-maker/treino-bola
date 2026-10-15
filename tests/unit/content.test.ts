@@ -61,25 +61,26 @@ describe('biblioteca de exercícios técnicos', () => {
     }
   });
 
-  test('cobre os temas pedidos (primeiro toque, pés alternados, corredores, pressão…)', () => {
-    const text = EXERCISES.map((e) => `${e.nome} ${e.instrucoes.join(' ')}`)
-      .join(' ')
-      .toLowerCase();
-    for (const term of [
-      'primeiro toque',
-      'alterne',
-      'passe',
-      'cones',
-      'mude de direção',
-      'proteja',
-      'finta',
-      'canto',
-      'ombro',
-      'porta',
-      'pressão',
-    ]) {
-      assert.ok(text.includes(term), `faltando: ${term}`);
+  test('cobre os 12 temas pedidos, cada um com um exercício próprio', () => {
+    const THEMES: Record<string, string> = {
+      'Primeiro toque': 'parede-primeiro-toque',
+      'Domínio com ambos os pés': 'dominio-dois-pes',
+      'Alternância de pés': 'alternancia-pes',
+      'Passe curto e direcionado': 'passe-porta',
+      'Condução entre obstáculos': 'conducao-zigue-zague',
+      'Mudança de direção': 'drible-mudancas-direcao',
+      'Proteção de bola': 'protecao-sola-giro',
+      'Drible controlado': 'drible-finta-corpo',
+      'Finalização de precisão': 'finalizacao-cantos',
+      'Varredura visual': 'varredura-ombro',
+      'Escolha de corredores': 'corredores-decisao',
+      'Recepção sob pressão simulada': 'recepcao-pressao',
+    };
+    for (const [theme, id] of Object.entries(THEMES)) {
+      const e = EXERCISES.find((x) => x.id === id);
+      assert.ok(e && !e.teste, `${theme}: exercício ${id} ausente`);
     }
+    assert.equal(new Set(Object.values(THEMES)).size, 12);
   });
 
   test('todo fundamento técnico tem exercício e os rótulos de erro existem', () => {

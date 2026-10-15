@@ -94,6 +94,49 @@ test('@parada treino livre: a câmera é só espelho e a contagem manual é salv
   expect((await storedSessions(page))[0]?.summary).toEqual({ attempts: 2, successes: 1 });
 });
 
+/** Maior largura de cada barra (esquerda/direita) observada durante `ms` milissegundos. */
+async function meterPeaks(page: Page, ms: number): Promise<{ left: number; right: number }> {
+  return page.evaluate(async (duration) => {
+    const bars = [...document.querySelectorAll<HTMLElement>('.meter .bar > span')];
+    const peak = { left: 0, right: 0 };
+    const end = performance.now() + duration;
+    while (performance.now() < end) {
+      peak.left = Math.max(peak.left, parseFloat(bars[0]?.style.width || '0'));
+      peak.right = Math.max(peak.right, parseFloat(bars[1]?.style.width || '0'));
+      await new Promise((r) => setTimeout(r, 30));
+    }
+    return peak;
+  }, ms);
+}
+
+test('@movimento o lado do movimento vem dos quadros reais e respeita o espelhamento', async ({
+  page,
+  context,
+}) => {
+  // Câmera falsa: um bloco claro pisca só na metade ESQUERDA da imagem bruta.
+  await context.grantPermissions(['camera']);
+  await openApp(page, '#/camera');
+  await page.getByRole('button', { name: 'Ligar câmera' }).click();
+  await page.getByRole('tab', { name: 'Reação com movimento' }).click();
+  await page.getByRole('button', { name: 'Começar série' }).click();
+  // O pisca-pisca contínuo é recusado na calibração (seria uma "largada falsa" eterna).
+  await expect(page.getByText(/Muito movimento com você parado/)).toBeVisible({ timeout: 8000 });
+
+  // De frente para a câmera, a imagem é espelhada: o lado esquerdo da imagem bruta é a
+  // DIREITA do jogador.
+  const facing = page.getByRole('checkbox', { name: /Estou de frente para a câmera/ });
+  await expect(facing).toBeChecked();
+  const mirrored = await meterPeaks(page, 1500);
+  expect(mirrored.right).toBeGreaterThan(5);
+  expect(mirrored.left).toBe(0);
+
+  // Sem espelhamento, o mesmo movimento aparece à esquerda.
+  await facing.uncheck();
+  const raw = await meterPeaks(page, 1500);
+  expect(raw.left).toBeGreaterThan(5);
+  expect(raw.right).toBe(0);
+});
+
 test('@padrao quadros reais da câmera passam pelo detector; cena agitada é recusada na calibração', async ({
   page,
   context,
