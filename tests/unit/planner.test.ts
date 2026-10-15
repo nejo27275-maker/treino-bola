@@ -172,6 +172,16 @@ describe('planejador até o interclasse', () => {
     ]);
   });
 
+  test('evento passado não mantém o treino preso ao modo de proximidade da competição', () => {
+    const p = plan('2026-10-22', {
+      results: baselineResults(),
+      profile: profile({ minutosDisponiveis: 45, preferenciaSessao: 'longas' }),
+    });
+    const firstPhysical = p.days[0]?.blocks.find((block) => block.kind === 'fisico');
+    assert.equal(firstPhysical?.activityId, 'coordenacao-escada');
+    assert.notEqual(firstPhysical?.activityId, 'agilidade-frenagem');
+  });
+
   test('prioriza o fundamento mais fraco nos dias de desenvolvimento', () => {
     const p = plan('2026-10-14', { results: baselineResults() });
     const dev = p.days.find((d) => d.phase === 'desenvolvimento')!;
