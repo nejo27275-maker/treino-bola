@@ -2,7 +2,7 @@
  * Prepara as mídias dos testes:
  * - vídeos Y4M para a câmera falsa (scripts/make-test-media.mjs);
  * - um vídeo WebM real, gravado pelo próprio Chromium com MediaRecorder a partir de uma
- *   animação em canvas (movimento conhecido em ~1,5–2,5 s à esquerda e ~3,5–4,2 s à direita).
+ *   animação em canvas (movimento conhecido em ~1,5–2,5 s à esquerda e ~3,0–4,6 s à direita, janela maior para amostragem robusta).
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
@@ -42,8 +42,8 @@ export default async function globalSetup(): Promise<void> {
         if (t > 1.5 && t < 2.5) {
           g.fillRect(20 + (t - 1.5) * 100, 40, 60, 120);
         }
-        if (t > 3.5 && t < 4.2) {
-          g.fillRect(200 + (t - 3.5) * 80, 60, 60, 120);
+        if (t > 3.0 && t < 4.6) {
+          g.fillRect(200 + (t - 3.0) * 50, 60, 60, 120);
         }
         if (t < 5) requestAnimationFrame(draw);
         else resolve();
