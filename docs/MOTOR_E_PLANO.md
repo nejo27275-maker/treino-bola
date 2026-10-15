@@ -91,13 +91,13 @@ As datas são calculadas a partir da **data local do aparelho** em cada abertura
 usa dias UTC (sem horário de verão), então o plano não "pula" dias por causa de fuso. A
 competição padrão é o interclasse de **20/10/2026** e pode ser trocada em Plano.
 
-| Dias até o evento                                                   | Fase                                                                                                   | Intensidade |
-| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ----------- |
-| 0                                                                   | Dia da competição: rotina pré-jogo, aquecimento de jogo, respiração, hidratação. **Sem treino extra.** | leve        |
-| 1                                                                   | Véspera: familiarização leve (poucas repetições fáceis), visualização, revisar a rotina                | leve        |
-| 2                                                                   | Recuperação ativa (mobilidade, leitura de jogo sem impacto, respiração)                                | leve        |
-| 4, 8, 12…                                                           | Recuperação ativa (um dia leve a cada três de desenvolvimento)                                         | leve        |
-| hoje, se faltam testes de base (≥ 3 fundamentos centrais pendentes) | Avaliação inicial (testes de linha de base)                                                            | moderada    |
+| Dias até o evento                                                   | Fase                                                                                                                          | Intensidade |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| 0                                                                   | Dia da competição: rotina pré-jogo, aquecimento de jogo, respiração, hidratação. **Sem treino extra.**                        | leve        |
+| 1                                                                   | Véspera: familiarização leve (poucas repetições fáceis), visualização, revisar a rotina                                       | leve        |
+| 2                                                                   | Recuperação ativa (mobilidade, leitura de jogo sem impacto, respiração)                                                       | leve        |
+| 4, 8, 12…                                                           | Recuperação ativa (um dia leve a cada três de desenvolvimento)                                                                | leve        |
+| hoje, se faltam testes de base (≥ 3 fundamentos centrais pendentes) | Avaliação inicial (testes de linha de base)                                                                                   | moderada    |
 | demais dias                                                         | Desenvolvimento: técnica prioritária + leitura + rotação física (coordenação, core, equilíbrio, força funcional e aceleração) | moderada    |
 
 - **Minutos honestos:** aquecimentos, treinos físicos, atividades mentais, testes de linha de
