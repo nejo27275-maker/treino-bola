@@ -197,8 +197,7 @@ export const EXERCISES: Exercise[] = [
     duracaoMin: 10,
     materiais: ['bola', 'parede'],
     espacoMin: 'pequeno',
-    objetivo:
-      'Controlar a bola que volta da parede com um só toque, deixando-a parada perto do pé e pronta para a próxima ação.',
+    objetivo: 'Controlar a bola que volta da parede com um só toque, deixando-a parada perto do pé e pronta para a próxima ação. Pista do treinador: recue o pé no contato, dobre levemente o joelho e deixe a bola a no máximo um passo; controle antes de aumentar a força.',
     organizacao:
       'Fique de frente para uma parede lisa, a 3 ou 4 passos. Imagine um círculo de um passo ao seu redor: é ali que a bola deve parar.',
     instrucoes: [
@@ -229,8 +228,7 @@ export const EXERCISES: Exercise[] = [
     duracaoMin: 10,
     materiais: ['bola', 'parede'],
     espacoMin: 'pequeno',
-    objetivo:
-      'Receber e controlar com o pé direito e com o esquerdo com a mesma segurança, para não depender de um lado só no jogo.',
+    objetivo: 'Melhorar o primeiro toque com a parte interna de ambos os pés. Pista do treinador: mantenha o corpo equilibrado, alterne os pés e deixe a bola ao alcance de um passo, sem colá-la nem deixá-la escapar.',
     organizacao:
       'Parede lisa a 3 ou 4 passos. Marque mentalmente um ponto à sua frente onde a bola deve parar.',
     instrucoes: [
@@ -504,7 +502,7 @@ export const EXERCISES: Exercise[] = [
     materiais: ['bola'],
     espacoMin: 'medio',
     sinais: 'direcao_pare',
-    objetivo: 'Conduzir olhando o jogo: perceber sinais à frente sem perder a bola.',
+    objetivo: 'Conduzir sem olhar continuamente para a bola, percebendo sinais ao redor. Pista do treinador: olhe rapidamente para a frente a cada 2–3 toques e volte os olhos à bola antes do contato; priorize controle antes de aumentar a velocidade.',
     organizacao:
       'Espaço de 8 × 8 passos. Apoie o celular em pé num lugar visível (o aplicativo mostra setas) ou peça a um parceiro para mostrar sinais com as mãos.',
     instrucoes: [
@@ -564,7 +562,7 @@ export const EXERCISES: Exercise[] = [
     duracaoMin: 10,
     materiais: ['bola', 'cones'],
     espacoMin: 'medio',
-    objetivo: 'Acertar a direção do passe com a parte interna do pé, com os dois pés.',
+    objetivo: 'Acertar um alvo estreito com passe rasteiro e força adequada. Pista do treinador: coloque o pé de apoio ao lado da bola apontado para a porta, trave o tornozelo e bata no meio da bola com a parte interna; passe firme, mas dominável.',
     organizacao:
       'Dois cones a um passo um do outro formam uma "porta", a 6 passos de você. Se houver uma parede, encoste a porta nela para a bola voltar.',
     instrucoes: [
@@ -683,7 +681,7 @@ export const EXERCISES: Exercise[] = [
     materiais: ['bola', 'cones'],
     espacoMin: 'medio',
     sinais: 'direcao',
-    objetivo: 'Enganar o marcador com o movimento do corpo e sair rápido para o outro lado.',
+    objetivo: 'Usar o corpo para convencer o marcador de que vai para um lado e sair pelo outro. Pista do treinador: abaixe um pouco o centro de gravidade, venda a finta com ombro e quadril e acelere após mudar de direção; a finta sem mudança de ritmo não cria vantagem.',
     organizacao:
       'Um cone (o "marcador") a 6 passos. Dois cones de saída, um de cada lado, 2 passos atrás do marcador.',
     instrucoes: [
@@ -922,7 +920,7 @@ export const EXERCISES: Exercise[] = [
     materiais: ['bola', 'parede'],
     espacoMin: 'medio',
     sinais: 'direcao',
-    objetivo: 'Criar o hábito de observar o que está às suas costas antes de a bola chegar.',
+    objetivo: 'Criar o hábito de observar o que está às suas costas antes de a bola chegar. Pista do treinador: olhe por cima do ombro enquanto a bola ainda viaja, memorize o sinal e volte a atenção para a bola antes do contato; não sacrifique o domínio para olhar por mais tempo.',
     organizacao:
       'A 4 passos da parede. Apoie o celular atrás de você, de pé, mostrando sinais (ou peça a um parceiro para mostrar sinais com as mãos).',
     instrucoes: [
