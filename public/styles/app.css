@@ -106,6 +106,8 @@ body {
   font-size: 16px;
   line-height: 1.5;
   padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + 16px);
+  /* Palavras longas quebram em telas muito estreitas (zoom de 200%) em vez de vazar. */
+  overflow-wrap: break-word;
 }
 
 img,
@@ -626,6 +628,8 @@ fieldset {
   border-radius: var(--radius-sm);
   padding: 10px 12px 4px;
   margin: 0 0 14px;
+  /* Por padrão o fieldset nunca fica mais estreito que o conteúdo e estoura telas estreitas. */
+  min-width: 0;
 }
 
 input[type='text'],
@@ -678,6 +682,10 @@ input[type='range'] {
   height: 22px;
   accent-color: var(--accent);
   flex: none;
+}
+
+.choice > span {
+  min-width: 0;
 }
 
 .choice:has(input:checked) {
@@ -1093,6 +1101,8 @@ input[type='range'] {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .chart-key {
@@ -1105,7 +1115,7 @@ input[type='range'] {
 .chart-tooltip {
   position: absolute;
   top: 0;
-  min-width: 160px;
+  width: max-content;
   background: var(--surface-3);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -1113,12 +1123,34 @@ input[type='range'] {
   box-shadow: var(--shadow);
   pointer-events: none;
   font-size: 0.85rem;
+  z-index: 1;
+  overflow-wrap: anywhere;
+}
+
+/* Sem espaço ao lado da mira: a dica ocupa a largura do gráfico, logo abaixo dele. */
+.chart-tooltip.below {
+  top: calc(100% + 4px);
+  width: auto;
 }
 
 .chart-tip-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 6px;
+}
+
+.chart-tip-row .chart-key {
+  align-self: center;
+}
+
+.chart-tip-detail {
+  grid-column: 3;
+  font-size: 0.75rem;
+}
+
+.table-scroll {
+  overflow-x: auto;
 }
 
 .data-table {
@@ -1173,11 +1205,11 @@ input[type='range'] {
   border-radius: var(--radius-sm);
 }
 
+/* As abas quebram linha em telas estreitas (nenhuma fica escondida fora da tela). */
 .tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
-  overflow-x: auto;
-  padding-bottom: 4px;
 }
 
 .tabs button[aria-selected='true'] {

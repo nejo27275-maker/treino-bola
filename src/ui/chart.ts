@@ -1,8 +1,11 @@
 /**
  * Gráfico de evolução (linha, valores de 0 a 1) com legenda, rótulo direto no último
  * ponto, mira que segue o toque/ponteiro, navegação por teclado e tabela acessível.
- * Cores das séries vêm de --series-1/--series-2 (validadas para os temas claro e escuro).
+ * Cores das séries vêm de --series-1/--series-2 (validadas para os temas claro e escuro)
+ * e seguem a série, não a posição: "Simulação" tem a mesma cor com ou sem "Execução real".
+ * Séries sem pontos ficam fora da legenda; com uma série só, o título a nomeia.
  */
+import { dataTable } from './components.ts';
 import { h, s } from './dom.ts';
 
 export interface ChartPoint {
@@ -19,6 +22,10 @@ export interface ChartPoint {
 const W = 320;
 const H = 170;
 const PAD = { l: 34, r: 40, t: 12, b: 24 };
+/** Dica: distância da mira e larguras (px de tela). */
+const TIP_GAP = 10;
+const TIP_MIN_WIDTH = 120;
+const TIP_MAX_WIDTH = 220;
 
 export function trendChart(opts: {
   points: ChartPoint[];
@@ -27,6 +34,13 @@ export function trendChart(opts: {
   valueFormat: (v: number) => string;
 }): HTMLElement {
   const { points, seriesNames, valueFormat } = opts;
+  const bySeries = seriesNames.map((_, i) =>
+    points.filter((p) => p.series === i).sort((a, b) => a.x - b.x),
+  );
+  const shown = seriesNames.map((_, i) => i).filter((i) => (bySeries[i]?.length ?? 0) > 0);
+  const only = shown.length === 1 ? seriesNames[shown[0] as number] : undefined;
+  const title =
+    only !== undefined && seriesNames.length > 1 ? `${opts.title} · ${only}` : opts.title;
   const xs = [...new Set(points.map((p) => p.x))].sort((a, b) => a - b);
   const minX = xs[0] ?? 0;
   const maxX = xs[xs.length - 1] ?? 1;
@@ -41,7 +55,7 @@ export function trendChart(opts: {
     viewBox: `0 0 ${W} ${H}`,
     class: 'chart',
     role: 'img',
-    'aria-label': `${opts.title}. Use a tabela abaixo para ver todos os valores.`,
+    'aria-label': `${title}. Use a tabela abaixo para ver todos os valores.`,
   });
   for (const v of [0, 0.5, 1]) {
     svg.append(
@@ -55,9 +69,6 @@ export function trendChart(opts: {
       s('text', { x: PAD.l - 6, y: sy(v) + 3, 'text-anchor': 'end' }, `${Math.round(v * 100)}%`),
     );
   }
-  const bySeries = seriesNames.map((_, i) =>
-    points.filter((p) => p.series === i).sort((a, b) => a.x - b.x),
-  );
   const usedLabelY: number[] = [];
   bySeries.forEach((list, i) => {
     if (list.length > 1) {
@@ -131,7 +142,7 @@ export function trendChart(opts: {
     {
       class: 'chart-wrap',
       tabindex: '0',
-      'aria-label': `${opts.title}: use as setas para percorrer os pontos`,
+      'aria-label': `${title}: use as setas para percorrer os pontos`,
     },
     svg,
     tooltip,
@@ -144,28 +155,44 @@ export function trendChart(opts: {
     crosshair.setAttribute('x1', String(sx(x)));
     crosshair.setAttribute('x2', String(sx(x)));
     crosshair.setAttribute('visibility', 'visible');
-    const rows = seriesNames.map((name, si) => {
+    const rows = shown.map((si) => {
       const atX = bySeries[si]?.find((p) => p.x === x);
       const before = [...(bySeries[si] ?? [])].reverse().find((p) => p.x <= x);
       const p = atX ?? before;
+      // Valor na frente, nome depois; o detalhe (e a data, se o valor é de uma sessão
+      // anterior) vai numa linha menor embaixo do nome.
+      const detail = [p && !atX ? `de ${p.label}` : '', p?.detail ?? '']
+        .filter(Boolean)
+        .join(' · ');
       return h(
         'div',
         { class: 'chart-tip-row' },
         h('span', { class: 'chart-key', style: { background: color(si) } }),
         h('strong', null, p ? valueFormat(p.value) : '—'),
-        h(
-          'span',
-          { class: 'muted' },
-          ` ${name}${p && !atX ? ' (anterior)' : ''}${p?.detail ? ` · ${p.detail}` : ''}`,
-        ),
+        h('span', null, ` ${seriesNames[si] ?? ''}`),
+        detail ? h('span', { class: 'chart-tip-detail muted' }, ` ${detail}`) : null,
       );
     });
     const label = points.find((p) => p.x === x)?.label ?? '';
     tooltip.replaceChildren(h('div', { class: 'small muted' }, label), ...rows);
     tooltip.hidden = false;
+    // A dica fica do lado com mais espaço, sem cobrir a mira nem os pontos inspecionados;
+    // se não houver espaço em nenhum lado (tela muito estreita/zoom), vai para baixo do gráfico.
     const rect = svg.getBoundingClientRect();
     const px = (sx(x) / W) * rect.width;
-    tooltip.style.left = `${Math.min(Math.max(0, px - 80), Math.max(0, rect.width - 170))}px`;
+    const room = Math.max(px, rect.width - px) - TIP_GAP;
+    const toRight = rect.width - px >= px;
+    const beside = room >= TIP_MIN_WIDTH;
+    let left = '0';
+    let right = '0';
+    if (beside) {
+      left = toRight ? `${px + TIP_GAP}px` : 'auto';
+      right = toRight ? 'auto' : `${rect.width - px + TIP_GAP}px`;
+    }
+    tooltip.classList.toggle('below', !beside);
+    tooltip.style.maxWidth = beside ? `${Math.min(TIP_MAX_WIDTH, room)}px` : '';
+    tooltip.style.left = left;
+    tooltip.style.right = right;
   };
   const hide = () => {
     crosshair.setAttribute('visibility', 'hidden');
@@ -203,28 +230,28 @@ export function trendChart(opts: {
   });
 
   const legend =
-    seriesNames.length >= 2
+    shown.length >= 2
       ? h(
           'div',
           { class: 'chart-legend' },
-          seriesNames.map((name, i) =>
+          shown.map((i) =>
             h(
               'span',
               { class: 'chart-legend-item' },
               h('span', { class: 'chart-key', style: { background: color(i) } }),
-              name,
+              seriesNames[i] ?? '',
             ),
           ),
         )
       : null;
 
+  // Com uma série só, a coluna "Série" repetiria o título em todas as linhas.
+  const withSeries = shown.length >= 2;
   const table = h(
     'details',
     null,
     h('summary', null, 'Ver tabela'),
-    h(
-      'table',
-      { class: 'data-table' },
+    dataTable(
       h(
         'thead',
         null,
@@ -232,7 +259,7 @@ export function trendChart(opts: {
           'tr',
           null,
           h('th', { scope: 'col' }, 'Sessão'),
-          h('th', { scope: 'col' }, 'Série'),
+          withSeries ? h('th', { scope: 'col' }, 'Série') : null,
           h('th', { scope: 'col' }, 'Valor'),
           h('th', { scope: 'col' }, 'Detalhe'),
         ),
@@ -247,7 +274,7 @@ export function trendChart(opts: {
               'tr',
               null,
               h('td', null, p.label),
-              h('td', null, seriesNames[p.series] ?? ''),
+              withSeries ? h('td', null, seriesNames[p.series] ?? '') : null,
               h('td', null, valueFormat(p.value)),
               h('td', null, p.detail ?? ''),
             ),
@@ -259,7 +286,7 @@ export function trendChart(opts: {
   return h(
     'figure',
     { class: 'chart-figure' },
-    h('figcaption', { class: 'small' }, h('strong', null, opts.title)),
+    h('figcaption', { class: 'small' }, h('strong', null, title)),
     legend,
     wrap,
     table,

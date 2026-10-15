@@ -2,7 +2,7 @@
  * Acessibilidade de teclado, foco e contraste (complementa os testes de navegação).
  */
 import { expect, test, type Page } from 'playwright/test';
-import { openApp } from './helpers.ts';
+import { go, openApp } from './helpers.ts';
 
 const activeLabel = (page: Page) =>
   page.evaluate(() => {
@@ -142,19 +142,27 @@ test('contraste: texto dos botões principais e da aba atual nos dois temas', as
   }
 });
 
-test('zoom de 200% (180 px de largura): nada importante fica cortado no plano', async ({
+test('zoom de 200% (180 px de largura): nenhuma tela rola para o lado nem corta controles', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 180, height: 370 });
   await openApp(page, '#/plano');
-  const overflow = await page.evaluate(() => {
-    const vw = document.documentElement.clientWidth;
-    return [...document.querySelectorAll<HTMLElement>('main button, main a, main .pill')]
-      .filter((el) => el.getBoundingClientRect().width > 0)
-      .filter((el) => el.getBoundingClientRect().right > vw + 1)
-      .map((el) => el.textContent?.trim());
-  });
-  expect(overflow).toEqual([]);
+  for (const route of ['#/plano', '#/perfil', '#/video', '#/config', '#/fisico', '#/sobre']) {
+    await go(page, route);
+    const problems = await page.evaluate(() => {
+      const vw = document.documentElement.clientWidth;
+      const cut = [
+        ...document.querySelectorAll<HTMLElement>(
+          'main button, main a, main .pill, main label, main legend, main [role="tab"]',
+        ),
+      ]
+        .filter((el) => el.getBoundingClientRect().width > 0)
+        .filter((el) => el.getBoundingClientRect().right > vw + 1)
+        .map((el) => el.textContent?.trim());
+      return { rolagemHorizontal: document.documentElement.scrollWidth > vw, cortados: cut };
+    });
+    expect(problems, route).toEqual({ rolagemHorizontal: false, cortados: [] });
+  }
 });
 
 test('simuladores: descrição da cena em texto, sem revelar o que está escondido', async ({

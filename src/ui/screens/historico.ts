@@ -10,6 +10,7 @@ import { trendChart, type ChartPoint } from '../chart.ts';
 import {
   button,
   card,
+  dataTable,
   emptyState,
   field,
   linkButton,
@@ -284,9 +285,7 @@ function compareView(snap: Snapshot): HTMLElement {
     ];
     replaceChildren(
       result,
-      h(
-        'table',
-        { class: 'data-table' },
+      dataTable(
         h(
           'thead',
           null,
@@ -455,9 +454,7 @@ export async function sessionDetailScreen(ctx: AppContext, id: string): Promise<
     s.rounds?.length
       ? card(
           { title: 'Rodadas' },
-          h(
-            'table',
-            { class: 'data-table' },
+          dataTable(
             h(
               'thead',
               null,

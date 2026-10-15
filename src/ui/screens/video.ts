@@ -36,6 +36,7 @@ import type { AppContext } from '../app.ts';
 import {
   button,
   card,
+  dataTable,
   field,
   pageHeader,
   pill,
@@ -547,9 +548,7 @@ export async function videoScreen(ctx: AppContext): Promise<Screen> {
 
   // ——— Pose (opcional) ———
   const metricsTable = (metrics: PoseMetric[]) =>
-    h(
-      'table',
-      { class: 'data-table' },
+    dataTable(
       h(
         'thead',
         null,

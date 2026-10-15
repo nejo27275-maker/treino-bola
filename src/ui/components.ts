@@ -172,6 +172,11 @@ export function showFocusOnLabel(input: HTMLInputElement, label: HTMLElement): v
   input.addEventListener('blur', () => label.classList.remove('focus-ring'));
 }
 
+/** Tabela de dados; em telas estreitas ela rola para o lado na própria caixa (a página não). */
+export function dataTable(...children: Child[]): HTMLElement {
+  return h('div', { class: 'table-scroll' }, h('table', { class: 'data-table' }, ...children));
+}
+
 export function linkButton(
   href: string,
   label: Child,

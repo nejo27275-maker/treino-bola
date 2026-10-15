@@ -85,8 +85,11 @@ viram mensagens em português (`friendlyStorageError`).
   anunciadas em regiões `role="status"` discretas.
 - Cada tela pode declarar `canLeave` (pede confirmação se há treino não salvo — vale também
   para "Atualizar agora") e `destroy` (libera câmera, vídeos, temporizadores e URLs).
-- Gráficos de evolução em SVG com legenda, rótulos diretos, dica por ponteiro/teclado e
-  "Ver tabela"; paleta validada para daltonismo nos temas claro e escuro.
+- Gráficos de evolução em SVG com legenda (só das séries que têm pontos; com uma série, o
+  título a nomeia), rótulos diretos, dica por ponteiro/teclado posicionada ao lado da mira
+  (nunca sobre o ponto inspecionado) e "Ver tabela"; paleta validada para daltonismo nos temas
+  claro e escuro. Tabelas rolam na própria caixa: nenhuma tela rola para o lado, nem com zoom
+  de 200%.
 - Tema claro/escuro (segue o sistema ou escolha do jogador) e "reduzir animações".
 
 ## Simuladores

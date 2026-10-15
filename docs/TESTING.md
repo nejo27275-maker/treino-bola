@@ -42,7 +42,7 @@ No primeiro uso do Playwright fora deste ambiente: `npx playwright install chrom
 | `npm run format:check`                                          | PASSOU                                                                                    |
 | `npm test` — 126 testes unitários                               | **126 PASSOU, 0 FALHOU**                                                                  |
 | `npm run build`                                                 | PASSOU — 73 arquivos pré-armazenados (~580 KB); dois builds seguidos geram a mesma versão |
-| `npx playwright test` — 62 testes de ponta a ponta (5 projetos) | **62 PASSOU, 0 FALHOU**                                                                   |
+| `npx playwright test` — 65 testes de ponta a ponta (5 projetos) | **65 PASSOU, 0 FALHOU**                                                                   |
 
 Observação honesta sobre estabilidade: em uma execução completa anterior, o teste
 "cena parada: calibra, mede tentativas…" (câmera falsa) estourou o tempo uma vez com os 3
@@ -102,7 +102,7 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
   cálculo das métricas, marcação de confiança insuficiente, salvamento e tratamento de falhas —
   **não** a detecção real.
 
-## Testes de ponta a ponta (62) — todos PASSOU na última execução
+## Testes de ponta a ponta (65) — todos PASSOU na última execução
 
 #### `tests/e2e/a11y.spec.ts` (9)
 
@@ -115,7 +115,7 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 | diálogo: foco preso em todos os controles, fundo inerte, Esc fecha e devolve o foco | app     | PASSOU |
 | rótulos que abrem seletores de arquivo mostram o foco do teclado                    | app     | PASSOU |
 | contraste: texto dos botões principais e da aba atual nos dois temas                | app     | PASSOU |
-| zoom de 200% (180 px de largura): nada importante fica cortado no plano             | app     | PASSOU |
+| zoom de 200% (180 px de largura): nenhuma tela rola para o lado nem corta controles | app     | PASSOU |
 | simuladores: descrição da cena em texto, sem revelar o que está escondido           | app     | PASSOU |
 
 #### `tests/e2e/data.spec.ts` (4)
@@ -126,6 +126,14 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 | importar mesclando não duplica registros                                  | app     | PASSOU |
 | arquivos inválidos são recusados com mensagem clara e nada é executado    | app     | PASSOU |
 | armazenamento indisponível: o app avisa e continua funcionando em memória | app     | PASSOU |
+
+#### `tests/e2e/history.spec.ts` (3)
+
+| Teste                                                                                      | Projeto | Status |
+| ------------------------------------------------------------------------------------------ | ------- | ------ |
+| evolução: a legenda só lista séries com pontos; com uma série, o título a nomeia           | app     | PASSOU |
+| dica do gráfico fica ao lado da mira (não cobre o ponto) e vai para baixo em tela estreita | app     | PASSOU |
+| abas do histórico: todas visíveis na largura do celular (quebram linha, não somem)         | app     | PASSOU |
 
 #### `tests/e2e/navigation.spec.ts` (6)
 
