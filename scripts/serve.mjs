@@ -4,12 +4,16 @@
  *
  * Uso: node scripts/serve.mjs [--dir dist] [--port 4173] [--host 127.0.0.1] [--base /]
  *   --base  serve o site sob um subcaminho (ex.: /treino-bola/), como no GitHub Pages.
+ *
+ * Arquivos de texto são enviados com gzip quando o navegador aceita (como faz o GitHub Pages),
+ * para que medições locais de carregamento sejam realistas.
  */
 import { createReadStream } from 'node:fs';
-import { realpath, stat } from 'node:fs/promises';
+import { readFile, realpath, stat } from 'node:fs/promises';
 import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { gzipSync } from 'node:zlib';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -44,6 +48,30 @@ const MIME = {
   '.txt': 'text/plain; charset=utf-8',
   '.md': 'text/markdown; charset=utf-8',
 };
+
+const COMPRESSIBLE = new Set([
+  '.html',
+  '.js',
+  '.mjs',
+  '.css',
+  '.json',
+  '.webmanifest',
+  '.svg',
+  '.txt',
+  '.md',
+]);
+/** Cache do gzip por arquivo e data de modificação. */
+const gzipCache = new Map();
+
+async function gzipped(filePath, info) {
+  const key = `${filePath}:${info.mtimeMs}:${info.size}`;
+  let body = gzipCache.get(key);
+  if (!body) {
+    body = gzipSync(await readFile(filePath), { level: 9 });
+    gzipCache.set(key, body);
+  }
+  return body;
+}
 
 const server = http.createServer(async (req, res) => {
   try {
@@ -90,6 +118,16 @@ const server = http.createServer(async (req, res) => {
       'Cache-Control': 'no-cache',
       'X-Content-Type-Options': 'nosniff',
     };
+    const acceptsGzip = /\bgzip\b/.test(String(req.headers['accept-encoding'] ?? ''));
+    if (COMPRESSIBLE.has(ext)) headers.Vary = 'Accept-Encoding';
+    if (acceptsGzip && COMPRESSIBLE.has(ext)) {
+      const body = await gzipped(filePath, info);
+      headers['Content-Encoding'] = 'gzip';
+      headers['Content-Length'] = body.length;
+      res.writeHead(200, headers);
+      res.end(req.method === 'HEAD' ? undefined : body);
+      return;
+    }
     if (req.method === 'HEAD') {
       res.writeHead(200, headers);
       res.end();

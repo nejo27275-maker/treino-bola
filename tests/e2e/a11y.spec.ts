@@ -171,10 +171,12 @@ test('simuladores: descrição da cena em texto, sem revelar o que está escondi
   await openApp(page, '#/simuladores/olhe_antes?semente=123&nivel=1');
   await page.getByRole('button', { name: 'Começar sessão' }).click();
   await page.getByText('Descrição da cena em texto').click();
-  const before = await items.count();
+  const people = page.locator('.scene-description li', { hasNotText: 'Parte do campo' });
+  const before = await people.count();
   // Quando a bola chega, a parte de trás some do desenho e da descrição.
   await expect(page.locator('.scene-description')).toContainText('Parte do campo está escondida', {
     timeout: 15_000,
   });
-  expect(await items.count()).toBeLessThan(before + 1);
+  // Quem estava às costas deixa de ser descrito (não há "vazamento" do que o desenho esconde).
+  expect(await people.count()).toBeLessThan(before);
 });

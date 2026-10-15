@@ -41,7 +41,7 @@ No primeiro uso do Playwright fora deste ambiente: `npx playwright install chrom
 | `npm run lint`                                                  | PASSOU (sem avisos)                                                                       |
 | `npm run format:check`                                          | PASSOU                                                                                    |
 | `npm test` — 126 testes unitários                               | **126 PASSOU, 0 FALHOU**                                                                  |
-| `npm run build`                                                 | PASSOU — 73 arquivos pré-armazenados (~600 KB); dois builds seguidos geram a mesma versão |
+| `npm run build`                                                 | PASSOU — 73 arquivos pré-armazenados (~580 KB); dois builds seguidos geram a mesma versão |
 | `npx playwright test` — 62 testes de ponta a ponta (5 projetos) | **62 PASSOU, 0 FALHOU**                                                                   |
 
 Observação honesta sobre estabilidade: em uma execução completa anterior, o teste
@@ -424,6 +424,25 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 **mensagens de erro de câmera e vídeo** (1) — PASSOU
 
 - erros conhecidos viram orientações em português
+
+## Desempenho medido (simulação de celular modesto)
+
+Medido com o Chromium do Playwright, tela de 360 px, **CPU 4× mais lenta** e rede **"4G ruim"**
+(150 ms de latência, 1,6 Mbps), servidor local com gzip (como o GitHub Pages). Mediana de 3 a
+5 execuções; scripts de medição fora do repositório (refazer com os mesmos parâmetros via CDP:
+`Emulation.setCPUThrottlingRate` e `Network.emulateNetworkConditions`).
+
+| Cenário                                                     | Antes                  | Depois                     | O que mudou                                                                               |
+| ----------------------------------------------------------- | ---------------------- | -------------------------- | ----------------------------------------------------------------------------------------- |
+| Primeira visita: até a tela inicial aparecer                | 2,6 s (65 requisições) | **1,7 s** (43 requisições) | Telas carregadas sob demanda, `modulepreload` dos 25 módulos iniciais, JS sem comentários |
+| Primeira visita: abrir o simulador logo em seguida          | 0,08 s                 | 0,9 s                      | Custo do carregamento sob demanda…                                                        |
+| Primeira visita: abrir o simulador após 3 s na tela inicial | —                      | **0,11 s**                 | …compensado pelo download das telas em segundo plano quando o app fica ocioso             |
+| Segunda visita (service worker): até a tela inicial         | —                      | **0,11 s**                 | Tudo vem do cache do aparelho                                                             |
+| Segunda visita: abrir a tela de vídeo                       | —                      | 0,25 s                     | —                                                                                         |
+| Iniciar uma rodada do simulador                             | 0,16 s                 | 0,16 s                     | —                                                                                         |
+
+Esses números são de uma **simulação** no computador; em um Android modesto real os tempos
+podem ser diferentes (EXIGE DISPOSITIVO REAL).
 
 ## Revisões feitas além dos testes
 

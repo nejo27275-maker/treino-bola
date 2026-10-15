@@ -128,17 +128,59 @@ async function buildServiceWorker() {
   return { version, count: precache.length, totalBytes };
 }
 
+/**
+ * Módulos importados estaticamente a partir de js/main.js: é o que o primeiro carregamento
+ * precisa. Imports dinâmicos (telas carregadas sob demanda) ficam de fora.
+ */
+async function startupModules() {
+  const staticImport =
+    /(?:^|[\n;])\s*(?:import|export)\s(?:[^'"`;]*?\sfrom\s*)?['"](\.{1,2}\/[^'"]+)['"]/g;
+  const seen = new Set();
+  const queue = ['js/main.js'];
+  while (queue.length) {
+    const rel = queue.shift();
+    if (seen.has(rel)) continue;
+    seen.add(rel);
+    const source = await readFile(path.join(dist, rel), 'utf8');
+    for (const match of source.matchAll(staticImport)) {
+      const target = path.posix.normalize(path.posix.join(path.posix.dirname(rel), match[1]));
+      if (!seen.has(target)) queue.push(target);
+    }
+  }
+  return [...seen].sort();
+}
+
+/**
+ * Coloca `<link rel="modulepreload">` para todos os módulos do primeiro carregamento: o
+ * navegador busca tudo em paralelo, em vez de descobrir um import por vez (lento em rede móvel).
+ */
+async function injectModulePreload() {
+  const htmlPath = path.join(dist, 'index.html');
+  const html = await readFile(htmlPath, 'utf8');
+  const marker = '<script type="module" src="js/main.js"></script>';
+  if (!html.includes(marker)) throw new Error('index.html sem o script principal esperado.');
+  const modules = await startupModules();
+  const links = modules
+    .filter((m) => m !== 'js/main.js')
+    .map((m) => `<link rel="modulepreload" href="${m}" />`)
+    .join('\n    ');
+  await writeFile(htmlPath, html.replace(marker, `${links}\n    ${marker}`));
+  return modules.length;
+}
+
 async function main() {
   const started = Date.now();
   await rm(dist, { recursive: true, force: true });
   await mkdir(dist, { recursive: true });
   compileTypeScript();
   await cp(path.join(root, 'public'), dist, { recursive: true });
+  const startupCount = await injectModulePreload();
   const { version, count, totalBytes } = await buildServiceWorker();
   const kb = (totalBytes / 1024).toFixed(0);
   console.log(
     `Build ${isDev ? 'de desenvolvimento' : 'de produção'} concluído em ${Date.now() - started} ms — ` +
-      `versão ${version}, ${isDev ? 'sem pré-cache' : `${count} arquivos pré-armazenados (${kb} KB)`}.`,
+      `versão ${version}, ${isDev ? 'sem pré-cache' : `${count} arquivos pré-armazenados (${kb} KB)`}; ` +
+      `${startupCount} módulos no primeiro carregamento.`,
   );
 }
 

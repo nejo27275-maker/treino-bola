@@ -7,25 +7,8 @@ import { button, pill } from './ui/components.ts';
 import { h } from './ui/dom.ts';
 import { icon, type IconName } from './ui/icons.ts';
 import { RouteNotFound, Router } from './ui/router.ts';
-import { avaliacaoScreen } from './ui/screens/avaliacao.ts';
-import { cameraScreen } from './ui/screens/camera.ts';
-import { configScreen } from './ui/screens/config.ts';
-import {
-  exerciseDetailScreen,
-  exerciseSessionScreen,
-  tecnicoScreen,
-} from './ui/screens/tecnico.ts';
-import { fisicoListScreen, workoutScreen } from './ui/screens/fisico.ts';
-import { historicoScreen, sessionDetailScreen } from './ui/screens/historico.ts';
 import { homeScreen } from './ui/screens/home.ts';
-import { leituraScreen } from './ui/screens/leitura.ts';
-import { maisScreen, sobreScreen, treinarScreen } from './ui/screens/menus.ts';
-import { mentalListScreen, mentalActivityScreen } from './ui/screens/mental.ts';
-import { perfilScreen } from './ui/screens/perfil.ts';
-import { planoScreen } from './ui/screens/plano.ts';
 import { loadingView } from './ui/screens/shared.ts';
-import { simulatorListScreen, simulatorScreen } from './ui/screens/simuladores.ts';
-import { videoScreen } from './ui/screens/video.ts';
 
 const TABS: { id: string; href: string; label: string; icon: IconName }[] = [
   { id: 'inicio', href: '#/', label: 'Início', icon: 'home' },
@@ -228,29 +211,62 @@ async function main(): Promise<void> {
   // Desbloqueia o áudio no primeiro toque (política dos navegadores).
   document.addEventListener('pointerdown', () => ctx.feedback.unlock(), { once: true });
 
+  // Só a tela inicial vem no primeiro carregamento; as demais são baixadas quando abertas
+  // (o service worker já guarda todas para uso offline).
+  const screens = {
+    avaliacao: () => import('./ui/screens/avaliacao.ts'),
+    camera: () => import('./ui/screens/camera.ts'),
+    config: () => import('./ui/screens/config.ts'),
+    fisico: () => import('./ui/screens/fisico.ts'),
+    historico: () => import('./ui/screens/historico.ts'),
+    leitura: () => import('./ui/screens/leitura.ts'),
+    mental: () => import('./ui/screens/mental.ts'),
+    menus: () => import('./ui/screens/menus.ts'),
+    perfil: () => import('./ui/screens/perfil.ts'),
+    plano: () => import('./ui/screens/plano.ts'),
+    simuladores: () => import('./ui/screens/simuladores.ts'),
+    tecnico: () => import('./ui/screens/tecnico.ts'),
+    video: () => import('./ui/screens/video.ts'),
+  };
+  const id = (p: Record<string, string>, key: string) => p[key] ?? '';
+
   router
     .add('/', 'inicio', () => homeScreen(ctx))
-    .add('/perfil', 'mais', () => perfilScreen(ctx))
-    .add('/treinar', 'treinar', () => treinarScreen(ctx))
-    .add('/avaliacao', 'treinar', () => avaliacaoScreen(ctx))
-    .add('/tecnico', 'treinar', (_p, q) => tecnicoScreen(ctx, q))
-    .add('/tecnico/:id', 'treinar', (p) => exerciseDetailScreen(ctx, p.id ?? ''))
-    .add('/tecnico/:id/sessao', 'treinar', (p) => exerciseSessionScreen(ctx, p.id ?? ''))
-    .add('/fisico', 'treinar', () => fisicoListScreen(ctx))
-    .add('/fisico/:id', 'treinar', (p) => workoutScreen(ctx, p.id ?? ''))
-    .add('/leitura', 'treinar', (_p, q) => leituraScreen(ctx, q))
-    .add('/mental', 'treinar', () => mentalListScreen(ctx))
-    .add('/mental/:id', 'treinar', (p) => mentalActivityScreen(ctx, p.id ?? ''))
-    .add('/simuladores', 'simular', () => simulatorListScreen(ctx))
-    .add('/simuladores/:mode', 'simular', (p, q) => simulatorScreen(ctx, p.mode ?? '', q))
-    .add('/plano', 'plano', () => planoScreen(ctx))
-    .add('/historico', 'mais', (_p, q) => historicoScreen(ctx, q))
-    .add('/historico/:id', 'mais', (p) => sessionDetailScreen(ctx, p.id ?? ''))
-    .add('/video', 'mais', () => videoScreen(ctx))
-    .add('/camera', 'mais', (_p, q) => cameraScreen(ctx, q))
-    .add('/config', 'mais', () => configScreen(ctx))
-    .add('/mais', 'mais', () => maisScreen(ctx))
-    .add('/sobre', 'mais', () => sobreScreen(ctx));
+    .add('/perfil', 'mais', async () => (await screens.perfil()).perfilScreen(ctx))
+    .add('/treinar', 'treinar', async () => (await screens.menus()).treinarScreen(ctx))
+    .add('/avaliacao', 'treinar', async () => (await screens.avaliacao()).avaliacaoScreen(ctx))
+    .add('/tecnico', 'treinar', async (_p, q) => (await screens.tecnico()).tecnicoScreen(ctx, q))
+    .add('/tecnico/:id', 'treinar', async (p) =>
+      (await screens.tecnico()).exerciseDetailScreen(ctx, id(p, 'id')),
+    )
+    .add('/tecnico/:id/sessao', 'treinar', async (p) =>
+      (await screens.tecnico()).exerciseSessionScreen(ctx, id(p, 'id')),
+    )
+    .add('/fisico', 'treinar', async () => (await screens.fisico()).fisicoListScreen(ctx))
+    .add('/fisico/:id', 'treinar', async (p) =>
+      (await screens.fisico()).workoutScreen(ctx, id(p, 'id')),
+    )
+    .add('/leitura', 'treinar', async (_p, q) => (await screens.leitura()).leituraScreen(ctx, q))
+    .add('/mental', 'treinar', async () => (await screens.mental()).mentalListScreen(ctx))
+    .add('/mental/:id', 'treinar', async (p) =>
+      (await screens.mental()).mentalActivityScreen(ctx, id(p, 'id')),
+    )
+    .add('/simuladores', 'simular', async () =>
+      (await screens.simuladores()).simulatorListScreen(ctx),
+    )
+    .add('/simuladores/:mode', 'simular', async (p, q) =>
+      (await screens.simuladores()).simulatorScreen(ctx, id(p, 'mode'), q),
+    )
+    .add('/plano', 'plano', async () => (await screens.plano()).planoScreen(ctx))
+    .add('/historico', 'mais', async (_p, q) => (await screens.historico()).historicoScreen(ctx, q))
+    .add('/historico/:id', 'mais', async (p) =>
+      (await screens.historico()).sessionDetailScreen(ctx, id(p, 'id')),
+    )
+    .add('/video', 'mais', async () => (await screens.video()).videoScreen(ctx))
+    .add('/camera', 'mais', async (_p, q) => (await screens.camera()).cameraScreen(ctx, q))
+    .add('/config', 'mais', async () => (await screens.config()).configScreen(ctx))
+    .add('/mais', 'mais', async () => (await screens.menus()).maisScreen(ctx))
+    .add('/sobre', 'mais', async () => (await screens.menus()).sobreScreen(ctx));
 
   setupConnectivity(ctx);
   setupInstallPrompt(ctx);
@@ -264,6 +280,27 @@ async function main(): Promise<void> {
 
   router.start();
   void setupServiceWorker(ctx, () => router.confirmLeave());
+  prefetchWhenIdle(Object.values(screens));
+}
+
+/**
+ * Depois que a primeira tela aparece, baixa as demais telas em segundo plano (quando o
+ * navegador estiver ocioso), para a primeira visita a cada uma não esperar pela rede.
+ * Respeita o "economia de dados" do aparelho.
+ */
+function prefetchWhenIdle(loaders: (() => Promise<unknown>)[]): void {
+  const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+  if (connection?.saveData) return;
+  const run = () => {
+    for (const load of loaders) void load().catch(() => {});
+  };
+  const idle = (window as Window & { requestIdleCallback?: (cb: () => void, o?: object) => void })
+    .requestIdleCallback;
+  window.addEventListener(
+    'load',
+    () => (idle ? idle(run, { timeout: 4000 }) : window.setTimeout(run, 1500)),
+    { once: true },
+  );
 }
 
 void main().catch((error) => {

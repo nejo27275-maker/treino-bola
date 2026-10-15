@@ -22,7 +22,7 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "sourceMap": false,
-    "removeComments": false,
+    "removeComments": true,
     "newLine": "lf"
   },
   "include": ["src/**/*.ts"]

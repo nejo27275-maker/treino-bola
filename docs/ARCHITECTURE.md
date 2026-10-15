@@ -23,7 +23,10 @@ tests/e2e     testes de ponta a ponta (Playwright + Chromium)
 ```
 
 Tamanho aproximado: ~18 mil linhas de TypeScript no aplicativo, ~3,9 mil linhas de testes;
-o build tem ~600 KB pré-armazenados para uso offline.
+o build tem ~580 KB pré-armazenados para uso offline (cerca de 150 KB com gzip). Só a tela
+inicial e o núcleo (25 módulos) vêm no primeiro carregamento, com `modulepreload` gerado pelo
+build; as outras telas são importadas quando abertas e baixadas em segundo plano quando o app
+fica ocioso (respeitando a "economia de dados"). Medições em [TESTING.md](TESTING.md#desempenho-medido-simulação-de-celular-modesto).
 
 ## Decisões principais (e por quê)
 

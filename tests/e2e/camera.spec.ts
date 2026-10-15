@@ -63,6 +63,8 @@ test('@parada cena parada: calibra, mede tentativas sem movimento e salva a sér
   page,
   context,
 }) => {
+  // Mede tempos reais (esperas e janelas de resposta): mais margem quando a máquina está carregada.
+  test.slow();
   await context.grantPermissions(['camera']);
   await openApp(page, '#/camera?tentativas=2');
   await page.getByRole('button', { name: 'Ligar câmera' }).click();
@@ -83,6 +85,8 @@ test('@parada desligar a câmera no meio da série encerra a série: nada é sal
   page,
   context,
 }) => {
+  // Mede tempos reais (esperas e janelas de resposta): mais margem quando a máquina está carregada.
+  test.slow();
   await context.grantPermissions(['camera']);
   await openApp(page, '#/camera?tentativas=2');
   await page.getByRole('button', { name: 'Ligar câmera' }).click();
