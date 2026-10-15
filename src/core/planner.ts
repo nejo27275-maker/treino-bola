@@ -158,7 +158,8 @@ const PHYSICAL_ROTATION_REASON: Record<(typeof PHYSICAL_ROTATION)[number], strin
   core: 'Estabilidade do tronco ajuda no equilíbrio e na proteção da bola.',
   equilibrio: 'Equilíbrio e propriocepção ajudam a manter o controle nas mudanças de direção.',
   forca: 'Força funcional apoia a proteção da bola e a estabilidade, sem buscar cargas máximas.',
-  aceleracao: 'Arrancadas curtas treinam a saída rápida; mantenha o volume baixo e a técnica limpa.',
+  aceleracao:
+    'Arrancadas curtas treinam a saída rápida; mantenha o volume baixo e a técnica limpa.',
 };
 const ROTATING_PHYSICAL_ACTIVITY_IDS = new Set([
   'coordenacao-escada',
