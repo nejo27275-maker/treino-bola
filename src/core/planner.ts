@@ -548,7 +548,8 @@ export function buildPlan(input: PlanInput): Plan {
       // Desenvolvimento/manutenção: técnica sempre; o físico segue rotação de capacidades.
       const t = tech[devIndex % Math.max(1, tech.length)];
       const r = reading[devIndex % Math.max(1, reading.length)];
-      const physicalKind = PHYSICAL_ROTATION[physicalIndex % PHYSICAL_ROTATION.length] ?? 'coordenacao';
+      const physicalKind =
+        PHYSICAL_ROTATION[physicalIndex % PHYSICAL_ROTATION.length] ?? 'coordenacao';
       const nearEvent = dte !== null && dte >= 0 && dte <= 3;
       const technical = t
         ? flexible(
@@ -603,7 +604,8 @@ export function buildPlan(input: PlanInput): Plan {
     const { kept: finalBlocks, dropped } = fit(blocks, dayBudget);
     if (
       finalBlocks.some(
-        (block) => block.kind === 'fisico' && ROTATING_PHYSICAL_ACTIVITY_IDS.has(block.activityId),
+        (block) =>
+          block.kind === 'fisico' && ROTATING_PHYSICAL_ACTIVITY_IDS.has(block.activityId),
       )
     ) {
       // Se o bloco opcional não couber no tempo, não avançamos para a próxima capacidade.
