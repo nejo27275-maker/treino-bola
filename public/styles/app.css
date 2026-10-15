@@ -644,6 +644,9 @@ details[open] > summary::before {
 .field > label,
 fieldset > legend {
   font-weight: 700;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 fieldset {
