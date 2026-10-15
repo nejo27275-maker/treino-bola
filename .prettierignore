@@ -1,0 +1,8 @@
+dist/
+node_modules/
+test-results/
+playwright-report/
+public/vendor/
+public/models/
+public/icons/
+tests/fixtures/

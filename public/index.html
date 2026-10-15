@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'"
+    />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="theme-color" content="#0b1712" />
+    <meta
+      name="description"
+      content="Treinador digital de futebol: fundamentos, leitura de jogo, simuladores e plano de preparação, com processamento local no celular."
+    />
+    <title>Cláudio Futebol AI</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icons/icon-32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="icons/icon-180.png" />
+    <link rel="stylesheet" href="styles/app.css" />
+    <script type="module" src="js/main.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+    <header class="app-header">
+      <a class="brand" href="#/" aria-label="Cláudio Futebol AI — início">
+        <img src="icons/icon-32.png" alt="" width="28" height="28" />
+        <span>Cláudio <strong>Futebol AI</strong></span>
+      </a>
+      <div class="header-status" id="header-status" aria-live="polite"></div>
+    </header>
+    <div id="banner-area"></div>
+    <main id="conteudo" tabindex="-1">
+      <div class="boot" id="boot">
+        <p>Carregando o Cláudio Futebol AI…</p>
+      </div>
+    </main>
+    <nav class="tabbar" id="tabbar" aria-label="Navegação principal"></nav>
+    <div id="toast-area" class="toast-area" role="status" aria-live="polite"></div>
+    <div id="dialog-root"></div>
+    <noscript>
+      <p class="noscript">
+        O Cláudio Futebol AI precisa de JavaScript ativado para funcionar. Ative o JavaScript nas
+        configurações do navegador e recarregue a página.
+      </p>
+    </noscript>
+    <script nomodule src="nomodule.js"></script>
+  </body>
+</html>
