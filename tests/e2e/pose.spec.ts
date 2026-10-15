@@ -66,6 +66,7 @@ async function withPoseInstalled(
           package: '@mediapipe/tasks-vision',
           version: 'SIMULADA',
           files: WASM_FILES,
+          cacheKey: 'abc123def4567890',
         },
       },
     }),
@@ -222,7 +223,7 @@ test('pose: guardar o detector para uso offline só confirma quando todos os arq
   await expect(
     page.getByText(/Não foi possível guardar: Falha ao baixar vendor\/mediapipe\/wasm/),
   ).toBeVisible();
-  expect(await page.evaluate(() => caches.has('cfa-opcional-v1'))).toBe(false);
+  expect(await page.evaluate(() => caches.has('cfa-opcional-abc123def4567890'))).toBe(false);
 
   await page.unroute(/\/(vendor\/mediapipe\/(manifest\.json|wasm\/.+)|models\/.+\.task)$/);
   await withPoseInstalled(page, STUB);
@@ -232,7 +233,9 @@ test('pose: guardar o detector para uso offline só confirma quando todos os arq
     box.getByText(/guardados neste aparelho: a pose também funciona offline/),
   ).toBeVisible();
   const keys = await page.evaluate(async () =>
-    (await (await caches.open('cfa-opcional-v1')).keys()).map((r) => new URL(r.url).pathname),
+    (await (await caches.open('cfa-opcional-abc123def4567890')).keys()).map(
+      (r) => new URL(r.url).pathname,
+    ),
   );
   expect(keys.sort()).toEqual([
     '/treino-bola/models/pose_landmarker_lite.task',

@@ -106,6 +106,14 @@ test.describe('atualização do aplicativo', () => {
     await expect(page.getByText(/Pronto para uso offline/)).toBeVisible({ timeout: 20_000 });
     await waitForController(page);
     const before = await swVersion(page);
+    // Arquivos de um detector de pose de uma versão anterior guardados no aparelho.
+    await page.evaluate(async () => {
+      const old = await window.caches.open('cfa-opcional-versaoantiga');
+      await old.put(
+        new URL('vendor/mediapipe/vision_bundle.mjs', location.href).href,
+        new Response('x'),
+      );
+    });
 
     // "Publica" a nova versão: o service worker muda de conteúdo, como em um novo build.
     const swPath = path.join(dir, 'sw.js');
@@ -129,5 +137,7 @@ test.describe('atualização do aplicativo', () => {
     await expect.poll(() => swVersion(page)).toBe(`${before}-b`);
     const caches = await page.evaluate(() => window.caches.keys());
     expect(caches.filter((k) => k.startsWith('cfa-app-'))).toEqual([`cfa-app-${before}-b`]);
+    // O cache opcional de outra versão do detector também é descartado na ativação.
+    expect(caches.filter((k) => k.startsWith('cfa-opcional-'))).toEqual([]);
   });
 });

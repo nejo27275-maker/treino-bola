@@ -6,7 +6,7 @@
  *   --base  serve o site sob um subcaminho (ex.: /treino-bola/), como no GitHub Pages.
  */
 import { createReadStream } from 'node:fs';
-import { stat } from 'node:fs/promises';
+import { realpath, stat } from 'node:fs/promises';
 import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -74,6 +74,13 @@ const server = http.createServer(async (req, res) => {
     if (!info?.isFile()) {
       res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('Não encontrado');
+      return;
+    }
+    // Links simbólicos não podem levar a arquivos de fora da pasta servida.
+    const [realFile, realDir] = await Promise.all([realpath(filePath), realpath(dir)]);
+    if (!realFile.startsWith(realDir + path.sep)) {
+      res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Acesso negado');
       return;
     }
     const ext = path.extname(filePath).toLowerCase();

@@ -341,8 +341,7 @@ export async function configScreen(ctx: AppContext): Promise<Screen> {
       );
       return;
     }
-    const files = a.files ?? [];
-    const cached = await isPoseCached(files);
+    const cached = await isPoseCached(a);
     replaceChildren(
       poseBox,
       h('p', { class: 'small' }, `Detector de pose instalado (experimental): ${a.detail}.`),
@@ -359,7 +358,7 @@ export async function configScreen(ctx: AppContext): Promise<Screen> {
             'Guardar o detector para uso offline',
             async () => {
               try {
-                const n = await cachePoseFiles(files);
+                const n = await cachePoseFiles(a);
                 ctx.toast(`Detector guardado (${n} arquivos).`, 'sucesso');
               } catch (error) {
                 ctx.toast(

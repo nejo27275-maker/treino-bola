@@ -8,9 +8,14 @@
  *   public/vendor/mediapipe/manifest.json   (versão, arquivos e SHA-256)
  *
  * Uso (com internet):
- *   node scripts/prepare-pose.mjs [--version latest]
+ *   node scripts/prepare-pose.mjs [--version 0.10.21] [--model-sha256 <hex>] [--tarball-sha256 <hex>]
  * Uso sem internet (arquivos já baixados):
  *   node scripts/prepare-pose.mjs --from-tarball caminho/mediapipe-tasks-vision-X.tgz --model-file caminho/pose_landmarker_lite.task
+ *
+ * Segurança: a versão do pacote é fixada (o npm confere a integridade do pacote baixado); com
+ * --model-sha256/--tarball-sha256 os arquivos só são aceitos se o hash conferir. O pacote é
+ * recusado se tiver links simbólicos ou entradas que não sejam arquivos/pastas comuns. Os
+ * hashes SHA-256 de tudo ficam em manifest.json (anote-os para conferir as próximas instalações).
  *
  * Depois rode `npm run build`. Verifique a licença do modelo no "model card" oficial antes
  * de redistribuir publicamente (veja docs/VISAO_COMPUTACIONAL.md).
@@ -28,6 +33,8 @@ const modelsDir = path.join(root, 'public', 'models');
 const MODEL_URL =
   'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task';
 const PACKAGE = '@mediapipe/tasks-vision';
+/** Versão fixada (publicada no npm). Use --version para escolher outra conscientemente. */
+const DEFAULT_VERSION = '0.10.21';
 
 function arg(name) {
   const i = process.argv.indexOf(`--${name}`);
@@ -55,7 +62,7 @@ function run(cmd, args, cwd) {
 async function obtainTarball(tmp) {
   const local = arg('from-tarball');
   if (local) return path.resolve(local);
-  const version = arg('version') ?? 'latest';
+  const version = arg('version') ?? DEFAULT_VERSION;
   console.log(`Baixando ${PACKAGE}@${version} do registro npm…`);
   const out = run(
     'npm',
@@ -76,13 +83,35 @@ async function obtainModel() {
   return Buffer.from(await res.arrayBuffer());
 }
 
+/** Recusa pacotes com links simbólicos ou entradas especiais (evita copiar arquivos de fora). */
+async function assertPlainTree(dir, base = dir) {
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    const rel = path.relative(base, full);
+    if (entry.isSymbolicLink())
+      throw new Error(`O pacote contém um link simbólico (${rel}): recusado por segurança.`);
+    if (entry.isDirectory()) await assertPlainTree(full, base);
+    else if (!entry.isFile()) throw new Error(`Entrada inesperada no pacote (${rel}): recusado.`);
+  }
+}
+
+function checkHash(label, buffer, expected) {
+  const actual = sha256(buffer);
+  if (expected && actual !== expected.toLowerCase()) {
+    throw new Error(`SHA-256 de ${label} não confere: esperado ${expected}, obtido ${actual}.`);
+  }
+  return actual;
+}
+
 async function main() {
   const tmp = await mkdtemp(path.join(os.tmpdir(), 'cfa-pose-'));
   try {
     const tarball = await obtainTarball(tmp);
+    const tarballSha = checkHash('pacote', await readFile(tarball), arg('tarball-sha256'));
     const extractDir = path.join(tmp, 'x');
     await mkdir(extractDir, { recursive: true });
     run('tar', ['-xzf', tarball, '-C', extractDir]);
+    await assertPlainTree(extractDir);
     const pkgDir = path.join(extractDir, 'package');
     const pkg = JSON.parse(await readFile(path.join(pkgDir, 'package.json'), 'utf8'));
     if (pkg.name !== PACKAGE) throw new Error(`Pacote inesperado: ${pkg.name}`);
@@ -94,6 +123,7 @@ async function main() {
     if (!wasmFiles.length) throw new Error('Pasta wasm vazia no pacote.');
 
     const model = await obtainModel();
+    const modelSha = checkHash('modelo', model, arg('model-sha256'));
     // O arquivo .task é um pacote zip: confere a assinatura "PK" e um tamanho mínimo.
     if (model.length < 100_000 || model[0] !== 0x50 || model[1] !== 0x4b) {
       throw new Error('O arquivo do modelo não parece um pacote .task válido.');
@@ -120,13 +150,16 @@ async function main() {
       files: wasmFiles,
       model: 'pose_landmarker_lite.task',
       modelSource: arg('model-file') ? 'arquivo local' : MODEL_URL,
-      sha256: { ...hashes, 'pose_landmarker_lite.task': sha256(model) },
+      sha256: { ...hashes, 'pose_landmarker_lite.task': modelSha },
+      tarballSha256: tarballSha,
       preparedAt: new Date().toISOString(),
     };
     await writeFile(path.join(vendorDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
     console.log(
       `Pronto: ${PACKAGE} ${pkg.version} (${wasmFiles.length} arquivos wasm) e modelo de ${(model.length / 1e6).toFixed(1)} MB.`,
     );
+    console.log(`SHA-256 do pacote: ${tarballSha}`);
+    console.log(`SHA-256 do modelo: ${modelSha}`);
     console.log('Agora rode: npm run build');
   } finally {
     await rm(tmp, { recursive: true, force: true });

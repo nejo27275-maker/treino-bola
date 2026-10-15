@@ -31,6 +31,12 @@ async function poseInfo() {
   const model = path.join(root, 'public', 'models', 'pose_landmarker_lite.task');
   const has = async (p) => (await stat(p).catch(() => null))?.isFile() ?? false;
   if (!(await has(bundle)) || !(await has(model))) return { available: false };
+  // Chave do cache opcional: muda quando os arquivos do detector mudam, para que o service
+  // worker descarte a versão antiga guardada nos aparelhos.
+  const keyHash = createHash('sha256');
+  keyHash.update(await readFile(bundle));
+  keyHash.update(await readFile(model));
+  const cacheKey = keyHash.digest('hex').slice(0, 16);
   try {
     const manifest = JSON.parse(
       await readFile(path.join(root, 'public', 'vendor', 'mediapipe', 'manifest.json'), 'utf8'),
@@ -40,6 +46,7 @@ async function poseInfo() {
       package: String(manifest.package ?? '@mediapipe/tasks-vision'),
       version: String(manifest.version ?? 'desconhecida'),
       files: Array.isArray(manifest.files) ? manifest.files.map(String) : [],
+      cacheKey,
     };
   } catch {
     return {
@@ -47,6 +54,7 @@ async function poseInfo() {
       package: '@mediapipe/tasks-vision',
       version: 'desconhecida',
       files: [],
+      cacheKey,
     };
   }
 }
@@ -73,6 +81,7 @@ function compileTypeScript() {
 }
 
 async function buildServiceWorker() {
+  const pose = await poseInfo();
   // build-info.json é escrito antes da lista de pré-cache para também funcionar offline.
   await writeFile(
     path.join(dist, 'build-info.json'),
@@ -81,7 +90,7 @@ async function buildServiceWorker() {
         // Sem data/hora do build: um novo build sem mudanças gera a mesma versão (o aparelho
         // não baixa tudo de novo à toa).
         mode: isDev ? 'development' : 'production',
-        pose: await poseInfo(),
+        pose,
       },
       null,
       2,
@@ -105,6 +114,11 @@ async function buildServiceWorker() {
   };
   let sw = replaceMarker(template, 'version', `const VERSION = ${JSON.stringify(version)};`);
   sw = replaceMarker(sw, 'dev', `const DEV_MODE = ${isDev};`);
+  sw = replaceMarker(
+    sw,
+    'optional-cache',
+    `const OPTIONAL_CACHE = ${JSON.stringify(`cfa-opcional-${pose.cacheKey ?? 'sem-pose'}`)};`,
+  );
   sw = replaceMarker(sw, 'precache', `const PRECACHE = ${JSON.stringify(isDev ? [] : precache)};`);
   await writeFile(path.join(dist, 'sw.js'), sw);
   const totalBytes = await files.reduce(async (accP, f) => {

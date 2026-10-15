@@ -6,14 +6,15 @@
  * - Requisições do próprio site são atendidas primeiro pelo cache (funciona offline).
  * - Navegações retornam o index.html armazenado (aplicativo de página única).
  * - Arquivos opcionais do detector de pose (vendor/ e models/) só são guardados quando
- *   o próprio aplicativo pede, em um cache separado.
+ *   o próprio aplicativo pede, em um cache separado cujo nome muda com a versão desses
+ *   arquivos (a versão antiga é apagada na ativação).
  * - Nada de outros domínios é interceptado, armazenado ou enviado.
  */
 const VERSION = 'sem-build'; // @build:version
 const DEV_MODE = true; // @build:dev
 const PRECACHE = []; // @build:precache
 const APP_CACHE = `cfa-app-${VERSION}`;
-const OPTIONAL_CACHE = 'cfa-opcional-v1';
+const OPTIONAL_CACHE = 'cfa-opcional-sem-pose'; // @build:optional-cache
 
 self.addEventListener('install', (event) => {
   if (DEV_MODE) {
@@ -42,10 +43,15 @@ self.addEventListener('activate', (event) => {
         await self.registration.unregister();
         return;
       }
+      // Remove versões antigas do aplicativo e dos arquivos opcionais do detector de pose.
       const keys = await caches.keys();
       await Promise.all(
         keys
-          .filter((key) => key.startsWith('cfa-app-') && key !== APP_CACHE)
+          .filter(
+            (key) =>
+              (key.startsWith('cfa-app-') && key !== APP_CACHE) ||
+              (key.startsWith('cfa-opcional-') && key !== OPTIONAL_CACHE),
+          )
           .map((key) => caches.delete(key)),
       );
       await self.clients.claim();
