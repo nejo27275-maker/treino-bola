@@ -279,14 +279,23 @@ export async function configScreen(ctx: AppContext): Promise<Screen> {
       h(
         'p',
         null,
-        pill(
-          p.swStatus === 'ativo' ? 'Offline: pronto' : 'Offline: indisponível',
-          p.swStatus === 'ativo' ? 'accent' : 'warn',
-        ),
+        p.swStatus === 'ativo'
+          ? pill('Offline: pronto', 'accent')
+          : p.swStatus === 'registrando'
+            ? pill('Offline: preparando')
+            : pill('Offline: indisponível', 'warn'),
         ' ',
         SW_TEXT[p.swStatus],
-        p.swError ? ` (${p.swError})` : '',
       ),
+      // A mensagem do navegador (em geral em inglês) fica recolhida, para quem precisar.
+      p.swError
+        ? h(
+            'details',
+            null,
+            h('summary', null, 'Detalhe técnico'),
+            h('p', { class: 'small muted' }, p.swError),
+          )
+        : null,
       p.updateReady
         ? button('Atualizar para a nova versão', () => p.applyUpdate?.(), {
             variant: 'primary',

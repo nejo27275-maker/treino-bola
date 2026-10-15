@@ -578,7 +578,30 @@ details > summary {
   min-height: 44px;
   display: flex;
   align-items: center;
+  gap: 10px;
   font-weight: 700;
+  list-style: none;
+}
+
+details > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Com display: flex o marcador nativo some; esta seta mostra que dá para abrir (› fechado, ⌄ aberto). */
+details > summary::before {
+  content: '';
+  flex: none;
+  width: 0.45em;
+  height: 0.45em;
+  margin-left: 2px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.15s;
+}
+
+details[open] > summary::before {
+  transform: rotate(45deg);
 }
 
 .banner {

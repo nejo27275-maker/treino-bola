@@ -40,7 +40,7 @@ No primeiro uso do Playwright fora deste ambiente: `npx playwright install chrom
 | `npm run typecheck`                                             | PASSOU (sem erros)                                                                        |
 | `npm run lint`                                                  | PASSOU (sem avisos)                                                                       |
 | `npm run format:check`                                          | PASSOU                                                                                    |
-| `npm test` — 126 testes unitários                               | **126 PASSOU, 0 FALHOU**                                                                  |
+| `npm test` — 129 testes unitários                               | **129 PASSOU, 0 FALHOU**                                                                  |
 | `npm run build`                                                 | PASSOU — 73 arquivos pré-armazenados (~580 KB); dois builds seguidos geram a mesma versão |
 | `npx playwright test` — 65 testes de ponta a ponta (5 projetos) | **65 PASSOU, 0 FALHOU**                                                                   |
 
@@ -224,7 +224,7 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 | @negada permissão negada mostra como liberar a câmera                                       | camera-sem-permissao | PASSOU |
 | @negada sem HTTPS a tela explica o requisito (contexto inseguro simulado)                   | camera-sem-permissao | PASSOU |
 
-## Testes unitários (126) — todos PASSOU na última execução
+## Testes unitários (129) — todos PASSOU na última execução
 
 **biblioteca de exercícios técnicos** (7) — PASSOU
 
@@ -257,6 +257,12 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 - hora local de um instante salvo em UTC (rótulos do histórico)
 - aritmética não é afetada por horário de verão
 - localDate formata com zeros à esquerda
+
+**formatação em português** (3) — PASSOU
+
+- vírgula decimal, porcentagem e valores inválidos
+- número e unidade ficam juntos (espaço não separável)
+- relógios de sessão e de vídeo
 
 **motor adaptativo — avaliação de fundamentos** (9) — PASSOU
 

@@ -5,7 +5,7 @@ jogo, simuladores, preparação física e mental, análise de vídeo e câmera a
 adaptativo até o **interclasse de 20/10/2026**. Tudo roda **no próprio aparelho**: sem conta,
 sem API de IA, sem analytics, e funciona offline depois da primeira visita.
 
-> **Estado honesto:** o app foi construído e testado com testes automatizados (126 unitários e
+> **Estado honesto:** o app foi construído e testado com testes automatizados (129 unitários e
 > 65 de ponta a ponta no Chromium), mas **não foi testado em um celular físico** nem publicado
 > por mim. A câmera foi validada com a câmera falsa do Chromium e a estimativa de pose só com
 > uma biblioteca simulada. Detalhes em [docs/TESTING.md](docs/TESTING.md).

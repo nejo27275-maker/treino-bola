@@ -166,7 +166,8 @@ test('E — reação à pressão: responder certo após o sinal mede o tempo; an
       : /Proteger/;
   await page.getByRole('button', { name: response }).click();
   await expect(page.getByRole('heading', { name: 'Reação certa!' })).toBeVisible();
-  await expect(page.getByText(/tempo de resposta \d+ ms/)).toBeVisible();
+  // Número e unidade vêm separados por espaço não separável (\s cobre os dois).
+  await expect(page.getByText(/tempo de resposta \d+\sms/)).toBeVisible();
   await expect(page.getByText('Acertos 1/1')).toBeVisible();
 });
 

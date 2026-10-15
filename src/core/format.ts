@@ -1,4 +1,9 @@
-/** Formatação de números e tempos em português do Brasil. */
+/**
+ * Formatação de números e tempos em português do Brasil. Entre número e unidade vai um
+ * espaço não separável (NBSP), para "1,25 s" nunca quebrar em duas linhas.
+ */
+
+const NBSP = ' ';
 
 export function percent(value: number, decimals = 0): string {
   if (!Number.isFinite(value)) return '—';
@@ -31,8 +36,8 @@ export function videoTime(seconds: number): string {
 /** "350 ms" ou "1,25 s" */
 export function millis(ms: number): string {
   if (!Number.isFinite(ms)) return '—';
-  if (ms < 1000) return `${Math.round(ms)} ms`;
-  return `${decimal(ms / 1000, 2)} s`;
+  if (ms < 1000) return `${Math.round(ms)}${NBSP}ms`;
+  return `${decimal(ms / 1000, 2)}${NBSP}s`;
 }
 
 export function minutesLabel(minutes: number): string {
@@ -45,10 +50,10 @@ export function plural(count: number, singular: string, pluralForm: string): str
 
 export function bytes(n: number): string {
   if (!Number.isFinite(n) || n < 0) return '—';
-  if (n < 1024) return `${n} B`;
-  if (n < 1024 * 1024) return `${decimal(n / 1024, 0)} KB`;
-  if (n < 1024 * 1024 * 1024) return `${decimal(n / (1024 * 1024), 1)} MB`;
-  return `${decimal(n / (1024 * 1024 * 1024), 2)} GB`;
+  if (n < 1024) return `${n}${NBSP}B`;
+  if (n < 1024 * 1024) return `${decimal(n / 1024, 0)}${NBSP}KB`;
+  if (n < 1024 * 1024 * 1024) return `${decimal(n / (1024 * 1024), 1)}${NBSP}MB`;
+  return `${decimal(n / (1024 * 1024 * 1024), 2)}${NBSP}GB`;
 }
 
 /** Hora local (HH:MM) de um instante ISO; vazio se a data for inválida. */
