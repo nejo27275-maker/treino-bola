@@ -145,13 +145,21 @@ const DEFAULT_MATERIALS: Material[] = ['bola'];
  * Força funcional não se repete em dias consecutivos; perto do evento, a seleção é
  * substituída por agilidade de baixo volume, sem força pesada ou esforço máximo.
  */
-const PHYSICAL_ROTATION: readonly WorkoutKind[] = [
+const PHYSICAL_ROTATION = [
   'coordenacao',
   'core',
   'equilibrio',
   'forca',
   'aceleracao',
-];
+] as const satisfies readonly WorkoutKind[];
+
+const PHYSICAL_ROTATION_REASON: Record<(typeof PHYSICAL_ROTATION)[number], string> = {
+  coordenacao: 'Coordenação melhora o controle do corpo com e sem a bola.',
+  core: 'Estabilidade do tronco ajuda no equilíbrio e na proteção da bola.',
+  equilibrio: 'Equilíbrio e propriocepção ajudam a manter o controle nas mudanças de direção.',
+  forca: 'Força funcional apoia a proteção da bola e a estabilidade, sem buscar cargas máximas.',
+  aceleracao: 'Arrancadas curtas treinam a saída rápida; mantenha o volume baixo e a técnica limpa.',
+};
 const ROTATING_PHYSICAL_ACTIVITY_IDS = new Set([
   'coordenacao-escada',
   'core-estabilidade',
@@ -574,9 +582,7 @@ export function buildPlan(input: PlanInput): Plan {
               catalog.workout(nearEvent ? 'agilidade' : physicalKind),
               nearEvent
                 ? 'Agilidade em volume baixo: rapidez sem acumular cansaço perto do jogo.'
-                : physicalKind === 'core'
-                  ? 'Estabilidade do tronco ajuda no equilíbrio e na proteção da bola.'
-                  : 'Coordenação melhora o controle do corpo com a bola.',
+                : PHYSICAL_ROTATION_REASON[physicalKind],
             )
           : null;
       const physicalFirst = devIndex % 2 === 1 && physical !== null;
