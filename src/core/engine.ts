@@ -375,8 +375,16 @@ function pct(v: number): string {
 
 function describeEvidence(a: SkillAssessment): string {
   const bits: string[] = [];
-  if (a.real) bits.push(`execução real ${pct(a.real.rate)} em ${a.real.attempts} tentativas`);
-  if (a.simulado) bits.push(`simulação ${pct(a.simulado.rate)} em ${a.simulado.attempts} rodadas`);
+  if (a.real) {
+    bits.push(
+      `execução real ${a.real.successes}/${a.real.attempts} acertos (estimativa ${pct(a.real.rate)})`,
+    );
+  }
+  if (a.simulado) {
+    bits.push(
+      `simulação ${a.simulado.successes}/${a.simulado.attempts} (estimativa ${pct(a.simulado.rate)})`,
+    );
+  }
   if (a.selfRating) bits.push(`autoavaliação ${a.selfRating.rating}/5 (peso menor)`);
   return bits.join('; ');
 }

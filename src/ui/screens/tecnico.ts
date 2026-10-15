@@ -287,6 +287,7 @@ export async function exerciseSessionScreen(ctx: AppContext, id: string): Promis
   let restTimer: number | null = null;
   let tickTimer: number | null = null;
   let signals: SignalGenerator | null = null;
+  let undoBtn: HTMLButtonElement | null = null;
 
   const timerEl = h('span', { class: 'timer', 'aria-label': 'Tempo ativo' }, '0:00');
   const seriesEl = h('span', { class: 'pill' });
@@ -324,6 +325,7 @@ export async function exerciseSessionScreen(ctx: AppContext, id: string): Promis
   };
 
   const updateCounters = () => {
+    if (undoBtn) undoBtn.disabled = marks.length === 0;
     const info = seriesInfo();
     seriesEl.textContent = `Série ${info.current} de ${e.series}`;
     countEl.textContent = `${successes} / ${attempts}`;
@@ -702,7 +704,10 @@ export async function exerciseSessionScreen(ctx: AppContext, id: string): Promis
                   }
                   render();
                 }),
-                button('Desfazer', undo, { variant: 'ghost', disabled: marks.length === 0 }),
+                (undoBtn = button('Desfazer', undo, {
+                  variant: 'ghost',
+                  disabled: marks.length === 0,
+                })),
                 button('Concluir', finish, { variant: 'primary' }),
               ),
             );

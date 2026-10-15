@@ -40,6 +40,8 @@ export class Router {
   private currentHash = '';
   private ignoreNext = false;
   private renderToken = 0;
+  /** Na primeira tela o foco fica no topo (link "Pular para o conteúdo"); depois vai ao título. */
+  private firstRender = true;
   private readonly outlet: HTMLElement;
   private readonly onChange: (tab: string, title: string) => void;
   private readonly onError: (error: unknown, retry: () => void) => HTMLElement;
@@ -131,8 +133,12 @@ export class Router {
         document.title = `${screen.title} · Cláudio Futebol AI`;
         this.onChange(route.tab, screen.title);
         window.scrollTo(0, 0);
-        const heading = this.outlet.querySelector<HTMLElement>('h1');
-        (heading ?? this.outlet).focus({ preventScroll: true });
+        if (this.firstRender) {
+          this.firstRender = false;
+        } else {
+          const heading = this.outlet.querySelector<HTMLElement>('h1');
+          (heading ?? this.outlet).focus({ preventScroll: true });
+        }
       } catch (error) {
         if (token !== this.renderToken) return;
         this.outlet.replaceChildren(this.onError(error, () => void this.handle(true)));

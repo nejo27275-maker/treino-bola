@@ -33,7 +33,7 @@ function skillRow(a: SkillAssessment): HTMLElement {
       h(
         'li',
         null,
-        `Execução real: ${percent(a.real.rate)} em ${a.real.attempts} tentativas (${sourcesText(a.real.sources)}) · último registro ${formatDayMonth(a.real.lastDate)}`,
+        `Execução real: ${a.real.successes}/${a.real.attempts} acertos · estimativa ${percent(a.real.rate)} (${sourcesText(a.real.sources)}) · último registro ${formatDayMonth(a.real.lastDate)}`,
       ),
     );
   }
@@ -42,7 +42,7 @@ function skillRow(a: SkillAssessment): HTMLElement {
       h(
         'li',
         null,
-        `Simulação/cenários: ${percent(a.simulado.rate)} em ${a.simulado.attempts} rodadas (${sourcesText(a.simulado.sources)})${a.simulado.avgResponseMs ? ` · tempo médio ${millis(a.simulado.avgResponseMs)}` : ''}`,
+        `Simulação/cenários: ${a.simulado.successes}/${a.simulado.attempts} acertos · estimativa ${percent(a.simulado.rate)} (${sourcesText(a.simulado.sources)})${a.simulado.avgResponseMs ? ` · tempo médio ${millis(a.simulado.avgResponseMs)}` : ''}`,
       ),
     );
   }

@@ -171,3 +171,26 @@ describe('métricas de pose', () => {
     assert.equal(summarizePoseSeries([]).stability, 'indefinido');
   });
 });
+
+describe('mensagens de erro de câmera e vídeo', () => {
+  test('erros conhecidos viram orientações em português', async () => {
+    const { describeCameraError, describeVideoError, checkVideoFile, cameraSupport } =
+      await import('../../src/media/mediaErrors.ts');
+    assert.equal(describeCameraError({ name: 'NotAllowedError' }).code, 'permissao_negada');
+    assert.equal(describeCameraError({ name: 'NotReadableError' }).code, 'camera_ocupada');
+    assert.equal(describeCameraError({ name: 'NotSupportedError' }).code, 'nao_suportado');
+    assert.equal(describeCameraError({ name: 'OverconstrainedError' }).code, 'configuracao');
+    assert.equal(describeCameraError(new Error('x')).code, 'desconhecido');
+    assert.equal(cameraSupport(false, true)?.code, 'inseguro');
+    assert.equal(cameraSupport(true, false)?.code, 'sem_suporte');
+    assert.equal(cameraSupport(true, true), null);
+    assert.equal(describeVideoError(4).code, 'formato');
+    assert.equal(describeVideoError(3).code, 'decodificacao');
+    assert.equal(checkVideoFile({ name: 'a.txt', type: 'text/plain', size: 10 }).ok, false);
+    assert.equal(checkVideoFile({ name: 'jogo.MOV', type: '', size: 10 }).ok, true);
+    assert.equal(checkVideoFile({ name: 'v.mp4', type: 'video/mp4', size: 0 }).ok, false);
+    assert.ok(
+      checkVideoFile({ name: 'v.mp4', type: 'video/mp4', size: 600 * 1024 * 1024 }).warning,
+    );
+  });
+});

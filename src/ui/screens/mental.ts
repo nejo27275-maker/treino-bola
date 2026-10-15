@@ -253,6 +253,7 @@ export async function mentalActivityScreen(ctx: AppContext, id: string): Promise
   const status = h('p', { role: 'status', class: 'small' });
   const notes = h('textarea', {
     maxlength: 2000,
+    'aria-label': activity.kind === 'confianca' ? 'Diário de confiança' : 'Anotações',
     placeholder: activity.kind === 'confianca' ? '1. …\n2. …\n3. …\nAjuste: …' : 'Opcional',
   });
 

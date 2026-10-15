@@ -170,3 +170,9 @@ describe('planejador até o interclasse', () => {
     assert.equal(p.days[0]!.completedSessions, 1);
   });
 });
+
+test('no dia da competição o aquecimento não é encurtado pelo limite de tempo', () => {
+  const day = plan('2026-10-20', { profile: profile({ minutosDisponiveis: 10, preferenciaSessao: 'curtas' }) }).days[0]!;
+  const warmup = day.blocks.find((b) => b.kind === 'aquecimento');
+  assert.equal(warmup?.minutes, 12);
+});

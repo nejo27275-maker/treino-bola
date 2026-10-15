@@ -35,7 +35,7 @@ import type { Screen } from '../router.ts';
 import { Stopwatch } from '../timers.ts';
 
 type Mode = 'livre' | 'reacao' | 'pose';
-const TRIALS = 8;
+const DEFAULT_TRIALS = 8;
 const RESPONSE_WINDOW_MS = 2500;
 const MIN_HUMAN_REACTION_MS = 100;
 
@@ -51,7 +51,13 @@ function problemCard(p: MediaProblem): HTMLElement {
   );
 }
 
-export async function cameraScreen(ctx: AppContext): Promise<Screen> {
+export async function cameraScreen(ctx: AppContext, query: URLSearchParams): Promise<Screen> {
+  // Tentativas válidas por série (padrão 8; ?tentativas=N permite séries curtas).
+  const requestedTrials = Number(query.get('tentativas'));
+  const TRIALS =
+    Number.isInteger(requestedTrials) && requestedTrials >= 1 && requestedTrials <= 20
+      ? requestedTrials
+      : DEFAULT_TRIALS;
   const camera = new CameraController();
   const unsupported = CameraController.support();
   const video = h('video', {
@@ -428,6 +434,18 @@ export async function cameraScreen(ctx: AppContext): Promise<Screen> {
       results.prepend(
         h('li', { class: 'small' }, `${trials.length}. Sinal: ${trial.expected} → ${text}`),
       );
+      // Três saídas antecipadas seguidas: provavelmente há movimento no fundo da cena.
+      const lastThree = trials.slice(-3);
+      if (lastThree.length === 3 && lastThree.every((t) => t.falseStart)) {
+        phase = 'parado';
+        stimulus.textContent =
+          'Três movimentos antes do sinal seguidos. Fique totalmente parado até a seta aparecer e confira se nada se mexe ao fundo (pessoas, cortinas, luz piscando).';
+        replaceChildren(
+          controls,
+          button('Calibrar e tentar de novo', () => startSeries(), { variant: 'primary' }),
+        );
+        return;
+      }
       phaseTimer = window.setTimeout(nextTrial, 2200);
     };
 

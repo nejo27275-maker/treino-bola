@@ -242,7 +242,7 @@ async function main(): Promise<void> {
     .add('/historico', 'mais', (_p, q) => historicoScreen(ctx, q))
     .add('/historico/:id', 'mais', (p) => sessionDetailScreen(ctx, p.id ?? ''))
     .add('/video', 'mais', () => videoScreen(ctx))
-    .add('/camera', 'mais', () => cameraScreen(ctx))
+    .add('/camera', 'mais', (_p, q) => cameraScreen(ctx, q))
     .add('/config', 'mais', () => configScreen(ctx))
     .add('/mais', 'mais', () => maisScreen(ctx))
     .add('/sobre', 'mais', () => sobreScreen(ctx));

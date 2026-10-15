@@ -63,6 +63,17 @@ export function describeCameraError(error: unknown): MediaProblem {
         message: 'O navegador só libera a câmera em páginas seguras (HTTPS) ou em localhost.',
         steps: ['Abra o aplicativo pelo endereço HTTPS (por exemplo, o do GitHub Pages).'],
       };
+    case 'NotSupportedError':
+      return {
+        code: 'nao_suportado',
+        title: 'Câmera indisponível neste navegador',
+        message:
+          'Este navegador não permite que sites usem a câmera. Isso é comum em navegadores embutidos de outros aplicativos (redes sociais, mensageiros).',
+        steps: [
+          'Abra o endereço do aplicativo diretamente no Google Chrome.',
+          'Se já estiver no Chrome, atualize-o pela loja de aplicativos.',
+        ],
+      };
     case 'AbortError':
       return {
         code: 'interrompida',

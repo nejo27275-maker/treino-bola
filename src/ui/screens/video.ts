@@ -156,6 +156,7 @@ export async function videoScreen(ctx: AppContext): Promise<Screen> {
     '1',
     'vel-video',
   );
+  speed.setAttribute('aria-label', 'Velocidade de reprodução');
   const infoEl = h('p', { class: 'small muted', 'aria-live': 'polite' });
   const errorBox = h('div');
   const playerCard = h('section', { class: 'card stack', hidden: true });
@@ -201,17 +202,43 @@ export async function videoScreen(ctx: AppContext): Promise<Screen> {
   video.addEventListener('play', () => (playBtn.textContent = '⏸ Pausar'));
   video.addEventListener('pause', () => (playBtn.textContent = '▶ Reproduzir'));
   video.addEventListener('ended', () => (playBtn.textContent = '▶ Reproduzir'));
-  video.addEventListener('loadedmetadata', () => {
+  const onReady = () => {
     const d = video.duration;
-    timeline.max = String(Number.isFinite(d) ? d : 0);
-    timeline.disabled = false;
+    const known = Number.isFinite(d) && d > 0;
+    timeline.max = String(known ? d : 0);
+    timeline.disabled = !known;
     overlay.width = video.videoWidth || 640;
     overlay.height = video.videoHeight || 360;
-    infoEl.textContent = `${fileName} · ${videoTime(d)} · ${video.videoWidth}×${video.videoHeight}`;
+    infoEl.textContent = `${fileName} · ${known ? videoTime(d) : 'duração desconhecida'} · ${video.videoWidth}×${video.videoHeight}`;
     playerCard.hidden = false;
     toolsBox.hidden = false;
     replaceChildren(errorBox);
     updateTime();
+  };
+  // Alguns WebM (ex.: gravados pelo navegador) não informam a duração no cabeçalho:
+  // buscar um tempo enorme faz o navegador percorrer o arquivo e descobrir o fim.
+  let resolvingDuration = false;
+  video.addEventListener('loadedmetadata', () => {
+    if (Number.isFinite(video.duration)) {
+      onReady();
+      return;
+    }
+    resolvingDuration = true;
+    const fallback = window.setTimeout(() => {
+      if (!resolvingDuration) return;
+      resolvingDuration = false;
+      onReady();
+    }, 4000);
+    const onDuration = () => {
+      if (!resolvingDuration || !Number.isFinite(video.duration)) return;
+      resolvingDuration = false;
+      window.clearTimeout(fallback);
+      video.removeEventListener('durationchange', onDuration);
+      video.currentTime = 0;
+      onReady();
+    };
+    video.addEventListener('durationchange', onDuration);
+    video.currentTime = 1e101;
   });
   video.addEventListener('error', () => {
     if (!objectUrl) return;
