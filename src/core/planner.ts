@@ -152,6 +152,13 @@ const PHYSICAL_ROTATION: readonly WorkoutKind[] = [
   'forca',
   'aceleracao',
 ];
+const ROTATING_PHYSICAL_ACTIVITY_IDS = new Set([
+  'coordenacao-escada',
+  'core-estabilidade',
+  'equilibrio-propriocepcao',
+  'forca-peso-corporal',
+  'aceleracao-curta',
+]);
 
 export const PHASE_LABEL: Record<PlanPhase, string> = {
   avaliacao: 'Avaliação inicial',
@@ -385,6 +392,7 @@ export function buildPlan(input: PlanInput): Plan {
   if (engine.wellbeing.level !== 'ok') notes.push(...engine.wellbeing.reasons);
 
   let devIndex = 0;
+  let physicalIndex = 0;
   const days: PlanDay[] = dateRange(today, end).map((date, index) => {
     const dte = validEvent ? diffDays(date, validEvent.data) : null;
     let phase = phaseFor(date, index, dte, mode, baseline);
@@ -518,7 +526,7 @@ export function buildPlan(input: PlanInput): Plan {
       // Desenvolvimento/manutenção: técnica sempre; o físico segue rotação de capacidades.
       const t = tech[devIndex % Math.max(1, tech.length)];
       const r = reading[devIndex % Math.max(1, reading.length)];
-      const physicalKind = PHYSICAL_ROTATION[devIndex % PHYSICAL_ROTATION.length] ?? 'coordenacao';
+      const physicalKind = PHYSICAL_ROTATION[physicalIndex % PHYSICAL_ROTATION.length] ?? 'coordenacao';
       const nearEvent = dte !== null && dte >= 0 && dte <= 3;
       const technical = t
         ? flexible(
@@ -570,6 +578,14 @@ export function buildPlan(input: PlanInput): Plan {
     }
 
     const { kept: finalBlocks, dropped } = fit(blocks, dayBudget);
+    if (
+      finalBlocks.some(
+        (block) => block.kind === 'fisico' && ROTATING_PHYSICAL_ACTIVITY_IDS.has(block.activityId),
+      )
+    ) {
+      // Se o bloco opcional não couber no tempo, não avançamos para a próxima capacidade.
+      physicalIndex++;
+    }
     if (dropped.length) {
       const onlyMental = dropped.every((b) => b.kind === 'mental');
       dayNotes.push(
