@@ -16,7 +16,9 @@ src/
   media/      câmera (getUserMedia), quadros, ferramentas de vídeo, pose opcional, mensagens de erro
   ui/         roteador por hash, componentes, gráficos, telas e simuladores (SVG)
   main.ts     inicialização, service worker, conectividade, instalação
+  platform.ts detecta o APK Android (ponte window.ClaudioAndroid)
 public/       index.html (CSP), manifest, ícones, CSS
+android/      app Android (APK): WebView que serve o dist/ de dentro do APK + pontes com o sistema
 scripts/      build, servidor local, dev, ícones, mídia de teste, preparo opcional da pose
 tests/unit    testes do núcleo (node --test)
 tests/e2e     testes de ponta a ponta (Playwright + Chromium)
@@ -40,6 +42,7 @@ fica ocioso (respeitando a "economia de dados"). Medições em [TESTING.md](TEST
 | **IndexedDB com transações atômicas** e alternativa em memória           | Histórico estruturado e grande; se o IndexedDB faltar (ex.: janela anônima), o app avisa e segue funcionando.                                                                                                                                             | —                                                                                  |
 | **Service worker próprio** com pré-cache versionado por hash de conteúdo | Abre offline depois da primeira visita; atualização só quando o jogador pede (não interrompe treino). Build reprodutível: sem mudanças, mesma versão.                                                                                                     | Primeira visita precisa de internet.                                               |
 | **Detecção de movimento por diferença de quadros** (sem modelo)          | Funciona em qualquer aparelho, offline, e é verificável (testes com câmera falsa e vídeos sintéticos).                                                                                                                                                    | Não identifica pessoas, bola ou adversários.                                       |
+| **APK com WebView e origem https local** (`android/`)                    | Instala e funciona offline sem publicar o site; a origem `https://appassets.androidplatform.net` é contexto seguro (câmera, módulos ES) e todo pedido é respondido pelo próprio app. Só a API da plataforma, sem AndroidX.                                | O build precisa do Android SDK: é feito no GitHub Actions (`android.yml`).         |
 | **Pose (MediaPipe) opcional** e instalada no servidor                    | O modelo não pôde ser baixado aqui; o app nunca finge ter detector e funciona inteiro sem ele.                                                                                                                                                            | Integração validada só com biblioteca simulada.                                    |
 
 ## Fluxo de dados

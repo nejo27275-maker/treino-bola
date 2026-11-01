@@ -67,12 +67,26 @@ jobs:
       # Também confere o gradle-wrapper.jar contra as somas publicadas pelo Gradle.
       - uses: gradle/actions/setup-gradle@v4
 
+      # Sem chave própria: uma chave de depuração criada na primeira execução e guardada no
+      # cache, para que cada APK novo instale por cima do anterior (mesma assinatura).
       - name: Chave de depuração estável entre execuções
         if: env.TEM_CHAVE != 'true'
         uses: actions/cache@v4
         with:
-          path: ~/.android/debug.keystore
-          key: claudio-apk-debug-keystore-v1
+          path: ~/claudio-debug.keystore
+          key: claudio-apk-debug-keystore-v2
+
+      - name: Criar a chave de depuração (só na primeira vez)
+        if: env.TEM_CHAVE != 'true'
+        run: |
+          if [ -f "$HOME/claudio-debug.keystore" ]; then
+            echo "Chave de depuração restaurada do cache."
+          else
+            keytool -genkeypair -keystore "$HOME/claudio-debug.keystore" -storepass android \
+              -keypass android -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+          fi
+          keytool -list -v -keystore "$HOME/claudio-debug.keystore" -storepass android | grep -m1 'SHA256:'
 
       - name: Chave de assinatura própria (segredos do repositório)
         if: env.TEM_CHAVE == 'true'
@@ -91,9 +105,10 @@ jobs:
             export ANDROID_KEYSTORE_PATH="$RUNNER_TEMP/assinatura.jks"
             TAREFA=assembleRelease
           else
+            export ANDROID_DEBUG_KEYSTORE="$HOME/claudio-debug.keystore"
             TAREFA=assembleDebug
           fi
-          ./gradlew --no-daemon --stacktrace testDebugUnitTest "$TAREFA"
+          ./gradlew --no-daemon --stacktrace --warning-mode all testDebugUnitTest "$TAREFA"
 
       - name: Nome final, conferência e soma SHA-256
         id: nome

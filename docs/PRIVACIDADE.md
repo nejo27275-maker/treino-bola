@@ -40,6 +40,13 @@ segurança de conteúdo (CSP) da página bloqueia conexões com outros domínios
 - **Apagar**: perfil (Configurações → Perfil) ou todos os dados do aplicativo (Configurações →
   Apagar todos os dados). Afeta só os dados deste aplicativo.
 
+## No APK Android
+
+O APK leva o site dentro dele e responde localmente a todo pedido da página (os arquivos do
+app ou uma recusa): nada é baixado nem enviado. O Safe Browsing e as métricas do WebView estão
+desligados e os dados não entram no backup automático do Android (`allowBackup=false`). As
+permissões e os motivos estão em [ANDROID_APK.md](ANDROID_APK.md#permissões).
+
 ## Câmera
 
 A câmera só liga quando você toca em "Ligar câmera", mostra o indicador "Câmera ligada", desliga

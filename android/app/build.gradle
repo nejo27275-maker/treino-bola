@@ -9,35 +9,45 @@ def pacote = new groovy.json.JsonSlurper().parse(rootProject.file('../package.js
 def codigoVersao = (System.getenv('APP_VERSION_CODE') ?: '1').toInteger()
 // Assinatura própria (opcional): caminho e senhas vêm de variáveis de ambiente, nunca do repositório.
 def chave = System.getenv('ANDROID_KEYSTORE_PATH')
+// Chave de depuração estável (o CI a guarda entre execuções); sem ela, vale a padrão do Android SDK.
+def chaveDepuracao = System.getenv('ANDROID_DEBUG_KEYSTORE')
 
 android {
-    namespace 'io.github.nejo27275.claudiofutebol'
-    compileSdk 35
+    namespace = 'io.github.nejo27275.claudiofutebol'
+    compileSdk = 35
 
     defaultConfig {
-        applicationId 'io.github.nejo27275.claudiofutebol'
-        minSdk 24
-        targetSdk 35
-        versionCode codigoVersao
-        versionName "${pacote.version}.${codigoVersao}"
+        applicationId = 'io.github.nejo27275.claudiofutebol'
+        minSdk = 24
+        targetSdk = 35
+        versionCode = codigoVersao
+        versionName = "${pacote.version}.${codigoVersao}"
     }
 
     signingConfigs {
+        if (chaveDepuracao) {
+            debug {
+                storeFile = file(chaveDepuracao)
+                storePassword = 'android'
+                keyAlias = 'androiddebugkey'
+                keyPassword = 'android'
+            }
+        }
         if (chave) {
             release {
-                storeFile file(chave)
-                storePassword System.getenv('ANDROID_KEYSTORE_PASSWORD')
-                keyAlias System.getenv('ANDROID_KEY_ALIAS')
-                keyPassword System.getenv('ANDROID_KEY_PASSWORD')
+                storeFile = file(chave)
+                storePassword = System.getenv('ANDROID_KEYSTORE_PASSWORD')
+                keyAlias = System.getenv('ANDROID_KEY_ALIAS')
+                keyPassword = System.getenv('ANDROID_KEY_PASSWORD')
             }
         }
     }
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled = false
             if (chave) {
-                signingConfig signingConfigs.release
+                signingConfig = signingConfigs.release
             }
         }
     }
@@ -49,13 +59,13 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     lint {
         // Instalado fora da Play Store: exigências da loja (ex.: targetSdk mínimo) não barram o build.
-        checkReleaseBuilds false
+        checkReleaseBuilds = false
     }
 }
 

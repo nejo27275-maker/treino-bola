@@ -42,7 +42,8 @@ No primeiro uso do Playwright fora deste ambiente: `npx playwright install chrom
 | `npm run format:check`                                          | PASSOU                                                                                    |
 | `npm test` — 134 testes unitários                               | **134 PASSOU, 0 FALHOU**                                                                  |
 | `npm run build`                                                 | PASSOU — 73 arquivos pré-armazenados (~580 KB); dois builds seguidos geram a mesma versão |
-| `npx playwright test` — 65 testes de ponta a ponta (5 projetos) | **65 PASSOU, 0 FALHOU**                                                                   |
+| `npx playwright test` — 68 testes de ponta a ponta (5 projetos) | **68 PASSOU, 0 FALHOU**                                                                   |
+| APK Android no GitHub Actions (`android.yml`, execução nº 1)    | **PASSOU** — 5 testes JUnit, `assembleDebug` e conferência do conteúdo do APK             |
 
 Observação honesta sobre estabilidade: em uma execução completa anterior, o teste
 "cena parada: calibra, mede tentativas…" (câmera falsa) estourou o tempo uma vez com os 3
@@ -73,17 +74,19 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 
 ## NÃO EXECUTADO e EXIGE DISPOSITIVO REAL
 
-| Item                                                                        | Status                 | Motivo / como validar                                                                                                                        |
-| --------------------------------------------------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Uso em celular Android (Chrome), toque real, desempenho em aparelho modesto | EXIGE DISPOSITIVO REAL | Publicar em HTTPS e abrir no celular; conferir fluidez dos simuladores e da câmera a 5–15 análises/s.                                        |
-| Câmera física (frontal/traseira, permissões do Android, luz e fundo reais)  | EXIGE DISPOSITIVO REAL | Seguir [CAMERA_E_HTTPS.md](CAMERA_E_HTTPS.md).                                                                                               |
-| Reação com movimento de uma pessoa de verdade                               | EXIGE DISPOSITIVO REAL | Testada só com quadros sintéticos (bloco piscando, cena parada, animação da câmera falsa).                                                   |
-| Vídeos MP4/H.264 e HEVC gravados no celular                                 | EXIGE DISPOSITIVO REAL | O Chromium dos testes não decodifica H.264 (verificado: `canPlayType` vazio); o Chrome do Android decodifica.                                |
-| Estimativa de pose com o MediaPipe real (qualidade, GPU/CPU, velocidade)    | NÃO EXECUTADO          | Sem acesso ao npm/armazenamento do modelo neste ambiente. Validar com `npm run pose:prepare` (com internet) em um aparelho.                  |
-| Instalação da PWA ("Adicionar à tela inicial")                              | EXIGE DISPOSITIVO REAL | O manifesto e o service worker foram testados; o prompt de instalação depende do Chrome do aparelho.                                         |
-| Leitor de tela (TalkBack)                                                   | NÃO EXECUTADO          | Verificados nomes acessíveis, foco, regiões de status e contraste de forma automatizada; a experiência com TalkBack precisa de teste manual. |
-| Publicação no GitHub Pages e workflows em `.github/workflows/`              | NÃO EXECUTADO          | Os workflows estão prontos, mas não foram rodados (precisam ser habilitados no repositório).                                                 |
-| Lighthouse / auditoria de PWA                                               | NÃO EXECUTADO          | Ferramenta não disponível offline neste ambiente.                                                                                            |
+| Item                                                                        | Status                 | Motivo / como validar                                                                                                                            |
+| --------------------------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Uso em celular Android (Chrome), toque real, desempenho em aparelho modesto | EXIGE DISPOSITIVO REAL | Publicar em HTTPS e abrir no celular; conferir fluidez dos simuladores e da câmera a 5–15 análises/s.                                            |
+| Câmera física (frontal/traseira, permissões do Android, luz e fundo reais)  | EXIGE DISPOSITIVO REAL | Seguir [CAMERA_E_HTTPS.md](CAMERA_E_HTTPS.md).                                                                                                   |
+| Reação com movimento de uma pessoa de verdade                               | EXIGE DISPOSITIVO REAL | Testada só com quadros sintéticos (bloco piscando, cena parada, animação da câmera falsa).                                                       |
+| Vídeos MP4/H.264 e HEVC gravados no celular                                 | EXIGE DISPOSITIVO REAL | O Chromium dos testes não decodifica H.264 (verificado: `canPlayType` vazio); o Chrome do Android decodifica.                                    |
+| Estimativa de pose com o MediaPipe real (qualidade, GPU/CPU, velocidade)    | NÃO EXECUTADO          | Sem acesso ao npm/armazenamento do modelo neste ambiente. Validar com `npm run pose:prepare` (com internet) em um aparelho.                      |
+| Instalação da PWA ("Adicionar à tela inicial")                              | EXIGE DISPOSITIVO REAL | O manifesto e o service worker foram testados; o prompt de instalação depende do Chrome do aparelho.                                             |
+| Leitor de tela (TalkBack)                                                   | NÃO EXECUTADO          | Verificados nomes acessíveis, foco, regiões de status e contraste de forma automatizada; a experiência com TalkBack precisa de teste manual.     |
+| Publicação no GitHub Pages e workflows em `.github/workflows/`              | NÃO EXECUTADO          | Os workflows estão prontos, mas não foram rodados (precisam ser habilitados no repositório).                                                     |
+| Lighthouse / auditoria de PWA                                               | NÃO EXECUTADO          | Ferramenta não disponível offline neste ambiente.                                                                                                |
+| APK instalado num celular (abrir, câmera, galeria, "Salvar como", voltar)   | EXIGE DISPOSITIVO REAL | O APK foi compilado e conferido no Actions; dentro do app, a ponte com o Android foi simulada no Chromium. Ver [ANDROID_APK.md](ANDROID_APK.md). |
+| Compilar o APK neste ambiente                                               | NÃO EXECUTADO          | O host do Android SDK (`dl.google.com`) é bloqueado pela política de rede daqui; o build roda no GitHub Actions.                                 |
 
 ## O que os testes de câmera e vídeo usam (e o que isso prova)
 
@@ -102,7 +105,7 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
   cálculo das métricas, marcação de confiança insuficiente, salvamento e tratamento de falhas —
   **não** a detecção real.
 
-## Testes de ponta a ponta (65) — todos PASSOU na última execução
+## Testes de ponta a ponta (68) — todos PASSOU na última execução
 
 #### `tests/e2e/a11y.spec.ts` (9)
 
@@ -117,6 +120,13 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 | contraste: texto dos botões principais e da aba atual nos dois temas                | app     | PASSOU |
 | zoom de 200% (180 px de largura): nenhuma tela rola para o lado nem corta controles | app     | PASSOU |
 | simuladores: descrição da cena em texto, sem revelar o que está escondido           | app     | PASSOU |
+
+#### `tests/e2e/android.spec.ts` (2) — ponte do APK simulada no Chromium
+
+| Teste                                                                           | Projeto | Status |
+| ------------------------------------------------------------------------------- | ------- | ------ |
+| APK: aparece como instalado e offline, sem service worker nem limpeza de cache  | app     | PASSOU |
+| APK: exportar entrega o JSON ao "Salvar como" do Android (sem download de blob) | app     | PASSOU |
 
 #### `tests/e2e/data.spec.ts` (4)
 
@@ -210,7 +220,7 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 | vídeo: arquivo que não é vídeo e vídeo corrompido mostram mensagens claras          | app     | PASSOU |
 | vídeo: sair com avaliação não salva pede confirmação e libera o vídeo               | app     | PASSOU |
 
-#### `tests/e2e/camera.spec.ts` (9)
+#### `tests/e2e/camera.spec.ts` (10)
 
 | Teste                                                                                       | Projeto              | Status |
 | ------------------------------------------------------------------------------------------- | -------------------- | ------ |
@@ -222,6 +232,7 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 | @movimento o lado do movimento vem dos quadros reais e respeita o espelhamento              | camera-movimento     | PASSOU |
 | @padrao quadros reais da câmera passam pelo detector; cena agitada é recusada na calibração | camera-padrao        | PASSOU |
 | @negada permissão negada mostra como liberar a câmera                                       | camera-sem-permissao | PASSOU |
+| @negada no APK, a permissão negada aponta para as configurações do Android                  | camera-sem-permissao | PASSOU |
 | @negada sem HTTPS a tela explica o requisito (contexto inseguro simulado)                   | camera-sem-permissao | PASSOU |
 
 ## Testes unitários (134) — todos PASSOU na última execução

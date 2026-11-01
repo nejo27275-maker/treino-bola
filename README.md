@@ -6,9 +6,10 @@ adaptativo até o **interclasse de 20/10/2026**. Tudo roda **no próprio aparelh
 sem API de IA, sem analytics, e funciona offline depois da primeira visita.
 
 > **Estado honesto:** o app foi construído e testado com testes automatizados (134 unitários e
-> 65 de ponta a ponta no Chromium), mas **não foi testado em um celular físico** nem publicado
+> 68 de ponta a ponta no Chromium), mas **não foi testado em um celular físico** nem publicado
 > por mim. A câmera foi validada com a câmera falsa do Chromium e a estimativa de pose só com
-> uma biblioteca simulada. Detalhes em [docs/TESTING.md](docs/TESTING.md).
+> uma biblioteca simulada. O APK Android é compilado no GitHub Actions e não foi instalado em
+> um aparelho real. Detalhes em [docs/TESTING.md](docs/TESTING.md).
 
 ## O que o app faz
 
@@ -67,9 +68,18 @@ npm run serve      # serve dist/ em http://127.0.0.1:4173/
 
 ## Usar no celular Android
 
-A câmera, a instalação e o modo offline exigem **HTTPS** (ou `localhost`).
+**Opção A — instalar o APK** (mais simples; funciona offline desde a primeira abertura):
 
-**Opção A — publicar no GitHub Pages** (não feito por mim; o repositório já tem o workflow):
+1. No GitHub: **Actions → "APK Android"** → execução mais recente com ✓ → **Artifacts** →
+   `claudio-futebol-ai-apk` (extraia o `.zip`).
+2. Abra o `.apk` no celular e permita "instalar apps desconhecidos" para quem abriu o arquivo.
+
+Detalhes, permissões, atualização sem perder dados e chave de assinatura própria:
+[docs/ANDROID_APK.md](docs/ANDROID_APK.md).
+
+Pelo navegador, a câmera, a instalação e o modo offline exigem **HTTPS** (ou `localhost`):
+
+**Opção B — publicar no GitHub Pages** (não feito por mim; o repositório já tem o workflow):
 
 1. No GitHub: **Settings → Pages → Source: GitHub Actions**.
 2. **Actions → "Publicar no GitHub Pages" → Run workflow**.
@@ -77,7 +87,7 @@ A câmera, a instalação e o modo offline exigem **HTTPS** (ou `localhost`).
    (o GitHub mostra o link ao fim do workflow).
 4. No Chrome do Android, abra o endereço; depois, menu **⋮ → Instalar app**.
 
-**Opção B — sem publicar, pelo cabo USB** (o celular acessa como `localhost`): veja
+**Opção C — sem publicar, pelo cabo USB** (o celular acessa como `localhost`): veja
 [docs/CAMERA_E_HTTPS.md](docs/CAMERA_E_HTTPS.md#testar-no-celular-durante-o-desenvolvimento).
 
 Instalação, offline e atualização: [docs/PWA_E_OFFLINE.md](docs/PWA_E_OFFLINE.md).
@@ -95,6 +105,7 @@ Exportar, importar e apagar ficam em **Mais → Configurações**. Detalhes:
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)               | Arquitetura, decisões e por quê                                               |
 | [docs/MOTOR_E_PLANO.md](docs/MOTOR_E_PLANO.md)             | Regras do motor adaptativo, simuladores e plano                               |
 | [docs/TESTING.md](docs/TESTING.md)                         | Testes executados, resultados individuais e o que falta validar               |
+| [docs/ANDROID_APK.md](docs/ANDROID_APK.md)                 | APK Android: baixar, instalar, permissões, assinatura e como é feito          |
 | [docs/PWA_E_OFFLINE.md](docs/PWA_E_OFFLINE.md)             | Instalação no Android, uso offline e atualizações                             |
 | [docs/CAMERA_E_HTTPS.md](docs/CAMERA_E_HTTPS.md)           | Permissões da câmera, HTTPS e solução de problemas                            |
 | [docs/VISAO_COMPUTACIONAL.md](docs/VISAO_COMPUTACIONAL.md) | O que a análise de vídeo/câmera mede de verdade e seus limites; pose opcional |
@@ -104,6 +115,8 @@ Exportar, importar e apagar ficam em **Mais → Configurações**. Detalhes:
 ## Limitações conhecidas
 
 - Não validado em celular físico; desempenho em aparelhos modestos ainda precisa ser medido.
+- O APK é gerado no GitHub Actions (este ambiente não tem o Android SDK) e não foi instalado em
+  um aparelho real; sem chave própria configurada, ele usa uma chave de depuração.
 - A detecção de movimento mede **mudança de pixels**: não reconhece pessoas, bola, adversários
   nem espaços livres. A estimativa de pose (opcional) só desenha pontos do corpo e calcula
   ângulos 2D; não reconhece ações de futebol nem mede força de chute.

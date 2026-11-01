@@ -33,6 +33,17 @@ Versões fixadas em `package.json` (`devDependencies`):
 
 Os testes unitários usam o executor nativo do Node (`node --test`), sem bibliotecas extras.
 
+### APK Android (`android/`)
+
+O app Android usa **só a API da plataforma** (WebView do sistema), sem AndroidX nem
+bibliotecas de terceiros dentro do APK. Para compilar:
+
+| Ferramenta                     | Versão | Uso                                                     | Licença    |
+| ------------------------------ | ------ | ------------------------------------------------------- | ---------- |
+| Android Gradle Plugin          | 8.12.2 | Build do APK (baixado do repositório Maven do Google)   | Apache-2.0 |
+| Gradle (wrapper em `android/`) | 8.14.3 | Executor do build                                       | Apache-2.0 |
+| JUnit                          | 4.13.2 | Testes das regras de caminhos/arquivos (não vai no APK) | EPL-1.0    |
+
 Observação: o repositório não tem `package-lock.json` porque o ambiente de desenvolvimento não
 tinha acesso ao registro npm (as ferramentas já estavam instaladas). Ao rodar `npm install` com
 internet, o npm cria o lockfile; recomenda-se versioná-lo.
