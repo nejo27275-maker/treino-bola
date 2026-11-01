@@ -144,6 +144,13 @@ p {
   margin: 0 0 10px;
 }
 
+/* Listas comuns: sem a margem de 1em do navegador e com recuo menor (cabe em telas estreitas). */
+ul,
+ol {
+  margin: 0 0 10px;
+  padding-left: 22px;
+}
+
 :focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
@@ -327,6 +334,10 @@ main:focus {
   border-radius: var(--radius);
   padding: 16px;
   box-shadow: var(--shadow);
+}
+
+.card > :last-child {
+  margin-bottom: 0;
 }
 
 .card.flat {

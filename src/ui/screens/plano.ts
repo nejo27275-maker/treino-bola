@@ -157,11 +157,14 @@ export async function planoScreen(ctx: AppContext): Promise<Screen> {
     plan.notes.length
       ? card(
           null,
-          h(
-            'ul',
-            { class: 'small' },
-            plan.notes.map((n) => h('li', null, n)),
-          ),
+          // Uma observação só vira parágrafo (um marcador sozinho numa caixa parece faltar algo).
+          plan.notes.length === 1
+            ? h('p', { class: 'small' }, plan.notes[0])
+            : h(
+                'ul',
+                { class: 'small' },
+                plan.notes.map((n) => h('li', null, n)),
+              ),
         )
       : null,
     h(
