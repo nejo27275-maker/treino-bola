@@ -3,6 +3,9 @@
  * Gera os ícones PNG do aplicativo (sem dependências): um rasterizador simples com
  * superamostragem 4x4 e um codificador PNG usando zlib.
  *
+ * Também gera os ícones do aplicativo Android (android/app/src/main/res/mipmap-*): o ícone
+ * tradicional e a camada da frente do ícone adaptativo (fundo verde definido em XML).
+ *
  * Uso: node scripts/make-icons.mjs
  */
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -12,6 +15,7 @@ import zlib from 'node:zlib';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const outDir = path.join(root, 'public', 'icons');
+const androidRes = path.join(root, 'android', 'app', 'src', 'main', 'res');
 
 const GREEN = [16, 115, 74];
 const DARK = [11, 43, 32];
@@ -86,16 +90,27 @@ function insideRoundedRect(x, y, size, radius) {
   return Math.hypot(x - cx, y - cy) <= radius;
 }
 
+/**
+ * Estilos: 'arredondado' (quadrado de cantos arredondados), 'mascaravel' (fundo cheio, bola
+ * dentro da área segura do PWA) e 'android' (só a bola, fundo transparente, dentro da área
+ * segura de 66 dp do ícone adaptativo de 108 dp).
+ */
+const BALL_RADIUS = { arredondado: 0.34, mascaravel: 0.29, android: 0.27 };
+
 /** Retorna a cor (ou null = transparente) do ponto (x, y) do ícone. */
-function shade(x, y, size, maskable) {
+function shade(x, y, size, style) {
   const c = size / 2;
-  const ballR = size * (maskable ? 0.29 : 0.34);
+  const ballR = size * BALL_RADIUS[style];
   const ring = size * 0.03;
   const pent = pentagon(c, c, ballR * 0.38);
-  const background = maskable ? true : insideRoundedRect(x, y, size, size * 0.22);
-  if (!background) return null;
   const d = Math.hypot(x - c, y - c);
-  if (d > ballR) return GREEN;
+  if (style === 'android') {
+    if (d > ballR) return null;
+  } else {
+    const background = style === 'mascaravel' ? true : insideRoundedRect(x, y, size, size * 0.22);
+    if (!background) return null;
+    if (d > ballR) return GREEN;
+  }
   if (d > ballR - ring) return DARK;
   if (insidePolygon(x, y, pent)) return DARK;
   // Linhas das costuras: de cada vértice do pentágono até a borda.
@@ -119,7 +134,7 @@ function shade(x, y, size, maskable) {
   return WHITE;
 }
 
-function render(size, maskable) {
+function render(size, style) {
   const rgba = Buffer.alloc(size * size * 4);
   const samples = 4;
   for (let y = 0; y < size; y++) {
@@ -130,7 +145,7 @@ function render(size, maskable) {
       let a = 0;
       for (let sy = 0; sy < samples; sy++) {
         for (let sx = 0; sx < samples; sx++) {
-          const color = shade(x + (sx + 0.5) / samples, y + (sy + 0.5) / samples, size, maskable);
+          const color = shade(x + (sx + 0.5) / samples, y + (sy + 0.5) / samples, size, style);
           if (color) {
             r += color[0];
             g += color[1];
@@ -152,16 +167,26 @@ function render(size, maskable) {
 }
 
 const targets = [
-  { name: 'icon-32.png', size: 32, maskable: false },
-  { name: 'icon-180.png', size: 180, maskable: false },
-  { name: 'icon-192.png', size: 192, maskable: false },
-  { name: 'icon-512.png', size: 512, maskable: false },
-  { name: 'icon-maskable-192.png', size: 192, maskable: true },
-  { name: 'icon-maskable-512.png', size: 512, maskable: true },
+  { name: 'icon-32.png', size: 32, style: 'arredondado' },
+  { name: 'icon-180.png', size: 180, style: 'arredondado' },
+  { name: 'icon-192.png', size: 192, style: 'arredondado' },
+  { name: 'icon-512.png', size: 512, style: 'arredondado' },
+  { name: 'icon-maskable-192.png', size: 192, style: 'mascaravel' },
+  { name: 'icon-maskable-512.png', size: 512, style: 'mascaravel' },
 ];
 
 await mkdir(outDir, { recursive: true });
 for (const target of targets) {
-  await writeFile(path.join(outDir, target.name), render(target.size, target.maskable));
+  await writeFile(path.join(outDir, target.name), render(target.size, target.style));
   console.log(`Gerado public/icons/${target.name}`);
+}
+
+// Android: 48 dp (ícone tradicional, Android 7) e 108 dp (frente do ícone adaptativo, 8+).
+const densities = { mdpi: 1, hdpi: 1.5, xhdpi: 2, xxhdpi: 3, xxxhdpi: 4 };
+for (const [density, scale] of Object.entries(densities)) {
+  const dir = path.join(androidRes, `mipmap-${density}`);
+  await mkdir(dir, { recursive: true });
+  await writeFile(path.join(dir, 'ic_launcher.png'), render(48 * scale, 'arredondado'));
+  await writeFile(path.join(dir, 'ic_launcher_foreground.png'), render(108 * scale, 'android'));
+  console.log(`Gerado android/app/src/main/res/mipmap-${density}/ic_launcher*.png`);
 }

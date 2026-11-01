@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Câmera ao vivo e "Gravar vídeo": o Android só pergunta quando o jogador usa. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Vibração dos sinais de treino (navigator.vibrate). -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Declarada por precaução (alguns WebViews recusam carregar páginas sem ela). O app não
+         acessa a internet: todo pedido é respondido com os arquivos do próprio APK, e qualquer
+         outro endereço recebe uma recusa local (veja ServidorLocal). -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <uses-feature
+        android:name="android.hardware.camera.any"
+        android:required="false" />
+
+    <!-- allowBackup=false: os dados ficam só no aparelho (para levar a outro celular, use
+         "Exportar meus dados" no app). -->
+    <application
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Claudio"
+        android:usesCleartextTraffic="false">
+
+        <!-- Nada é carregado da internet: sem consultas do Safe Browsing e sem métricas do WebView. -->
+        <meta-data
+            android:name="android.webkit.WebView.EnableSafeBrowsing"
+            android:value="false" />
+        <meta-data
+            android:name="android.webkit.WebView.MetricsOptOut"
+            android:value="true" />
+
+        <!-- configChanges: girar a tela ou abrir o teclado não recarrega a página (um treino em
+             andamento continua). A troca de tema claro/escuro recria a tela para aplicar as cores. -->
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden|navigation"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

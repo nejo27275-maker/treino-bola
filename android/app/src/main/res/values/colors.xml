@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Mesmas cores do site (public/styles/app.css): fundo do tema claro. -->
+    <color name="fundo">#F2F7F4</color>
+    <color name="destaque">#0B6F3F</color>
+    <!-- Fundo do ícone adaptativo (o verde dos ícones do site). -->
+    <color name="icone_fundo">#10734A</color>
+</resources>

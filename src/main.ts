@@ -1,4 +1,5 @@
 /** Ponto de entrada do Cláudio Futebol AI. */
+import { isAndroidApp } from './platform.ts';
 import { openBackend } from './storage/backend.ts';
 import { getPref } from './storage/prefs.ts';
 import { Repository } from './storage/repo.ts';
@@ -80,6 +81,12 @@ async function setupServiceWorker(
   ctx: AppContext,
   confirmLeave: () => Promise<boolean>,
 ): Promise<void> {
+  if (isAndroidApp()) {
+    // No APK os arquivos já estão dentro do aplicativo: não há service worker nem cache.
+    ctx.pwa.swStatus = 'app';
+    ctx.notifyPwa();
+    return;
+  }
   if (!('serviceWorker' in navigator)) {
     ctx.pwa.swStatus = 'sem-suporte';
     ctx.notifyPwa();
@@ -161,7 +168,7 @@ function setupInstallPrompt(ctx: AppContext): void {
     ctx.pwa.installPrompt = null;
     ctx.notifyPwa();
   });
-  if (matchMedia('(display-mode: standalone)').matches) ctx.pwa.installed = true;
+  if (isAndroidApp() || matchMedia('(display-mode: standalone)').matches) ctx.pwa.installed = true;
 }
 
 interface PwaPromptEvent {

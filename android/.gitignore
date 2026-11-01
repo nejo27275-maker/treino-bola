@@ -1,0 +1,9 @@
+.gradle/
+build/
+app/build/
+local.properties
+.idea/
+*.iml
+# Chaves de assinatura nunca vão para o repositório.
+*.jks
+*.keystore

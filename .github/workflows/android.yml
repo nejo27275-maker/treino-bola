@@ -1,0 +1,147 @@
+# Gera o APK Android: compila o site (dist/), empacota no app Android (pasta android/) e
+# publica o arquivo .apk como artefato da execução (aba Actions → "APK Android" → execução →
+# "Artifacts"). Roda quando o app muda e sob demanda (Run workflow).
+#
+# Assinatura: sem segredos configurados, o APK é de depuração, com uma chave guardada no cache
+# do Actions para que as próximas versões instalem por cima. Para uma chave própria e
+# permanente, configure os segredos descritos em docs/ANDROID_APK.md.
+name: APK Android
+
+on:
+  push:
+    paths:
+      - 'android/**'
+      - 'src/**'
+      - 'public/**'
+      - 'scripts/build.mjs'
+      - 'scripts/sw-template.js'
+      - 'package.json'
+      - 'tsconfig.json'
+      - '.github/workflows/android.yml'
+  workflow_dispatch:
+    inputs:
+      publicar_release:
+        description: 'Também publicar o APK numa release do GitHub (link direto para baixar no celular)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    name: Gerar APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      APP_VERSION_CODE: ${{ github.run_number }}
+      TEM_CHAVE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+    outputs:
+      versao: ${{ steps.nome.outputs.versao }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Ferramentas de desenvolvimento
+        run: npm install --no-audit --no-fund
+
+      - name: Testes unitários do site
+        run: npm test
+
+      - name: Build do site (dist/)
+        run: npm run build
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # Também confere o gradle-wrapper.jar contra as somas publicadas pelo Gradle.
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Chave de depuração estável entre execuções
+        if: env.TEM_CHAVE != 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: claudio-apk-debug-keystore-v1
+
+      - name: Chave de assinatura própria (segredos do repositório)
+        if: env.TEM_CHAVE == 'true'
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/assinatura.jks"
+
+      - name: Testes do app Android e APK
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ "$TEM_CHAVE" = "true" ]; then
+            export ANDROID_KEYSTORE_PATH="$RUNNER_TEMP/assinatura.jks"
+            TAREFA=assembleRelease
+          else
+            TAREFA=assembleDebug
+          fi
+          ./gradlew --no-daemon --stacktrace testDebugUnitTest "$TAREFA"
+
+      - name: Nome final, conferência e soma SHA-256
+        id: nome
+        run: |
+          VERSAO="$(node -p "require('./package.json').version").${{ github.run_number }}"
+          APK="$(ls android/app/build/outputs/apk/*/*.apk | head -n 1)"
+          mkdir -p saida
+          cp "$APK" "saida/claudio-futebol-ai-$VERSAO.apk"
+          # O APK precisa conter o manifesto, o código e o site.
+          for f in AndroidManifest.xml classes.dex assets/index.html assets/js/main.js; do
+            unzip -l "saida/claudio-futebol-ai-$VERSAO.apk" | grep -q " $f\$" || { echo "Faltou $f no APK"; exit 1; }
+          done
+          (cd saida && sha256sum ./*.apk > SHA256SUMS.txt && cat SHA256SUMS.txt)
+          echo "versao=$VERSAO" >> "$GITHUB_OUTPUT"
+          {
+            echo "### APK gerado: claudio-futebol-ai-$VERSAO.apk"
+            echo ""
+            echo "Baixe em **Artifacts** (abaixo), extraia o .zip e instale o .apk no celular."
+            echo "Assinatura: $([ "$TEM_CHAVE" = "true" ] && echo 'chave própria (release)' || echo 'depuração (sem chave própria configurada)')."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: claudio-futebol-ai-apk
+          path: saida/
+          if-no-files-found: error
+
+  release:
+    name: Publicar release (opcional)
+    needs: apk
+    if: github.event_name == 'workflow_dispatch' && inputs.publicar_release
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: claudio-futebol-ai-apk
+          path: saida
+
+      - name: Criar release com o APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSAO: ${{ needs.apk.outputs.versao }}
+        run: |
+          gh release create "apk-$VERSAO" saida/*.apk saida/SHA256SUMS.txt \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --prerelease \
+            --title "Cláudio Futebol AI $VERSAO (APK Android)" \
+            --notes "APK gerado automaticamente a partir de $GITHUB_SHA. Instale no Android permitindo 'instalar apps desconhecidos' para o navegador. Antes de trocar de assinatura, exporte seus dados em Mais → Configurações."

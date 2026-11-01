@@ -9,6 +9,7 @@ import {
   isPoseCached,
   type PoseAvailability,
 } from '../../media/pose.ts';
+import { androidBridge } from '../../platform.ts';
 import type { AppContext } from '../app.ts';
 import {
   button,
@@ -23,8 +24,15 @@ import {
 import { h, replaceChildren } from '../dom.ts';
 import type { Screen } from '../router.ts';
 
+/** Baixa o JSON; no APK, abre o "Salvar como" do Android (o WebView não baixa blobs). */
 function downloadJson(data: unknown, filename: string): void {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const text = JSON.stringify(data, null, 2);
+  const android = androidBridge();
+  if (android) {
+    android.saveFile(filename, 'application/json', text);
+    return;
+  }
+  const blob = new Blob([text], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = h('a', { href: url, download: filename });
   document.body.appendChild(a);
@@ -63,6 +71,7 @@ const SW_TEXT: Record<AppContext['pwa']['swStatus'], string> = {
   ativo: 'Pronto para uso offline: os arquivos do aplicativo estão guardados neste aparelho.',
   erro: 'Não foi possível ativar o uso offline.',
   desenvolvimento: 'Modo de desenvolvimento: o cache offline está desligado de propósito.',
+  app: 'Aplicativo Android: todos os arquivos estão dentro do app, que funciona sem internet.',
 };
 
 export async function configScreen(ctx: AppContext): Promise<Screen> {
@@ -206,7 +215,7 @@ export async function configScreen(ctx: AppContext): Promise<Screen> {
         downloadJson(data, `claudio-futebol-ai-backup-${localDate(ctx.now())}.json`);
         replaceChildren(
           dataStatus,
-          'Arquivo gerado. Ele contém seu perfil e seu histórico; imagens capturadas de vídeos não são incluídas.',
+          `${androidBridge() ? 'Escolha onde salvar o arquivo na janela do Android.' : 'Arquivo gerado.'} Ele contém seu perfil e seu histórico; imagens capturadas de vídeos não são incluídas.`,
         );
       } catch (error) {
         replaceChildren(
@@ -279,7 +288,7 @@ export async function configScreen(ctx: AppContext): Promise<Screen> {
       h(
         'p',
         null,
-        p.swStatus === 'ativo'
+        p.swStatus === 'ativo' || p.swStatus === 'app'
           ? pill('Offline: pronto', 'accent')
           : p.swStatus === 'registrando'
             ? pill('Offline: preparando')
@@ -328,20 +337,23 @@ export async function configScreen(ctx: AppContext): Promise<Screen> {
               { class: 'small' },
               'Para instalar no Android (Chrome): toque no menu ⋮ e escolha "Instalar app" ou "Adicionar à tela inicial". O site precisa estar em HTTPS.',
             ),
-      button(
-        'Remover arquivos offline',
-        async () => {
-          const n = await clearAppCaches();
-          ctx.toast(
-            n
-              ? 'Arquivos offline removidos. Eles serão baixados de novo na próxima visita com internet.'
-              : 'Não havia arquivos offline guardados.',
-            'info',
-            5000,
-          );
-        },
-        { small: true, variant: 'ghost' },
-      ),
+      // No APK não há cache de navegador para remover (os arquivos fazem parte do app).
+      p.swStatus === 'app'
+        ? null
+        : button(
+            'Remover arquivos offline',
+            async () => {
+              const n = await clearAppCaches();
+              ctx.toast(
+                n
+                  ? 'Arquivos offline removidos. Eles serão baixados de novo na próxima visita com internet.'
+                  : 'Não havia arquivos offline guardados.',
+                'info',
+                5000,
+              );
+            },
+            { small: true, variant: 'ghost' },
+          ),
     );
   };
   drawPwa();

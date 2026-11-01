@@ -1,0 +1,77 @@
+plugins {
+    id 'com.android.application'
+}
+
+// O site já compilado (`npm run build` na raiz → ../dist) vai inteiro dentro do APK.
+def siteDir = rootProject.file('../dist')
+def pacote = new groovy.json.JsonSlurper().parse(rootProject.file('../package.json'))
+// No CI, APP_VERSION_CODE é o número da execução: cada APK novo instala por cima do anterior.
+def codigoVersao = (System.getenv('APP_VERSION_CODE') ?: '1').toInteger()
+// Assinatura própria (opcional): caminho e senhas vêm de variáveis de ambiente, nunca do repositório.
+def chave = System.getenv('ANDROID_KEYSTORE_PATH')
+
+android {
+    namespace 'io.github.nejo27275.claudiofutebol'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'io.github.nejo27275.claudiofutebol'
+        minSdk 24
+        targetSdk 35
+        versionCode codigoVersao
+        versionName "${pacote.version}.${codigoVersao}"
+    }
+
+    signingConfigs {
+        if (chave) {
+            release {
+                storeFile file(chave)
+                storePassword System.getenv('ANDROID_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('ANDROID_KEY_ALIAS')
+                keyPassword System.getenv('ANDROID_KEY_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (chave) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+
+    sourceSets {
+        main {
+            assets.srcDirs = [siteDir]
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        // Instalado fora da Play Store: exigências da loja (ex.: targetSdk mínimo) não barram o build.
+        checkReleaseBuilds false
+    }
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+}
+
+def verificarSite = tasks.register('verificarSite') {
+    def indice = new File(siteDir, 'index.html')
+    doLast {
+        if (!indice.exists()) {
+            throw new GradleException("Site não encontrado em ${indice}. Rode 'npm run build' na raiz do projeto antes.")
+        }
+    }
+}
+
+tasks.matching { it.name == 'preBuild' }.configureEach {
+    dependsOn verificarSite
+}

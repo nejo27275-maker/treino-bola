@@ -11,21 +11,36 @@ export interface MediaProblem {
   steps: string[];
 }
 
-export function describeCameraError(error: unknown): MediaProblem {
+/** `onde`: no aplicativo Android (APK) a permissão fica nas configurações do sistema, não do site. */
+export function describeCameraError(
+  error: unknown,
+  onde: 'navegador' | 'app' = 'navegador',
+): MediaProblem {
   const name = (error as { name?: string } | null)?.name ?? '';
   switch (name) {
     case 'NotAllowedError':
     case 'PermissionDeniedError':
-      return {
-        code: 'permissao_negada',
-        title: 'Permissão da câmera negada',
-        message: 'O navegador não liberou a câmera para este site.',
-        steps: [
-          'No Chrome do Android, toque no ícone à esquerda do endereço (cadeado ou "i").',
-          'Abra "Permissões" e mude "Câmera" para "Permitir".',
-          'Recarregue a página e toque em "Ligar câmera" novamente.',
-        ],
-      };
+      return onde === 'app'
+        ? {
+            code: 'permissao_negada',
+            title: 'Permissão da câmera negada',
+            message: 'O Android não liberou a câmera para o aplicativo.',
+            steps: [
+              'Abra as Configurações do Android → Apps → Cláudio Futebol AI → Permissões.',
+              'Mude "Câmera" para "Permitir durante o uso do app".',
+              'Volte ao aplicativo e toque em "Ligar câmera" novamente.',
+            ],
+          }
+        : {
+            code: 'permissao_negada',
+            title: 'Permissão da câmera negada',
+            message: 'O navegador não liberou a câmera para este site.',
+            steps: [
+              'No Chrome do Android, toque no ícone à esquerda do endereço (cadeado ou "i").',
+              'Abra "Permissões" e mude "Câmera" para "Permitir".',
+              'Recarregue a página e toque em "Ligar câmera" novamente.',
+            ],
+          };
     case 'NotFoundError':
     case 'DevicesNotFoundError':
       return {

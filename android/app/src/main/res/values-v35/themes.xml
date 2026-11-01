@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 15+: mantém o layout tradicional (a página não fica atrás das barras do
+         sistema), já que o site não recebe as medidas dessas barras dentro do WebView. -->
+    <style name="Theme.Claudio" parent="Theme.Claudio.Base">
+        <item name="android:windowLightNavigationBar">@bool/barras_claras</item>
+        <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
+    </style>
+</resources>

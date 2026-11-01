@@ -33,7 +33,15 @@ export interface Snapshot {
 
 export interface PwaState {
   installPrompt: { prompt: () => Promise<void>; userChoice?: Promise<{ outcome: string }> } | null;
-  swStatus: 'sem-suporte' | 'inseguro' | 'registrando' | 'ativo' | 'erro' | 'desenvolvimento';
+  swStatus:
+    | 'sem-suporte'
+    | 'inseguro'
+    | 'registrando'
+    | 'ativo'
+    | 'erro'
+    | 'desenvolvimento'
+    /** Dentro do APK: os arquivos já estão no aplicativo, sem service worker. */
+    | 'app';
   swError?: string;
   updateReady: boolean;
   applyUpdate?: () => void | Promise<void>;

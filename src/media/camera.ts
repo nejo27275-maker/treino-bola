@@ -2,6 +2,7 @@
  * Controle da câmera: pede permissão só quando o jogador toca em "Ligar câmera",
  * evita sessões duplicadas e libera todas as faixas ao parar. Nada é gravado.
  */
+import { isAndroidApp } from '../platform.ts';
 import { cameraSupport, describeCameraError, type MediaProblem } from './mediaErrors.ts';
 
 export type Facing = 'user' | 'environment';
@@ -117,7 +118,7 @@ export class CameraController {
   private fail(token: number, error: unknown): false {
     if (token !== this.startToken) return false;
     this.state = 'erro';
-    this.problem = describeCameraError(error);
+    this.problem = describeCameraError(error, isAndroidApp() ? 'app' : 'navegador');
     this.stream = null;
     this.emit();
     return false;

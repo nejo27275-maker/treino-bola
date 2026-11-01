@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tema claro; no modo escuro do Android vale values-night. O WebView usa esse tema para
+         responder a prefers-color-scheme, então o site acompanha o claro/escuro do sistema. -->
+    <style name="Theme.Claudio.Base" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/fundo</item>
+        <item name="android:colorAccent">@color/destaque</item>
+        <item name="android:statusBarColor">@color/fundo</item>
+        <item name="android:navigationBarColor">@color/fundo</item>
+        <item name="android:windowLightStatusBar">@bool/barras_claras</item>
+    </style>
+
+    <style name="Theme.Claudio" parent="Theme.Claudio.Base" />
+</resources>

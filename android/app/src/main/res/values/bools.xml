@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Ícones escuros nas barras do sistema sobre o fundo claro. -->
+    <bool name="barras_claras">true</bool>
+</resources>

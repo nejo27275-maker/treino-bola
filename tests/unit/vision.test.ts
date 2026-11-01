@@ -177,6 +177,11 @@ describe('mensagens de erro de câmera e vídeo', () => {
     const { describeCameraError, describeVideoError, checkVideoFile, cameraSupport } =
       await import('../../src/media/mediaErrors.ts');
     assert.equal(describeCameraError({ name: 'NotAllowedError' }).code, 'permissao_negada');
+    // No APK, a orientação aponta para as configurações do Android, não para as do site.
+    const noApp = describeCameraError({ name: 'NotAllowedError' }, 'app');
+    assert.equal(noApp.code, 'permissao_negada');
+    assert.match(noApp.steps.join(' '), /Configurações do Android → Apps/);
+    assert.doesNotMatch(noApp.steps.join(' '), /endereço/);
     assert.equal(describeCameraError({ name: 'NotReadableError' }).code, 'camera_ocupada');
     assert.equal(describeCameraError({ name: 'NotSupportedError' }).code, 'nao_suportado');
     assert.equal(describeCameraError({ name: 'OverconstrainedError' }).code, 'configuracao');

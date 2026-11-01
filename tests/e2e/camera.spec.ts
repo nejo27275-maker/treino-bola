@@ -187,6 +187,22 @@ test('@negada permissão negada mostra como liberar a câmera', async ({ page })
   await expect(page.locator('#header-status').getByText('Câmera ligada')).toHaveCount(0);
 });
 
+test('@negada no APK, a permissão negada aponta para as configurações do Android', async ({
+  page,
+}) => {
+  // Simula a ponte que o app Android injeta no WebView.
+  await page.addInitScript(() => {
+    (window as unknown as { ClaudioAndroid: unknown }).ClaudioAndroid = { saveFile: () => {} };
+  });
+  await openApp(page, '#/camera');
+  await page.getByRole('button', { name: 'Ligar câmera' }).click();
+  await expect(page.getByRole('heading', { name: 'Permissão da câmera negada' })).toBeVisible();
+  await expect(
+    page.getByText(/Configurações do Android → Apps → Cláudio Futebol AI/),
+  ).toBeVisible();
+  await expect(page.getByText(/ícone à esquerda do endereço/)).toHaveCount(0);
+});
+
 test('@negada sem HTTPS a tela explica o requisito (contexto inseguro simulado)', async ({
   page,
 }) => {

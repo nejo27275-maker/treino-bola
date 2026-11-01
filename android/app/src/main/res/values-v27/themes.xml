@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 8.1+: ícones da barra de navegação também seguem o tema. -->
+    <style name="Theme.Claudio" parent="Theme.Claudio.Base">
+        <item name="android:windowLightNavigationBar">@bool/barras_claras</item>
+    </style>
+</resources>

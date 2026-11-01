@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tema escuro do site. -->
+    <color name="fundo">#0B1712</color>
+    <color name="destaque">#3DDC84</color>
+</resources>
