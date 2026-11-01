@@ -93,7 +93,7 @@ test('vídeo: marcar momentos, capturar quadro, mapa de movimento e avaliação 
   await page.getByRole('checkbox', { name: /Salvar os quadros/ }).check();
   await page.getByRole('button', { name: 'Salvar avaliação' }).click();
   await expect(
-    page.getByText(/Avaliação salva: 2 critério\(s\) com evidência, 1 quadro\(s\) guardado\(s\)/),
+    page.getByText(/Avaliação salva: 2 critérios com evidência, 1 quadro guardado/),
   ).toBeVisible();
   await expect(
     page.locator('main .card', { hasText: 'Avaliações anteriores' }).getByText('treino.webm'),

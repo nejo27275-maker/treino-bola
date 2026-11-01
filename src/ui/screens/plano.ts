@@ -1,5 +1,6 @@
 /** Plano de preparação até a competição, recalculado a cada abertura. */
 import { formatDateBR, formatLong, isValidDate } from '../../core/dates.ts';
+import { plural } from '../../core/format.ts';
 import { PHASE_LABEL, type PlanDay } from '../../core/planner.ts';
 import type { AppContext } from '../app.ts';
 import { button, card, field, linkButton, pageHeader, pill, setFieldError } from '../components.ts';
@@ -41,7 +42,7 @@ function dayCard(day: PlanDay, today: string): HTMLElement {
         ),
         pill(`${day.minutes} min`),
         day.completedSessions > 0
-          ? pill(`✓ ${day.completedSessions} registrada(s)`, 'accent')
+          ? pill(`✓ ${plural(day.completedSessions, 'registrada', 'registradas')}`, 'accent')
           : null,
       ),
       day.blocks.length
@@ -119,7 +120,15 @@ export async function planoScreen(ctx: AppContext): Promise<Screen> {
       ? card(
           { title: competition.nome },
           h('p', { class: 'lead' }, formatLong(competition.data)),
-          h('p', null, plan.daysToEvent === 0 ? 'É hoje!' : `Faltam ${plan.daysToEvent} dia(s).`),
+          h(
+            'p',
+            null,
+            plan.daysToEvent === 0
+              ? 'É hoje!'
+              : plan.daysToEvent === 1
+                ? 'É amanhã!'
+                : `Faltam ${plan.daysToEvent} dias.`,
+          ),
           h('details', null, h('summary', null, 'Alterar competição'), form),
         )
       : card(

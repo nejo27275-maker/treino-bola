@@ -159,7 +159,7 @@ test('pose (biblioteca simulada): GPU→CPU, métricas com confiança, esqueleto
   await poseCard.getByRole('button', { name: 'Analisar 3 s a partir daqui' }).click();
   await expect(
     poseCard.getByText(
-      /Trecho de 00:00,0 a 00:03,0: \d+ quadro\(s\) com pessoa detectada, \d+ confiável\(is\)/,
+      /Trecho de 00:00,0 a 00:03,0: \d+ quadros? com pessoa detectada, \d+ (confiável|confiáveis)/,
     ),
   ).toBeVisible({ timeout: 20_000 });
   await expect(
@@ -168,11 +168,11 @@ test('pose (biblioteca simulada): GPU→CPU, métricas com confiança, esqueleto
   await expect(poseCard.getByText('Flexão média dos joelhos: 30,0°.')).toBeVisible();
 
   await page.getByRole('button', { name: 'Salvar avaliação' }).click();
-  await expect(page.getByText(/Avaliação salva: 0 critério\(s\) com evidência/)).toBeVisible();
+  await expect(page.getByText(/Avaliação salva: 0 critérios com evidência/)).toBeVisible();
   const history = page.locator('main .card', { hasText: 'Avaliações anteriores' });
   await expect(
     history.getByText(
-      /Pose \(automática, experimental\): \d+ quadro\(s\), \d+ confiável\(is\) · tronco 0,0° · variação 0,0° · joelhos 30,0°\./,
+      /Pose \(automática, experimental\): \d+ quadros?, \d+ (confiável|confiáveis) · tronco 0,0° · variação 0,0° · joelhos 30,0°\./,
     ),
   ).toBeVisible();
 

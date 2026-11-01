@@ -2,7 +2,7 @@
 import { testFor } from '../../content/catalog.ts';
 import { formatDayMonth } from '../../core/dates.ts';
 import type { SkillAssessment } from '../../core/engine.ts';
-import { millis, percent } from '../../core/format.ts';
+import { millis, percent, plural } from '../../core/format.ts';
 import { logSelfAssessment } from '../../core/sessionLog.ts';
 import { SKILLS, SKILL_ORDER, SOURCE_INFO } from '../../core/skills.ts';
 import type { ResultSource, SkillId } from '../../core/types.ts';
@@ -191,7 +191,7 @@ export async function avaliacaoScreen(ctx: AppContext): Promise<Screen> {
             h('span', null, SKILLS[s].nome),
             pill(
               a.trainedSessions
-                ? `${a.trainedSessions} treino(s)${a.lastTrained ? ` · último ${formatDayMonth(a.lastTrained)}` : ''}`
+                ? `${plural(a.trainedSessions, 'treino', 'treinos')}${a.lastTrained ? ` · último ${formatDayMonth(a.lastTrained)}` : ''}`
                 : 'Nenhum treino ainda',
             ),
           );

@@ -90,7 +90,7 @@ test('depois do evento: avisa que passou e permite configurar a próxima competi
   await page.getByLabel('Data').fill('2026-11-05');
   await page.getByRole('button', { name: 'Salvar e recalcular' }).click();
   await expect(page.getByRole('heading', { name: 'Copa da escola' })).toBeVisible();
-  await expect(page.getByText('Faltam 14 dia(s).')).toBeVisible();
+  await expect(page.getByText('Faltam 14 dias.')).toBeVisible();
   // De 22/10 a 05/11, inclusive: 15 dias.
   await expect(
     page.getByRole('list', { name: 'Dias do plano' }).locator(':scope > li'),

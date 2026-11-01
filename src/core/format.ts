@@ -3,7 +3,7 @@
  * espaço não separável (NBSP), para "1,25 s" nunca quebrar em duas linhas.
  */
 
-const NBSP = ' ';
+const NBSP = '\u00a0';
 
 export function percent(value: number, decimals = 0): string {
   if (!Number.isFinite(value)) return '—';

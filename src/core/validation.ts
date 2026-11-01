@@ -402,9 +402,11 @@ function validateList<T>(
     }
   });
   if (skipped > 0) {
-    warnings.push(
-      `${skipped} registro(s) inválido(s) em "${name}" foram ignorados (ex.: ${examples.join('; ')}).`,
-    );
+    const what =
+      skipped === 1
+        ? `1 registro inválido em "${name}" foi ignorado`
+        : `${skipped} registros inválidos em "${name}" foram ignorados`;
+    warnings.push(`${what} (ex.: ${examples.join('; ')}).`);
   }
   return out;
 }
@@ -451,7 +453,11 @@ export function validateExport(input: unknown): ImportValidation {
     );
     const orphan = results.filter((r) => !sessionIds.has(r.sessionId)).length;
     if (orphan > 0)
-      warnings.push(`${orphan} resultado(s) sem sessão correspondente foram mantidos.`);
+      warnings.push(
+        orphan === 1
+          ? '1 resultado sem sessão correspondente foi mantido.'
+          : `${orphan} resultados sem sessão correspondente foram mantidos.`,
+      );
     const routine = optional(
       root.preGameRoutine,
       (v) =>

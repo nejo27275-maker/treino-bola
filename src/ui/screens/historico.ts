@@ -1,6 +1,6 @@
 /** Histórico e evolução: sessões, gráficos por fundamento, simuladores e comparação. */
 import { formatDayMonth, formatLong } from '../../core/dates.ts';
-import { clock, localTime, millis, percent } from '../../core/format.ts';
+import { clock, localTime, millis, percent, plural } from '../../core/format.ts';
 import { SIM_MODES, SIM_MODE_ORDER, isSimModeId } from '../../core/sim/index.ts';
 import { SKILLS, SKILL_ORDER, SOURCE_INFO } from '../../core/skills.ts';
 import type { TrainingSession } from '../../core/types.ts';
@@ -101,7 +101,7 @@ function evolutionView(snap: Snapshot): HTMLElement {
         series: r.channel === 'real' ? 0 : 1,
         value: r.rate,
         label: formatDayMonth(r.date),
-        detail: `${r.attempts} tentativa(s), nível ${r.difficulty}`,
+        detail: `${plural(r.attempts, 'tentativa', 'tentativas')}, nível ${r.difficulty}`,
       }));
       return card(
         { title: SKILLS[skill].nome, headingLevel: 2 },
@@ -358,7 +358,7 @@ export async function historicoScreen(ctx: AppContext, query: URLSearchParams): 
     { class: 'stack' },
     pageHeader(
       'Histórico e evolução',
-      `${snap.sessions.length} sessão(ões) registrada(s) neste aparelho.`,
+      `${plural(snap.sessions.length, 'sessão registrada', 'sessões registradas')} neste aparelho.`,
       { href: '#/mais', label: 'Mais' },
     ),
     tabs.el,

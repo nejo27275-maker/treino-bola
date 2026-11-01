@@ -1,6 +1,6 @@
 /** Configurações: perfil, preferências, dados (exportar/importar/apagar), offline e instalação. */
 import { localDate } from '../../core/dates.ts';
-import { bytes } from '../../core/format.ts';
+import { bytes, plural } from '../../core/format.ts';
 import { MAX_IMPORT_BYTES, parseImportText, type ExportData } from '../../core/validation.ts';
 import type { Settings } from '../../core/types.ts';
 import {
@@ -162,7 +162,7 @@ export async function configScreen(ctx: AppContext): Promise<Screen> {
         h(
           'p',
           null,
-          `O arquivo tem ${data.sessions.length} sessão(ões), ${data.results.length} resultado(s) e ${data.videoAnalyses.length} análise(s) de vídeo.`,
+          `O arquivo tem ${plural(data.sessions.length, 'sessão', 'sessões')}, ${plural(data.results.length, 'resultado', 'resultados')} e ${plural(data.videoAnalyses.length, 'análise', 'análises')} de vídeo.`,
         ),
         warnings.length
           ? h(
@@ -185,7 +185,7 @@ export async function configScreen(ctx: AppContext): Promise<Screen> {
       // Substituir troca também as configurações: as do arquivo ou, sem elas, as padrão.
       if (mode === 'substituir') await ctx.saveSettings(await ctx.repo.getSettings());
       ctx.toast(
-        `Importado: ${summary.sessions} sessão(ões), ${summary.results} resultado(s), ${summary.videoAnalyses} análise(s). Ignorados (já existiam): ${summary.skipped}.`,
+        `Importado: ${plural(summary.sessions, 'sessão', 'sessões')}, ${plural(summary.results, 'resultado', 'resultados')}, ${plural(summary.videoAnalyses, 'análise', 'análises')} de vídeo. Ignorados (já existiam): ${summary.skipped}.`,
         'sucesso',
         6000,
       );
@@ -476,7 +476,7 @@ export async function configScreen(ctx: AppContext): Promise<Screen> {
         h(
           'li',
           null,
-          `${counts.sessions} sessão(ões), ${counts.results} resultado(s), ${counts.analyses} análise(s) de vídeo e ${counts.frames} quadro(s) capturado(s).`,
+          `${plural(counts.sessions, 'sessão', 'sessões')}, ${plural(counts.results, 'resultado', 'resultados')}, ${plural(counts.analyses, 'análise', 'análises')} de vídeo e ${plural(counts.frames, 'quadro capturado', 'quadros capturados')}.`,
         ),
         h(
           'li',

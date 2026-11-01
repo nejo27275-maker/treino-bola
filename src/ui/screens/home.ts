@@ -2,6 +2,7 @@
 import { pickExercise, testFor } from '../../content/catalog.ts';
 import { formatDateBR, formatLong } from '../../core/dates.ts';
 import type { Recommendation } from '../../core/engine.ts';
+import { plural } from '../../core/format.ts';
 import { SKILLS, SKILL_ORDER } from '../../core/skills.ts';
 import type { Profile } from '../../core/types.ts';
 import type { AppContext } from '../app.ts';
@@ -200,7 +201,7 @@ export async function homeScreen(ctx: AppContext): Promise<Screen> {
           ? h(
               'p',
               { class: 'small' },
-              `✓ Você já registrou ${today.completedSessions} atividade(s) hoje.`,
+              `✓ Você já registrou ${plural(today.completedSessions, 'atividade', 'atividades')} hoje.`,
             )
           : null,
         h(

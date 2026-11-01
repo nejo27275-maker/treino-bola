@@ -4,7 +4,7 @@
  */
 import { RATING_LABEL, VIDEO_CRITERIA, ratingToEvidence } from '../../content/videoCriteria.ts';
 import { formatDayMonth } from '../../core/dates.ts';
-import { bytes, decimal, percent, videoTime } from '../../core/format.ts';
+import { bytes, decimal, percent, plural, videoTime } from '../../core/format.ts';
 import { newId } from '../../core/ids.ts';
 import {
   computePoseMetrics,
@@ -81,7 +81,7 @@ function problemCard(p: MediaProblem): HTMLElement {
 /** Resumo salvo da análise de pose, sempre identificado como automático e experimental. */
 function poseSummaryLine(sum: Record<string, number>): HTMLElement {
   const parts = [
-    `${sum.quadros ?? 0} quadro(s), ${sum.quadrosConfiaveis ?? 0} confiável(is)`,
+    `${plural(sum.quadros ?? 0, 'quadro', 'quadros')}, ${plural(sum.quadrosConfiaveis ?? 0, 'confiável', 'confiáveis')}`,
     sum.inclinacaoMedia !== undefined ? `tronco ${decimal(sum.inclinacaoMedia, 1)}°` : null,
     sum.variacaoTronco !== undefined ? `variação ${decimal(sum.variacaoTronco, 1)}°` : null,
     sum.flexaoJoelhos !== undefined ? `joelhos ${decimal(sum.flexaoJoelhos, 1)}°` : null,
@@ -681,7 +681,7 @@ export async function videoScreen(ctx: AppContext): Promise<Screen> {
       h(
         'p',
         null,
-        `Trecho de ${videoTime(start)} a ${videoTime(end)}: ${sum.frames} quadro(s) com pessoa detectada, ${sum.reliableFrames} confiável(is).`,
+        `Trecho de ${videoTime(start)} a ${videoTime(end)}: ${plural(sum.frames, 'quadro', 'quadros')} com pessoa detectada, ${plural(sum.reliableFrames, 'confiável', 'confiáveis')}.`,
       ),
       sum.stability === 'indefinido'
         ? h(
@@ -822,7 +822,7 @@ export async function videoScreen(ctx: AppContext): Promise<Screen> {
       await ctx.repo.saveAnalysis(analysis, logged.session, logged.results, storedFrames);
       ctx.toast('Avaliação salva.', 'sucesso');
       startNewEvaluation();
-      saveStatus.textContent = `Avaliação salva: ${evaluated} critério(s) com evidência${storedFrames.length ? `, ${storedFrames.length} quadro(s) guardado(s)` : ''}. Origem: avaliação manual (observação de vídeo). Para avaliar de novo, marque os critérios outra vez: cada avaliação salva é um registro separado.`;
+      saveStatus.textContent = `Avaliação salva: ${plural(evaluated, 'critério', 'critérios')} com evidência${storedFrames.length ? `, ${plural(storedFrames.length, 'quadro guardado', 'quadros guardados')}` : ''}. Origem: avaliação manual (observação de vídeo). Para avaliar de novo, marque os critérios outra vez: cada avaliação salva é um registro separado.`;
       void drawHistory();
     } catch (error) {
       saveStatus.textContent = `Não foi possível salvar: ${error instanceof Error ? error.message : String(error)}`;
@@ -870,7 +870,7 @@ export async function videoScreen(ctx: AppContext): Promise<Screen> {
           h(
             'div',
             { class: 'small' },
-            `${rated.length} critério(s) avaliado(s) · ${a.markers.length} marcador(es)${a.motionPeaks?.length ? ` · ${a.motionPeaks.length} pico(s) de movimento` : ''}`,
+            `${plural(rated.length, 'critério avaliado', 'critérios avaliados')} · ${plural(a.markers.length, 'marcador', 'marcadores')}${a.motionPeaks?.length ? ` · ${plural(a.motionPeaks.length, 'pico de movimento', 'picos de movimento')}` : ''}`,
           ),
           rated.length
             ? h(

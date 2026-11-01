@@ -1,8 +1,16 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import { bytes, clock, decimal, millis, percent, videoTime } from '../../src/core/format.ts';
+import {
+  bytes,
+  clock,
+  decimal,
+  millis,
+  percent,
+  plural,
+  videoTime,
+} from '../../src/core/format.ts';
 
-const NBSP = ' ';
+const NBSP = '\u00a0';
 
 describe('formatação em português', () => {
   test('vírgula decimal, porcentagem e valores inválidos', () => {
@@ -21,6 +29,12 @@ describe('formatação em português', () => {
     assert.equal(bytes(5 * 1024 * 1024), `5,0${NBSP}MB`);
     assert.equal(millis(Number.NaN), '—');
     assert.equal(bytes(-1), '—');
+  });
+
+  test('plural com concordância (sem "(s)" improvisado)', () => {
+    assert.equal(plural(1, 'sessão registrada', 'sessões registradas'), '1 sessão registrada');
+    assert.equal(plural(2, 'sessão registrada', 'sessões registradas'), '2 sessões registradas');
+    assert.equal(plural(0, 'quadro', 'quadros'), '0 quadros');
   });
 
   test('relógios de sessão e de vídeo', () => {

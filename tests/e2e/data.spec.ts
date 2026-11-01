@@ -62,7 +62,7 @@ test('dados persistem após recarregar; exportar, apagar e importar de volta', a
     .locator('#import-file')
     .setInputFiles(jsonFile('backup.json', readFileSync(file, 'utf8')));
   const importDialog = page.getByRole('alertdialog');
-  await expect(importDialog).toContainText('1 sessão(ões), 1 resultado(s)');
+  await expect(importDialog).toContainText('1 sessão, 1 resultado');
   await importDialog.getByRole('radio', { name: /Substituir/ }).check();
   await importDialog.getByRole('button', { name: 'Importar' }).click();
   await expect(page.getByText(/Importado: 1 sessão/)).toBeVisible();
@@ -130,7 +130,7 @@ test('arquivos inválidos são recusados com mensagem clara e nada é executado'
   );
   await page.locator('#import-file').setInputFiles(hostile);
   const dialog = page.getByRole('alertdialog');
-  await expect(dialog).toContainText('registro(s) inválido(s) em "sessions" foram ignorados');
+  await expect(dialog).toContainText('1 registro inválido em "sessions" foi ignorado');
   await dialog.getByRole('button', { name: 'Importar' }).click();
   await go(page, '#/', /Olá, <img/);
   expect(await page.title()).not.toBe('1');
