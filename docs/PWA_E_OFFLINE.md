@@ -1,7 +1,27 @@
-# Instalação no Android (PWA) e uso offline
+# Instalação no Android e no iPhone (PWA) e uso offline
 
 O Cláudio Futebol AI é um site estático que funciona como aplicativo instalável (PWA). Não há
 loja de aplicativos, conta ou servidor próprio: depois da primeira visita, tudo roda no aparelho.
+O mesmo endereço serve Android e iPhone — no iPhone **não** se usa APK (isso é só do Android).
+
+## No iPhone (iOS)
+
+1. Abra o endereço **HTTPS** do app no **Safari** (precisa ser o Safari, não um navegador
+   embutido de outro app).
+2. Toque no botão **Compartilhar** (o quadrado com a seta para cima).
+3. Escolha **"Adicionar à Tela de Início"** e confirme.
+4. Abra pelo ícone "Cláudio Futebol AI": roda em tela cheia, funciona offline e pede permissão
+   da câmera quando você usa. Vídeos MP4/H.264 do iPhone tocam normalmente.
+
+Observações honestas do iOS (não testado em um iPhone real por mim, **EXIGE DISPOSITIVO REAL**):
+
+- A câmera e a instalação só funcionam no **Safari** e em **HTTPS**.
+- O iOS pode apagar os dados de um site **não instalado** após alguns dias sem uso; depois de
+  "Adicionar à Tela de Início" isso é bem menos provável. Mesmo assim, para trocar de aparelho
+  use **Exportar meus dados** e **Importar backup**.
+- Não há prompt automático de instalação no iOS (por isso o passo manual acima); o botão
+  "Instalar o aplicativo" em Configurações só aparece onde o navegador oferece a instalação
+  (Android/Chrome).
 
 ## Requisitos
 

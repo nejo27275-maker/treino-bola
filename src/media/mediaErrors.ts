@@ -36,8 +36,8 @@ export function describeCameraError(
             title: 'Permissão da câmera negada',
             message: 'O navegador não liberou a câmera para este site.',
             steps: [
-              'No Chrome do Android, toque no ícone à esquerda do endereço (cadeado ou "i").',
-              'Abra "Permissões" e mude "Câmera" para "Permitir".',
+              'Toque no ícone ao lado do endereço (no iPhone, o "aA" no Safari; no Android, o cadeado ou "i").',
+              'Abra as permissões do site e mude "Câmera" para "Permitir".',
               'Recarregue a página e toque em "Ligar câmera" novamente.',
             ],
           };
@@ -85,8 +85,8 @@ export function describeCameraError(
         message:
           'Este navegador não permite que sites usem a câmera. Isso é comum em navegadores embutidos de outros aplicativos (redes sociais, mensageiros).',
         steps: [
-          'Abra o endereço do aplicativo diretamente no Google Chrome.',
-          'Se já estiver no Chrome, atualize-o pela loja de aplicativos.',
+          'Abra o endereço no navegador do sistema (Safari no iPhone, Chrome no Android), não em um navegador embutido.',
+          'Se já estiver nele, atualize-o pela loja de aplicativos.',
         ],
       };
     case 'AbortError':
@@ -128,7 +128,9 @@ export function cameraSupport(secure: boolean, hasApi: boolean): MediaProblem | 
       code: 'sem_suporte',
       title: 'Navegador sem acesso à câmera',
       message: 'Este navegador não oferece a função de câmera para sites.',
-      steps: ['Atualize o Google Chrome ou use outro navegador moderno.'],
+      steps: [
+        'Atualize o navegador (Safari no iPhone, Chrome no Android) ou use um navegador moderno.',
+      ],
     };
   }
   return null;

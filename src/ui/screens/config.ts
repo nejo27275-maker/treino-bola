@@ -322,7 +322,7 @@ export async function configScreen(ctx: AppContext): Promise<Screen> {
           : h(
               'p',
               { class: 'small' },
-              'Para instalar no Android (Chrome): toque no menu ⋮ e escolha "Instalar app" ou "Adicionar à tela inicial". O site precisa estar em HTTPS.',
+              'Para instalar: no Android (Chrome), menu ⋮ → "Instalar app"; no iPhone (Safari), botão Compartilhar → "Adicionar à Tela de Início". O site precisa estar em HTTPS.',
             ),
       // No APK não há cache de navegador para remover (os arquivos fazem parte do app).
       p.swStatus === 'app'

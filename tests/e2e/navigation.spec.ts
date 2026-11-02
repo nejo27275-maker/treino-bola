@@ -63,6 +63,27 @@ test('endereço inexistente mostra página de erro com caminho de volta', async 
   await expect(page.locator('main h1')).toHaveText(/^Olá/);
 });
 
+test('instalável como app no iPhone e no Android (manifesto e metatags)', async ({ page }) => {
+  await openApp(page);
+  await expect(page.locator('link[rel="manifest"]')).toHaveAttribute(
+    'href',
+    'manifest.webmanifest',
+  );
+  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveCount(1);
+  // iOS: abre em tela cheia ao "Adicionar à Tela de Início".
+  await expect(page.locator('meta[name="apple-mobile-web-app-capable"]')).toHaveAttribute(
+    'content',
+    'yes',
+  );
+  await expect(page.locator('meta[name="apple-mobile-web-app-title"]')).toHaveAttribute(
+    'content',
+    'Cláudio Futebol AI',
+  );
+  const manifesto = await page.request.get('manifest.webmanifest');
+  expect(manifesto.ok()).toBe(true);
+  expect((await manifesto.json()).display).toBe('standalone');
+});
+
 test('acessibilidade básica: rótulos, nomes acessíveis, idioma e link para pular', async ({
   page,
 }) => {

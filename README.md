@@ -6,7 +6,7 @@ adaptativo até o **interclasse de 20/10/2026**. Tudo roda **no próprio aparelh
 sem API de IA, sem analytics, e funciona offline depois da primeira visita.
 
 > **Estado honesto:** o app foi construído e testado com testes automatizados (150 unitários e
-> 74 de ponta a ponta no Chromium), mas **não foi testado em um celular físico** nem publicado
+> 75 de ponta a ponta no Chromium), mas **não foi testado em um celular físico** nem publicado
 > por mim. A câmera foi validada com a câmera falsa do Chromium e a estimativa de pose só com
 > uma biblioteca simulada. O APK Android é compilado no GitHub Actions e não foi instalado em
 > um aparelho real. Detalhes em [docs/TESTING.md](docs/TESTING.md).
@@ -67,6 +67,21 @@ npm run serve      # serve dist/ em http://127.0.0.1:4173/
 | `npm run icons`                   | Regera os ícones PNG (site e APK).                                                    |
 | `npm run admin:senha`             | Sorteia uma nova senha do painel de administração e grava só o hash.                  |
 | `npm run pose:prepare`            | Opcional: baixa o detector de pose (MediaPipe) para ser servido pelo próprio site.    |
+
+## Usar no iPhone (iOS)
+
+O iPhone **não instala APK** (isso é só do Android). No iPhone o app roda no **Safari** e se
+instala na tela de início como um app (tela cheia, offline):
+
+1. Abra o endereço **HTTPS** do app no **Safari** (publique no GitHub Pages — Opção B abaixo).
+2. Toque no botão **Compartilhar** (quadrado com seta para cima) → **"Adicionar à Tela de
+   Início"**.
+3. Abra pelo ícone novo: roda em tela cheia, funciona offline e usa a câmera (o Safari pede
+   permissão). Vídeos MP4 do iPhone tocam normalmente.
+
+Precisa ser o Safari e um endereço HTTPS (a câmera e a instalação não funcionam em navegadores
+embutidos de outros apps nem em `http://`). Mais detalhes em
+[docs/PWA_E_OFFLINE.md](docs/PWA_E_OFFLINE.md#no-iphone-ios).
 
 ## Usar no celular Android
 

@@ -42,7 +42,7 @@ No primeiro uso do Playwright fora deste ambiente: `npx playwright install chrom
 | `npm run format:check`                                            | PASSOU                                                                                    |
 | `npm test` — 150 testes unitários                                 | **150 PASSOU, 0 FALHOU**                                                                  |
 | `npm run build`                                                   | PASSOU — 73 arquivos pré-armazenados (~580 KB); dois builds seguidos geram a mesma versão |
-| `npx playwright test` — 74 testes de ponta a ponta (5 projetos)   | **74 PASSOU, 0 FALHOU**                                                                   |
+| `npx playwright test` — 75 testes de ponta a ponta (5 projetos)   | **75 PASSOU, 0 FALHOU**                                                                   |
 | APK Android no GitHub Actions (`android.yml`, execuções nº 1 a 6) | **PASSOU** — 5 testes JUnit, `assembleDebug`, conteúdo conferido; chave estável no cache  |
 
 Observação honesta sobre estabilidade: em uma execução completa anterior, o teste
@@ -74,19 +74,20 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 
 ## NÃO EXECUTADO e EXIGE DISPOSITIVO REAL
 
-| Item                                                                        | Status                 | Motivo / como validar                                                                                                                            |
-| --------------------------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Uso em celular Android (Chrome), toque real, desempenho em aparelho modesto | EXIGE DISPOSITIVO REAL | Publicar em HTTPS e abrir no celular; conferir fluidez dos simuladores e da câmera a 5–15 análises/s.                                            |
-| Câmera física (frontal/traseira, permissões do Android, luz e fundo reais)  | EXIGE DISPOSITIVO REAL | Seguir [CAMERA_E_HTTPS.md](CAMERA_E_HTTPS.md).                                                                                                   |
-| Reação com movimento de uma pessoa de verdade                               | EXIGE DISPOSITIVO REAL | Testada só com quadros sintéticos (bloco piscando, cena parada, animação da câmera falsa).                                                       |
-| Vídeos MP4/H.264 e HEVC gravados no celular                                 | EXIGE DISPOSITIVO REAL | O Chromium dos testes não decodifica H.264 (verificado: `canPlayType` vazio); o Chrome do Android decodifica.                                    |
-| Estimativa de pose com o MediaPipe real (qualidade, GPU/CPU, velocidade)    | NÃO EXECUTADO          | Sem acesso ao npm/armazenamento do modelo neste ambiente. Validar com `npm run pose:prepare` (com internet) em um aparelho.                      |
-| Instalação da PWA ("Adicionar à tela inicial")                              | EXIGE DISPOSITIVO REAL | O manifesto e o service worker foram testados; o prompt de instalação depende do Chrome do aparelho.                                             |
-| Leitor de tela (TalkBack)                                                   | NÃO EXECUTADO          | Verificados nomes acessíveis, foco, regiões de status e contraste de forma automatizada; a experiência com TalkBack precisa de teste manual.     |
-| Publicação no GitHub Pages e workflows em `.github/workflows/`              | NÃO EXECUTADO          | Os workflows estão prontos, mas não foram rodados (precisam ser habilitados no repositório).                                                     |
-| Lighthouse / auditoria de PWA                                               | NÃO EXECUTADO          | Ferramenta não disponível offline neste ambiente.                                                                                                |
-| APK instalado num celular (abrir, câmera, galeria, "Salvar como", voltar)   | EXIGE DISPOSITIVO REAL | O APK foi compilado e conferido no Actions; dentro do app, a ponte com o Android foi simulada no Chromium. Ver [ANDROID_APK.md](ANDROID_APK.md). |
-| Compilar o APK neste ambiente                                               | NÃO EXECUTADO          | O host do Android SDK (`dl.google.com`) é bloqueado pela política de rede daqui; o build roda no GitHub Actions.                                 |
+| Item                                                                         | Status                 | Motivo / como validar                                                                                                                                                          |
+| ---------------------------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Uso em celular Android (Chrome), toque real, desempenho em aparelho modesto  | EXIGE DISPOSITIVO REAL | Publicar em HTTPS e abrir no celular; conferir fluidez dos simuladores e da câmera a 5–15 análises/s.                                                                          |
+| Câmera física (frontal/traseira, permissões do Android, luz e fundo reais)   | EXIGE DISPOSITIVO REAL | Seguir [CAMERA_E_HTTPS.md](CAMERA_E_HTTPS.md).                                                                                                                                 |
+| Reação com movimento de uma pessoa de verdade                                | EXIGE DISPOSITIVO REAL | Testada só com quadros sintéticos (bloco piscando, cena parada, animação da câmera falsa).                                                                                     |
+| Vídeos MP4/H.264 e HEVC gravados no celular                                  | EXIGE DISPOSITIVO REAL | O Chromium dos testes não decodifica H.264 (verificado: `canPlayType` vazio); o Chrome do Android decodifica.                                                                  |
+| Estimativa de pose com o MediaPipe real (qualidade, GPU/CPU, velocidade)     | NÃO EXECUTADO          | Sem acesso ao npm/armazenamento do modelo neste ambiente. Validar com `npm run pose:prepare` (com internet) em um aparelho.                                                    |
+| Instalação da PWA ("Adicionar à tela inicial")                               | EXIGE DISPOSITIVO REAL | O manifesto e o service worker foram testados; o prompt de instalação depende do Chrome do aparelho.                                                                           |
+| iPhone (iOS/Safari): instalar na tela de início, câmera, offline, vídeos MP4 | EXIGE DISPOSITIVO REAL | As metatags de app em tela cheia e o manifesto estão testados; o comportamento no iOS real não foi verificado por mim. Ver [PWA_E_OFFLINE.md](PWA_E_OFFLINE.md#no-iphone-ios). |
+| Leitor de tela (TalkBack)                                                    | NÃO EXECUTADO          | Verificados nomes acessíveis, foco, regiões de status e contraste de forma automatizada; a experiência com TalkBack precisa de teste manual.                                   |
+| Publicação no GitHub Pages e workflows em `.github/workflows/`               | NÃO EXECUTADO          | Os workflows estão prontos, mas não foram rodados (precisam ser habilitados no repositório).                                                                                   |
+| Lighthouse / auditoria de PWA                                                | NÃO EXECUTADO          | Ferramenta não disponível offline neste ambiente.                                                                                                                              |
+| APK instalado num celular (abrir, câmera, galeria, "Salvar como", voltar)    | EXIGE DISPOSITIVO REAL | O APK foi compilado e conferido no Actions; dentro do app, a ponte com o Android foi simulada no Chromium. Ver [ANDROID_APK.md](ANDROID_APK.md).                               |
+| Compilar o APK neste ambiente                                                | NÃO EXECUTADO          | O host do Android SDK (`dl.google.com`) é bloqueado pela política de rede daqui; o build roda no GitHub Actions.                                                               |
 
 ## O que os testes de câmera e vídeo usam (e o que isso prova)
 
@@ -105,7 +106,7 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
   cálculo das métricas, marcação de confiança insuficiente, salvamento e tratamento de falhas —
   **não** a detecção real.
 
-## Testes de ponta a ponta (74) — todos PASSOU na última execução
+## Testes de ponta a ponta (75) — todos PASSOU na última execução
 
 #### `tests/e2e/a11y.spec.ts` (9)
 
@@ -156,7 +157,7 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 | dica do gráfico fica ao lado da mira (não cobre o ponto) e vai para baixo em tela estreita | app     | PASSOU |
 | abas do histórico: todas visíveis na largura do celular (quebram linha, não somem)         | app     | PASSOU |
 
-#### `tests/e2e/navigation.spec.ts` (6)
+#### `tests/e2e/navigation.spec.ts` (7)
 
 | Teste                                                                      | Projeto | Status |
 | -------------------------------------------------------------------------- | ------- | ------ |
@@ -166,6 +167,7 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 | acessibilidade básica: rótulos, nomes acessíveis, idioma e link para pular | app     | PASSOU |
 | teclado: link para pular ao conteúdo e foco no título ao trocar de tela    | app     | PASSOU |
 | alvos de toque têm pelo menos 40 px de altura                              | app     | PASSOU |
+| instalável como app no iPhone e no Android (manifesto e metatags)          | app     | PASSOU |
 
 #### `tests/e2e/offline.spec.ts` (2)
 
