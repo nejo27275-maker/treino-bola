@@ -33,14 +33,20 @@
 
 ## Mensagens de erro e o que fazer
 
-| Mensagem                            | Causa provável                              | O que fazer                                  |
-| ----------------------------------- | ------------------------------------------- | -------------------------------------------- |
-| Permissão da câmera negada          | Você (ou o navegador) bloqueou a câmera     | Libere em Permissões do site (passo 3 acima) |
-| Nenhuma câmera encontrada           | Aparelho sem câmera ou câmera desativada    | Teste em outro app; tente a outra câmera     |
-| A câmera está ocupada               | Outro app ou aba usa a câmera               | Feche videochamadas e outras abas            |
-| Configuração não suportada          | A resolução pedida não existe nessa câmera  | Use a resolução baixa ou a outra câmera      |
-| Câmera indisponível neste navegador | Navegador embutido ou sem suporte           | Abra no Chrome atualizado                    |
-| A câmera precisa de HTTPS           | Página aberta por `http://` (não localhost) | Use o endereço HTTPS                         |
+| Mensagem                            | Causa provável                                                | O que fazer                                     |
+| ----------------------------------- | ------------------------------------------------------------- | ----------------------------------------------- |
+| Permissão da câmera negada          | Você (ou o navegador) bloqueou a câmera                       | Libere em Permissões do site (passo 3 acima)    |
+| Nenhuma câmera encontrada           | Aparelho sem câmera ou câmera desativada                      | Teste em outro app; tente a outra câmera        |
+| A câmera está ocupada               | Outro app ou aba usa a câmera                                 | Feche videochamadas e outras abas               |
+| Configuração não suportada          | A resolução pedida não existe nessa câmera                    | Use a resolução baixa ou a outra câmera         |
+| Câmera indisponível neste navegador | Navegador embutido ou sem suporte                             | Abra no Chrome atualizado                       |
+| A câmera ligou, mas não há imagem   | Câmera tapada, câmera virtual sem fonte ou navegador embutido | Destape a câmera; tente a outra; abra no Chrome |
+| A câmera precisa de HTTPS           | Página aberta por `http://` (não localhost)                   | Use o endereço HTTPS                            |
+
+Sobre a troca **frontal/traseira**: o app pede primeiro a câmera exata do lado escolhido (para
+o botão realmente trocar de câmera em aparelhos com as duas) e, se aquele lado não existir
+(por exemplo, um notebook só com a frontal), cai para a câmera preferida e depois para
+qualquer câmera disponível, em vez de falhar.
 
 ## Testar no celular durante o desenvolvimento
 
