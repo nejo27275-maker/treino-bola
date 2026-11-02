@@ -100,9 +100,7 @@ test('arquivos inválidos são recusados com mensagem clara e nada é executado'
   await page
     .locator('#import-file')
     .setInputFiles(jsonFile('outro.json', JSON.stringify({ app: 'outro-app', schemaVersion: 1 })));
-  await expect(
-    page.getByText('Este arquivo não é uma exportação do Cláudio Futebol AI.'),
-  ).toBeVisible();
+  await expect(page.getByText('Este arquivo não é uma exportação do Craque AI.')).toBeVisible();
 
   const hostile = jsonFile(
     'hostil.json',

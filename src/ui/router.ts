@@ -139,7 +139,7 @@ export class Router {
         }
         this.current = screen;
         this.outlet.replaceChildren(screen.el);
-        document.title = `${screen.title} · Cláudio Futebol AI`;
+        document.title = `${screen.title} · Craque AI`;
         this.onChange(route.tab, screen.title);
         window.scrollTo(0, 0);
         if (this.firstRender) {

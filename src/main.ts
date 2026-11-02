@@ -1,4 +1,4 @@
-/** Ponto de entrada do Cláudio Futebol AI. */
+/** Ponto de entrada do Craque AI. */
 import { isAndroidApp } from './platform.ts';
 import { openBackend } from './storage/backend.ts';
 import { getPref } from './storage/prefs.ts';

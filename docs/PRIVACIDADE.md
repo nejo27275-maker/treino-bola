@@ -1,6 +1,6 @@
 # Privacidade
 
-Resumo: **tudo fica no aparelho.** O Cláudio Futebol AI não tem servidor de dados, conta,
+Resumo: **tudo fica no aparelho.** O Craque AI não tem servidor de dados, conta,
 anúncios, analytics, rastreamento ou telemetria, e não usa API de IA externa.
 
 ## O que é guardado e onde

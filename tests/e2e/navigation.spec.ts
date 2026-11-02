@@ -77,7 +77,7 @@ test('instalável como app no iPhone e no Android (manifesto e metatags)', async
   );
   await expect(page.locator('meta[name="apple-mobile-web-app-title"]')).toHaveAttribute(
     'content',
-    'Cláudio Futebol AI',
+    'Craque AI',
   );
   const manifesto = await page.request.get('manifest.webmanifest');
   expect(manifesto.ok()).toBe(true);

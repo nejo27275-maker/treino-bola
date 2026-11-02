@@ -197,9 +197,7 @@ test('@negada no APK, a permissão negada aponta para as configurações do Andr
   await openApp(page, '#/camera');
   await page.getByRole('button', { name: 'Ligar câmera' }).click();
   await expect(page.getByRole('heading', { name: 'Permissão da câmera negada' })).toBeVisible();
-  await expect(
-    page.getByText(/Configurações do Android → Apps → Cláudio Futebol AI/),
-  ).toBeVisible();
+  await expect(page.getByText(/Configurações do Android → Apps → Craque AI/)).toBeVisible();
   await expect(page.getByText(/ícone à esquerda do endereço/)).toHaveCount(0);
 });
 

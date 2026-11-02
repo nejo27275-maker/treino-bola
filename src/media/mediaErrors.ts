@@ -26,7 +26,7 @@ export function describeCameraError(
             title: 'Permissão da câmera negada',
             message: 'O Android não liberou a câmera para o aplicativo.',
             steps: [
-              'Abra as Configurações do Android → Apps → Cláudio Futebol AI → Permissões.',
+              'Abra as Configurações do Android → Apps → Craque AI → Permissões.',
               'Mude "Câmera" para "Permitir durante o uso do app".',
               'Volte ao aplicativo e toque em "Ligar câmera" novamente.',
             ],

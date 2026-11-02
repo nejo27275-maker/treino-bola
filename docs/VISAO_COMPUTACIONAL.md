@@ -1,6 +1,6 @@
 # Vídeo, câmera e visão computacional: o que existe e quais são os limites
 
-Este documento separa, com honestidade, o que o Cláudio Futebol AI **mede de verdade**, o que é
+Este documento separa, com honestidade, o que o Craque AI **mede de verdade**, o que é
 **avaliação manual** e o que é **experimental**. Toda análise roda no próprio aparelho; nenhum
 vídeo, quadro ou imagem da câmera é enviado para fora.
 

@@ -4,9 +4,7 @@ import { go, openApp, watchErrors } from './helpers.ts';
 test('perfil opcional: salvar, persistir após recarregar, editar e apagar', async ({ page }) => {
   const errors = watchErrors(page);
   await openApp(page);
-  await expect(
-    page.getByRole('heading', { name: 'Bem-vindo ao Cláudio Futebol AI' }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Bem-vindo ao Craque AI' })).toBeVisible();
   await page.getByRole('link', { name: 'Configurar perfil' }).click();
   await page.getByLabel('Como quer ser chamado? (opcional)').fill('Cláudio');
   await page.getByRole('radio', { name: 'Meio-campo' }).check();
@@ -19,9 +17,7 @@ test('perfil opcional: salvar, persistir após recarregar, editar e apagar', asy
 
   await page.reload();
   await go(page, '#/', /Olá, Cláudio!/);
-  await expect(page.getByRole('heading', { name: 'Bem-vindo ao Cláudio Futebol AI' })).toHaveCount(
-    0,
-  );
+  await expect(page.getByRole('heading', { name: 'Bem-vindo ao Craque AI' })).toHaveCount(0);
   // O foco escolhido aparece como motivo nas prioridades.
   await expect(page.getByText('Você marcou este fundamento como foco.').first()).toBeAttached();
 
@@ -39,14 +35,10 @@ test('perfil opcional: salvar, persistir após recarregar, editar e apagar', asy
 test('pular a configuração esconde as boas-vindas', async ({ page }) => {
   await openApp(page);
   await page.getByRole('button', { name: 'Agora não' }).click();
-  await expect(page.getByRole('heading', { name: 'Bem-vindo ao Cláudio Futebol AI' })).toHaveCount(
-    0,
-  );
+  await expect(page.getByRole('heading', { name: 'Bem-vindo ao Craque AI' })).toHaveCount(0);
   await page.reload();
   await expect(page.locator('main h1')).toHaveText('Olá!');
-  await expect(page.getByRole('heading', { name: 'Bem-vindo ao Cláudio Futebol AI' })).toHaveCount(
-    0,
-  );
+  await expect(page.getByRole('heading', { name: 'Bem-vindo ao Craque AI' })).toHaveCount(0);
 });
 
 test('plano de 14/10/2026: sete dias até o interclasse de terça, 20/10', async ({ page }) => {

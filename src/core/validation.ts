@@ -417,7 +417,7 @@ export function validateExport(input: unknown): ImportValidation {
   try {
     const root = obj(input, 'arquivo');
     if (root.app !== EXPORT_APP_ID) {
-      return { ok: false, errors: ['Este arquivo não é uma exportação do Cláudio Futebol AI.'] };
+      return { ok: false, errors: ['Este arquivo não é uma exportação do Craque AI.'] };
     }
     const version = num(root.schemaVersion, 'schemaVersion', 1, 1000, true);
     if (version > EXPORT_SCHEMA_VERSION) {

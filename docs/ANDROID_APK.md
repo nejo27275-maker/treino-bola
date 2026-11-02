@@ -1,6 +1,6 @@
 # APK Android
 
-O Cláudio Futebol AI também existe como **aplicativo Android (APK)**, além do site/PWA. O APK
+O Craque AI também existe como **aplicativo Android (APK)**, além do site/PWA. O APK
 leva o site inteiro dentro dele: funciona sem internet desde a primeira abertura, sem precisar
 publicar o site em HTTPS.
 
@@ -30,7 +30,7 @@ Um APK novo é gerado sempre que o app muda (`src/`, `public/`, `android/` e afi
 2. Toque no arquivo. Na primeira vez, o Android pede para **permitir instalar apps
    desconhecidos** para o aplicativo que está abrindo o arquivo (navegador ou gerenciador de
    arquivos): permita só para ele.
-3. Abra **Cláudio Futebol AI** pela tela inicial.
+3. Abra **Craque AI** pela tela inicial.
 
 Requisitos: Android 7.0 (API 24) ou mais novo, com o **Android System WebView** (ou o Chrome)
 atualizado pela Play Store — é ele que desenha o app.
@@ -78,7 +78,7 @@ são escolhidos por você nos seletores do próprio Android.
 - **Exportar meus dados:** abre o "Salvar como" do Android (o WebView não baixa arquivos como
   o navegador).
 - **Permissão da câmera negada:** as instruções apontam para Configurações do Android → Apps →
-  Cláudio Futebol AI → Permissões.
+  Craque AI → Permissões.
 - **Gravar vídeo:** abre o app de câmera do aparelho; o vídeo gravado fica na galeria (como no
   navegador) e é aberto no app sem ser copiado.
 - **Voltar:** o botão voltar do Android volta pelas telas do app e só depois fecha o app.

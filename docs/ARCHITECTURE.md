@@ -2,7 +2,7 @@
 
 ## Visão geral
 
-O Cláudio Futebol AI é um **site estático** que funciona como aplicativo (PWA) no navegador do
+O Craque AI é um **site estático** que funciona como aplicativo (PWA) no navegador do
 celular. Não há servidor de aplicação, banco remoto, conta, API de IA nem analytics: todo o
 processamento acontece no aparelho e os dados ficam no IndexedDB.
 

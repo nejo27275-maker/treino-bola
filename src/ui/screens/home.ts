@@ -83,7 +83,7 @@ export async function homeScreen(ctx: AppContext): Promise<Screen> {
 
   const welcome = !snap.onboardingSeen
     ? card(
-        { title: 'Bem-vindo ao Cláudio Futebol AI', tone: 'accent' },
+        { title: 'Bem-vindo ao Craque AI', tone: 'accent' },
         h(
           'p',
           null,

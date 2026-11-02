@@ -1,6 +1,6 @@
 # Instalação no Android e no iPhone (PWA) e uso offline
 
-O Cláudio Futebol AI é um site estático que funciona como aplicativo instalável (PWA). Não há
+O Craque AI é um site estático que funciona como aplicativo instalável (PWA). Não há
 loja de aplicativos, conta ou servidor próprio: depois da primeira visita, tudo roda no aparelho.
 O mesmo endereço serve Android e iPhone — no iPhone **não** se usa APK (isso é só do Android).
 
@@ -10,7 +10,7 @@ O mesmo endereço serve Android e iPhone — no iPhone **não** se usa APK (isso
    embutido de outro app).
 2. Toque no botão **Compartilhar** (o quadrado com a seta para cima).
 3. Escolha **"Adicionar à Tela de Início"** e confirme.
-4. Abra pelo ícone "Cláudio Futebol AI": roda em tela cheia, funciona offline e pede permissão
+4. Abra pelo ícone "Craque AI": roda em tela cheia, funciona offline e pede permissão
    da câmera quando você usa. Vídeos MP4/H.264 do iPhone tocam normalmente.
 
 Observações honestas do iOS (não testado em um iPhone real por mim, **EXIGE DISPOSITIVO REAL**):
