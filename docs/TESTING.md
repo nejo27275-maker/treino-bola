@@ -35,15 +35,15 @@ No primeiro uso do Playwright fora deste ambiente: `npx playwright install chrom
 
 ## Resumo
 
-| Verificação                                                     | Resultado                                                                                 |
-| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `npm run typecheck`                                             | PASSOU (sem erros)                                                                        |
-| `npm run lint`                                                  | PASSOU (sem avisos)                                                                       |
-| `npm run format:check`                                          | PASSOU                                                                                    |
-| `npm test` — 134 testes unitários                               | **134 PASSOU, 0 FALHOU**                                                                  |
-| `npm run build`                                                 | PASSOU — 73 arquivos pré-armazenados (~580 KB); dois builds seguidos geram a mesma versão |
-| `npx playwright test` — 68 testes de ponta a ponta (5 projetos) | **68 PASSOU, 0 FALHOU**                                                                   |
-| APK Android no GitHub Actions (`android.yml`, execução nº 1)    | **PASSOU** — 5 testes JUnit, `assembleDebug` e conferência do conteúdo do APK             |
+| Verificação                                                       | Resultado                                                                                 |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `npm run typecheck`                                               | PASSOU (sem erros)                                                                        |
+| `npm run lint`                                                    | PASSOU (sem avisos)                                                                       |
+| `npm run format:check`                                            | PASSOU                                                                                    |
+| `npm test` — 143 testes unitários                                 | **143 PASSOU, 0 FALHOU**                                                                  |
+| `npm run build`                                                   | PASSOU — 73 arquivos pré-armazenados (~580 KB); dois builds seguidos geram a mesma versão |
+| `npx playwright test` — 72 testes de ponta a ponta (5 projetos)   | **72 PASSOU, 0 FALHOU**                                                                   |
+| APK Android no GitHub Actions (`android.yml`, execuções nº 1 e 2) | **PASSOU** — 5 testes JUnit, `assembleDebug`, conteúdo conferido; chave estável no cache  |
 
 Observação honesta sobre estabilidade: em uma execução completa anterior, o teste
 "cena parada: calibra, mede tentativas…" (câmera falsa) estourou o tempo uma vez com os 3
@@ -105,7 +105,7 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
   cálculo das métricas, marcação de confiança insuficiente, salvamento e tratamento de falhas —
   **não** a detecção real.
 
-## Testes de ponta a ponta (68) — todos PASSOU na última execução
+## Testes de ponta a ponta (72) — todos PASSOU na última execução
 
 #### `tests/e2e/a11y.spec.ts` (9)
 
@@ -120,6 +120,15 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 | contraste: texto dos botões principais e da aba atual nos dois temas                | app     | PASSOU |
 | zoom de 200% (180 px de largura): nenhuma tela rola para o lado nem corta controles | app     | PASSOU |
 | simuladores: descrição da cena em texto, sem revelar o que está escondido           | app     | PASSOU |
+
+#### `tests/e2e/admin.spec.ts` (4) — painel de administração (credencial de teste)
+
+| Teste                                                                            | Projeto | Status |
+| -------------------------------------------------------------------------------- | ------- | ------ |
+| os quatro cantos em até 3 s abrem a área restrita; nenhum menu leva ao painel    | app     | PASSOU |
+| senha errada é recusada; a certa abre o painel, que exporta diagnóstico e tranca | app     | PASSOU |
+| cinco senhas erradas bloqueiam novas tentativas, mesmo recarregando              | app     | PASSOU |
+| erros inesperados ficam no registro local e aparecem no painel                   | app     | PASSOU |
 
 #### `tests/e2e/android.spec.ts` (2) — ponte do APK simulada no Chromium
 
@@ -235,7 +244,28 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 | @negada no APK, a permissão negada aponta para as configurações do Android                  | camera-sem-permissao | PASSOU |
 | @negada sem HTTPS a tela explica o requisito (contexto inseguro simulado)                   | camera-sem-permissao | PASSOU |
 
-## Testes unitários (134) — todos PASSOU na última execução
+## Testes unitários (143) — todos PASSOU na última execução
+
+**painel de administração — senha** (3) — PASSOU
+
+- confere a senha certa e recusa variações, vazia e espaços
+- comparação em tempo constante e base64
+- a credencial real só guarda o hash forte (nada de senha no código)
+
+**painel de administração — tentativas erradas** (2) — PASSOU
+
+- 4 erros livres; depois 1 min, dobrando até 1 h
+- estado salvo corrompido não quebra nem bloqueia para sempre
+
+**painel de administração — gesto dos quatro cantos** (3) — PASSOU
+
+- quadrado de cada canto proporcional à tela (44 a 72 px)
+- os quatro cantos em até 3 s, em qualquer ordem, completam o gesto
+- devagar demais (mais de 3 s) ou repetindo o mesmo canto não abre
+
+**registro local de erros** (1) — PASSOU
+
+- guarda os 20 mais recentes, corta textos longos e tolera lixo
 
 **biblioteca de exercícios técnicos** (7) — PASSOU
 

@@ -22,25 +22,8 @@ import {
   showFocusOnLabel,
 } from '../components.ts';
 import { h, replaceChildren } from '../dom.ts';
+import { baixarJson } from '../download.ts';
 import type { Screen } from '../router.ts';
-
-/** Baixa o JSON; no APK, abre o "Salvar como" do Android (o WebView não baixa blobs). */
-function downloadJson(data: unknown, filename: string): void {
-  const text = JSON.stringify(data, null, 2);
-  const android = androidBridge();
-  if (android) {
-    android.saveFile(filename, 'application/json', text);
-    return;
-  }
-  const blob = new Blob([text], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = h('a', { href: url, download: filename });
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  // Libera a URL temporária depois que o navegador inicia o download.
-  window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
-}
 
 async function storageInfo(): Promise<{ usage?: number; quota?: number; persisted?: boolean }> {
   const out: { usage?: number; quota?: number; persisted?: boolean } = {};
@@ -212,10 +195,10 @@ export async function configScreen(ctx: AppContext): Promise<Screen> {
     async () => {
       try {
         const data = await ctx.repo.exportAll(ctx.now());
-        downloadJson(data, `claudio-futebol-ai-backup-${localDate(ctx.now())}.json`);
+        const noApp = baixarJson(data, `claudio-futebol-ai-backup-${localDate(ctx.now())}.json`);
         replaceChildren(
           dataStatus,
-          `${androidBridge() ? 'Escolha onde salvar o arquivo na janela do Android.' : 'Arquivo gerado.'} Ele contém seu perfil e seu histórico; imagens capturadas de vídeos não são incluídas.`,
+          `${noApp ? 'Escolha onde salvar o arquivo na janela do Android.' : 'Arquivo gerado.'} Ele contém seu perfil e seu histórico; imagens capturadas de vídeos não são incluídas.`,
         );
       } catch (error) {
         replaceChildren(
@@ -252,17 +235,21 @@ export async function configScreen(ctx: AppContext): Promise<Screen> {
     { variant: 'danger' },
   );
 
+  // No APK os dados ficam na pasta do próprio app: não há limpeza automática do navegador.
+  const noApp = androidBridge() !== null;
   const persistStatus = h(
     'span',
     null,
-    info.persisted === undefined
-      ? 'indisponível neste navegador'
-      : info.persisted
-        ? 'protegido contra limpeza automática'
-        : 'pode ser limpo pelo navegador se faltar espaço',
+    noApp
+      ? 'guardado no próprio app (só some ao desinstalar ou ao limpar os dados do app)'
+      : info.persisted === undefined
+        ? 'indisponível neste navegador'
+        : info.persisted
+          ? 'protegido contra limpeza automática'
+          : 'pode ser limpo pelo navegador se faltar espaço',
   );
   const persistBtn =
-    info.persisted === false
+    !noApp && info.persisted === false
       ? button(
           'Proteger meus dados',
           async () => {

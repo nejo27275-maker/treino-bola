@@ -5,8 +5,8 @@ jogo, simuladores, preparação física e mental, análise de vídeo e câmera a
 adaptativo até o **interclasse de 20/10/2026**. Tudo roda **no próprio aparelho**: sem conta,
 sem API de IA, sem analytics, e funciona offline depois da primeira visita.
 
-> **Estado honesto:** o app foi construído e testado com testes automatizados (134 unitários e
-> 68 de ponta a ponta no Chromium), mas **não foi testado em um celular físico** nem publicado
+> **Estado honesto:** o app foi construído e testado com testes automatizados (143 unitários e
+> 72 de ponta a ponta no Chromium), mas **não foi testado em um celular físico** nem publicado
 > por mim. A câmera foi validada com a câmera falsa do Chromium e a estimativa de pose só com
 > uma biblioteca simulada. O APK Android é compilado no GitHub Actions e não foi instalado em
 > um aparelho real. Detalhes em [docs/TESTING.md](docs/TESTING.md).
@@ -26,6 +26,7 @@ sem API de IA, sem analytics, e funciona offline depois da primeira visita.
 | **Câmera ao vivo**           | Permissão explícita, frontal/traseira, resolução e frequência ajustáveis, indicador "Câmera ligada", liberação de todas as faixas ao sair; treino livre com contagem manual e reação com detecção de movimento (métrica calculada). Nada é gravado.                                          |
 | **Plano**                    | Calendário recalculado pela data do aparelho: avaliação inicial, desenvolvimento, recuperação, véspera leve, dia do jogo sem treino extra; se o evento passou, pede a próxima competição.                                                                                                    |
 | **Histórico**                | Sessões, evolução por fundamento (gráfico com tabela), simuladores e comparação de sessões.                                                                                                                                                                                                  |
+| **Painel de administração**  | Escondido (tocar os 4 cantos da tela em até 3 s) e protegido por senha aleatória forte (só o hash PBKDF2 fica no código): estado do app, dados, números do motor, erros recentes, manutenção e diagnóstico.                                                                                  |
 | **Dados**                    | IndexedDB, exportar/importar JSON validado, apagar tudo (só os dados deste app), uso de espaço e proteção contra limpeza.                                                                                                                                                                    |
 
 Cada resultado mostra a **origem**: avaliação manual, métrica calculada ou inferência automática
@@ -63,7 +64,8 @@ npm run serve      # serve dist/ em http://127.0.0.1:4173/
 | `npm test`                        | Testes unitários (`node --test`).                                                     |
 | `npm run test:e2e`                | Testes de interface (Playwright + Chromium; faz o build sozinho).                     |
 | `npm run check`                   | Tudo: tipos, lint, formatação, unitários, build e interface.                          |
-| `npm run icons`                   | Regera os ícones PNG.                                                                 |
+| `npm run icons`                   | Regera os ícones PNG (site e APK).                                                    |
+| `npm run admin:senha`             | Sorteia uma nova senha do painel de administração e grava só o hash.                  |
 | `npm run pose:prepare`            | Opcional: baixa o detector de pose (MediaPipe) para ser servido pelo próprio site.    |
 
 ## Usar no celular Android
@@ -106,6 +108,7 @@ Exportar, importar e apagar ficam em **Mais → Configurações**. Detalhes:
 | [docs/MOTOR_E_PLANO.md](docs/MOTOR_E_PLANO.md)             | Regras do motor adaptativo, simuladores e plano                               |
 | [docs/TESTING.md](docs/TESTING.md)                         | Testes executados, resultados individuais e o que falta validar               |
 | [docs/ANDROID_APK.md](docs/ANDROID_APK.md)                 | APK Android: baixar, instalar, permissões, assinatura e como é feito          |
+| [docs/ADMIN.md](docs/ADMIN.md)                             | Painel de administração escondido: como abrir, o que mostra, senha e limites  |
 | [docs/PWA_E_OFFLINE.md](docs/PWA_E_OFFLINE.md)             | Instalação no Android, uso offline e atualizações                             |
 | [docs/CAMERA_E_HTTPS.md](docs/CAMERA_E_HTTPS.md)           | Permissões da câmera, HTTPS e solução de problemas                            |
 | [docs/VISAO_COMPUTACIONAL.md](docs/VISAO_COMPUTACIONAL.md) | O que a análise de vídeo/câmera mede de verdade e seus limites; pose opcional |

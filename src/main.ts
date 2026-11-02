@@ -4,8 +4,10 @@ import { openBackend } from './storage/backend.ts';
 import { getPref } from './storage/prefs.ts';
 import { Repository } from './storage/repo.ts';
 import { AppContext, applyTheme } from './ui/app.ts';
+import { observarGestoQuatroCantos } from './ui/cantos.ts';
 import { button, pill } from './ui/components.ts';
 import { h } from './ui/dom.ts';
+import { registrarErro } from './ui/errorLog.ts';
 import { icon, type IconName } from './ui/icons.ts';
 import { RouteNotFound, Router } from './ui/router.ts';
 import { homeScreen } from './ui/screens/home.ts';
@@ -184,10 +186,17 @@ function setupGlobalErrors(ctx: AppContext): void {
     last = now;
     ctx.toast(`Algo deu errado: ${message}`, 'erro', 6000);
   };
-  window.addEventListener('error', (e) => report(e.message || 'erro inesperado'));
+  // Cada erro também vai para o registro local (visto no painel de administração).
+  window.addEventListener('error', (e) => {
+    const message = e.message || 'erro inesperado';
+    registrarErro('erro', e.filename ? `${message} (${e.filename}:${e.lineno})` : message);
+    report(message);
+  });
   window.addEventListener('unhandledrejection', (e) => {
     const reason = e.reason as { message?: string } | undefined;
-    report(reason?.message ?? String(e.reason));
+    const message = reason?.message ?? String(e.reason);
+    registrarErro('promessa', message);
+    report(message);
   });
 }
 
@@ -221,6 +230,7 @@ async function main(): Promise<void> {
   // Só a tela inicial vem no primeiro carregamento; as demais são baixadas quando abertas
   // (o service worker já guarda todas para uso offline).
   const screens = {
+    admin: () => import('./ui/screens/admin.ts'),
     avaliacao: () => import('./ui/screens/avaliacao.ts'),
     camera: () => import('./ui/screens/camera.ts'),
     config: () => import('./ui/screens/config.ts'),
@@ -273,7 +283,9 @@ async function main(): Promise<void> {
     .add('/camera', 'mais', async (_p, q) => (await screens.camera()).cameraScreen(ctx, q))
     .add('/config', 'mais', async () => (await screens.config()).configScreen(ctx))
     .add('/mais', 'mais', async () => (await screens.menus()).maisScreen(ctx))
-    .add('/sobre', 'mais', async () => (await screens.menus()).sobreScreen(ctx));
+    .add('/sobre', 'mais', async () => (await screens.menus()).sobreScreen(ctx))
+    // Painel de administração: não aparece em nenhum menu (gesto dos 4 cantos + senha).
+    .add('/admin', 'mais', async () => (await screens.admin()).adminScreen(ctx));
 
   setupConnectivity(ctx);
   setupInstallPrompt(ctx);
@@ -286,6 +298,7 @@ async function main(): Promise<void> {
     });
 
   router.start();
+  observarGestoQuatroCantos(() => ctx.navigate('/admin'));
   void setupServiceWorker(ctx, () => router.confirmLeave());
   prefetchWhenIdle(Object.values(screens));
 }

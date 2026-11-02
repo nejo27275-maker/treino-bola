@@ -14,6 +14,8 @@ anúncios, analytics, rastreamento ou telemetria, e não usa API de IA externa.
 | Competição (nome e data), níveis dos simuladores, configurações (tema, som, vibração, animações) e rotina pré-jogo | IndexedDB                                  | Ao configurar / jogar / editar        |
 | Cópia do tema e da preferência de animação, para aplicar antes de a página carregar                                | localStorage (`cfa:tema`, `cfa:movimento`) | Ao alterar                            |
 | Arquivos do aplicativo para uso offline                                                                            | Cache do service worker (`cfa-*`)          | Na primeira visita                    |
+| Últimos 20 erros inesperados (data, hora e mensagem), para o painel de administração                               | localStorage (`cfa:erros`)                 | Quando um erro acontece               |
+| Tentativas erradas da senha do painel de administração (contagem e espera)                                         | localStorage (`cfa:admin-tentativas`)      | Ao errar a senha                      |
 
 O que **não** é guardado:
 

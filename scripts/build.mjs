@@ -82,6 +82,7 @@ function compileTypeScript() {
 
 async function buildServiceWorker() {
   const pose = await poseInfo();
+  const pacote = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
   // build-info.json é escrito antes da lista de pré-cache para também funcionar offline.
   await writeFile(
     path.join(dist, 'build-info.json'),
@@ -90,6 +91,7 @@ async function buildServiceWorker() {
         // Sem data/hora do build: um novo build sem mudanças gera a mesma versão (o aparelho
         // não baixa tudo de novo à toa).
         mode: isDev ? 'development' : 'production',
+        versao: pacote.version,
         pose,
       },
       null,

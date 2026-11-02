@@ -107,6 +107,11 @@ export class Repository {
     await this.setKv('onboarding', true);
   }
 
+  /** Faz as boas-vindas aparecerem de novo (painel de administração). */
+  async clearOnboardingSeen(): Promise<void> {
+    await this.setKv('onboarding', false);
+  }
+
   async listSessions(): Promise<TrainingSession[]> {
     const sessions = await this.backend.getAll<TrainingSession>('sessions');
     return sessions.sort((a, b) =>

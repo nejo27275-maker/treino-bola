@@ -28,6 +28,14 @@ export function setPref(key: string, value: string): void {
   }
 }
 
+export function removePref(key: string): void {
+  try {
+    storage()?.removeItem(PREFIX + key);
+  } catch {
+    // ignora
+  }
+}
+
 export function clearPrefs(): void {
   const s = storage();
   if (!s) return;

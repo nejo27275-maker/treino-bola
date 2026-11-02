@@ -17,6 +17,7 @@ src/
   ui/         roteador por hash, componentes, gráficos, telas e simuladores (SVG)
   main.ts     inicialização, service worker, conectividade, instalação
   platform.ts detecta o APK Android (ponte window.ClaudioAndroid)
+  admin/      painel de administração: verificação da senha (PBKDF2) e credencial (só o hash)
 public/       index.html (CSP), manifest, ícones, CSS
 android/      app Android (APK): WebView que serve o dist/ de dentro do APK + pontes com o sistema
 scripts/      build, servidor local, dev, ícones, mídia de teste, preparo opcional da pose

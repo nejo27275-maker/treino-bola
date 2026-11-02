@@ -35,6 +35,9 @@ test('APK: aparece como instalado e offline, sem service worker nem limpeza de c
   await expect(page.getByText('Offline: pronto')).toBeVisible();
   await expect(page.getByText('O aplicativo já está instalado neste aparelho.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Remover arquivos offline' })).toHaveCount(0);
+  // Os dados ficam na pasta do app: nada de "o navegador pode limpar" nem botão de proteção.
+  await expect(page.getByText(/guardado no próprio app/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Proteger meus dados' })).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 
