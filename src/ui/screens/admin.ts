@@ -14,7 +14,7 @@ import {
   type EstadoTentativas,
 } from '../../admin/acesso.ts';
 import { CREDENCIAL } from '../../admin/credencial.ts';
-import { formatDateBR } from '../../core/dates.ts';
+import { formatDateBR, weekdayShortName } from '../../core/dates.ts';
 import { bytes, decimal, localTime, percent, plural } from '../../core/format.ts';
 import { DEFAULT_SIM_LEVELS, SIM_MODES, SIM_MODE_ORDER } from '../../core/sim/index.ts';
 import { SKILLS, SKILL_ORDER } from '../../core/skills.ts';
@@ -434,10 +434,6 @@ function tempoDeUso(ctx: AppContext): HTMLElement {
   const r = resumir(stats, ctx.today());
   const semana = ultimosDias(stats, ctx.today(), 7);
   const pico = Math.max(1, ...semana.map((d) => d.minutos));
-  const diaCurto = (iso: string) => {
-    const dias = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
-    return dias[new Date(`${iso}T12:00:00`).getDay()] ?? '';
-  };
   return card(
     { title: 'Tempo de uso (só deste aparelho)', headingLevel: 2 },
     h(
@@ -462,7 +458,7 @@ function tempoDeUso(ctx: AppContext): HTMLElement {
         h(
           'li',
           { class: 'usage-day' },
-          h('span', { class: 'usage-day-label' }, diaCurto(d.dia)),
+          h('span', { class: 'usage-day-label' }, weekdayShortName(d.dia)),
           h('span', {
             class: 'usage-day-bar',
             style: { width: `${Math.round((d.minutos / pico) * 100)}%` },

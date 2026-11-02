@@ -88,6 +88,13 @@ export function weekdayName(date: string): string {
   return WEEKDAYS[weekdayIndex(date)] ?? '';
 }
 
+export const WEEKDAYS_SHORT = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'] as const;
+
+/** "ter", "qua"... (abreviação do dia da semana, à prova de fuso horário). */
+export function weekdayShortName(date: string): string {
+  return WEEKDAYS_SHORT[weekdayIndex(date)] ?? '';
+}
+
 /** "20/10/2026" */
 export function formatDateBR(date: string): string {
   const [y, m, d] = parts(date);

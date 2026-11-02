@@ -11,6 +11,7 @@ import {
   localDate,
   relativeDayLabel,
   weekdayName,
+  weekdayShortName,
 } from '../../src/core/dates.ts';
 
 describe('datas de calendário', () => {
@@ -27,6 +28,8 @@ describe('datas de calendário', () => {
   test('14/10/2026 é quarta-feira e o interclasse (20/10/2026) é terça-feira', () => {
     assert.equal(weekdayName('2026-10-14'), 'quarta-feira');
     assert.equal(weekdayName('2026-10-20'), 'terça-feira');
+    assert.equal(weekdayShortName('2026-10-14'), 'qua');
+    assert.equal(weekdayShortName('2026-11-01'), 'dom', 'à prova de fuso (vira o dia)');
     assert.equal(diffDays('2026-10-14', '2026-10-20'), 6);
     assert.equal(formatLong('2026-10-20'), 'terça-feira, 20 de outubro de 2026');
     assert.equal(formatDateBR('2026-10-20'), '20/10/2026');
