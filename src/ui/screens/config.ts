@@ -241,7 +241,7 @@ export async function configScreen(ctx: AppContext): Promise<Screen> {
     'span',
     null,
     noApp
-      ? 'guardado no próprio app (só some ao desinstalar ou ao limpar os dados do app)'
+      ? 'guardado no próprio app; com o backup do Android ligado, uma cópia criptografada vai para o seu backup do Google e volta ao reinstalar no mesmo aparelho'
       : info.persisted === undefined
         ? 'indisponível neste navegador'
         : info.persisted

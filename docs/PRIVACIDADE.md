@@ -46,9 +46,15 @@ segurança de conteúdo (CSP) da página bloqueia conexões com outros domínios
 ## No APK Android
 
 O APK leva o site dentro dele e responde localmente a todo pedido da página (os arquivos do
-app ou uma recusa): nada é baixado nem enviado. O Safe Browsing e as métricas do WebView estão
-desligados e os dados não entram no backup automático do Android (`allowBackup=false`). As
-permissões e os motivos estão em [ANDROID_APK.md](ANDROID_APK.md#permissões).
+app ou uma recusa): o app **não acessa a internet** nem envia nada para nós. O Safe Browsing e
+as métricas do WebView estão desligados.
+
+**Backup do Android (`allowBackup` ligado):** para os dados voltarem ao reinstalar, o próprio
+Android guarda uma cópia **criptografada** no **seu** backup do Google (se o backup do Google
+estiver ligado no celular). Isso é feito pelo sistema, vai para a sua conta, **não** passa por
+servidor nosso e nós nunca vemos. Você pode desligar nas configurações do Android. No navegador
+(PWA) isso não existe: os dados ficam no armazenamento do navegador. As permissões e os motivos
+estão em [ANDROID_APK.md](ANDROID_APK.md#permissões).
 
 ## Câmera
 

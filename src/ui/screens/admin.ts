@@ -18,7 +18,7 @@ import { formatDateBR } from '../../core/dates.ts';
 import { bytes, decimal, localTime, percent, plural } from '../../core/format.ts';
 import { DEFAULT_SIM_LEVELS, SIM_MODES, SIM_MODE_ORDER } from '../../core/sim/index.ts';
 import { SKILLS, SKILL_ORDER } from '../../core/skills.ts';
-import { resumir } from '../../core/usageStats.ts';
+import { resumir, ultimosDias } from '../../core/usageStats.ts';
 import { checkPoseAvailability } from '../../media/pose.ts';
 import { isAndroidApp } from '../../platform.ts';
 import { getPref, removePref, setPref } from '../../storage/prefs.ts';
@@ -207,6 +207,7 @@ interface Ambiente {
   cache: string | null;
   uso?: number;
   cota?: number;
+  persistido?: boolean;
   pose: string;
 }
 
@@ -221,6 +222,7 @@ async function lerAmbiente(): Promise<Ambiente> {
     .then((nomes) => nomes.find((n) => n.startsWith('cfa-app-'))?.slice('cfa-app-'.length) ?? null)
     .catch(() => null);
   const espaco = await navigator.storage?.estimate?.().catch(() => undefined);
+  const persistido = await navigator.storage?.persisted?.().catch(() => undefined);
   const pose = await checkPoseAvailability()
     .then((a) => (a.available ? `instalado (${a.detail})` : `não instalado (${a.detail})`))
     .catch(() => 'indisponível');
@@ -231,6 +233,7 @@ async function lerAmbiente(): Promise<Ambiente> {
     cache: cache ?? null,
     uso: espaco?.usage,
     cota: espaco?.quota,
+    persistido,
     pose,
   };
 }
@@ -370,12 +373,52 @@ async function painel(ctx: AppContext, aoBloquear: () => void): Promise<HTMLElem
     topo,
     aplicativo,
     dados,
+    backup(ambiente),
     tempoDeUso(ctx),
     motor(snap),
     errosRecentes(ctx),
     manutencao(ctx, snap, ambiente),
     seguranca(),
   ];
+}
+
+function backup(ambiente: Ambiente): HTMLElement {
+  const noApp = isAndroidApp();
+  const linhas = noApp
+    ? [
+        item('Backup automático do Android', 'ligado (allowBackup) — restaura ao reinstalar'),
+        item('Para onde vai', 'o backup do Google DO USUÁRIO (criptografado); nós nunca vemos'),
+        item('O que inclui', 'perfil, histórico, preferências e níveis (IndexedDB + localStorage)'),
+        item(
+          'Volta quando',
+          'reinstalar no mesmo aparelho/conta Google com o backup do Google ligado',
+        ),
+        item('Limite', 'o Android faz backup de até ~25 MB por app; acima disso ele não sobe'),
+      ]
+    : [
+        item('Onde fica', 'armazenamento do navegador (IndexedDB + localStorage) deste aparelho'),
+        item(
+          'Proteção contra limpeza',
+          ambiente.persistido === undefined
+            ? 'indisponível neste navegador'
+            : ambiente.persistido
+              ? 'protegido (armazenamento persistente)'
+              : 'não protegido (o navegador pode limpar se faltar espaço) — use "Proteger meus dados"',
+        ),
+        item(
+          'Sobrevive ao desinstalar?',
+          'no navegador, não automaticamente — use Exportar/Importar',
+        ),
+      ];
+  return card(
+    { title: 'Backup e persistência', headingLevel: 2 },
+    h('ul', { class: 'small' }, ...linhas),
+    h(
+      'p',
+      { class: 'small muted' },
+      'Para levar os dados a OUTRO aparelho (ou do Android para o iPhone), use Exportar meus dados → Importar backup. Nada é enviado para servidores nossos.',
+    ),
+  );
 }
 
 /** "1 h 05 min", "12 min". */
@@ -387,7 +430,14 @@ function duracao(minutos: number): string {
 }
 
 function tempoDeUso(ctx: AppContext): HTMLElement {
-  const r = resumir(lerUso(), ctx.today());
+  const stats = lerUso();
+  const r = resumir(stats, ctx.today());
+  const semana = ultimosDias(stats, ctx.today(), 7);
+  const pico = Math.max(1, ...semana.map((d) => d.minutos));
+  const diaCurto = (iso: string) => {
+    const dias = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+    return dias[new Date(`${iso}T12:00:00`).getDay()] ?? '';
+  };
   return card(
     { title: 'Tempo de uso (só deste aparelho)', headingLevel: 2 },
     h(
@@ -402,6 +452,24 @@ function tempoDeUso(ctx: AppContext): HTMLElement {
       item(
         'Último uso',
         r.ultimoUso ? `${formatDateBR(r.ultimoUso.slice(0, 10))} ${localTime(r.ultimoUso)}` : '—',
+      ),
+    ),
+    h('h3', { style: { fontSize: '0.95rem', margin: '8px 0 4px' } }, 'Últimos 7 dias'),
+    h(
+      'ul',
+      { class: 'usage-week small' },
+      ...semana.map((d) =>
+        h(
+          'li',
+          { class: 'usage-day' },
+          h('span', { class: 'usage-day-label' }, diaCurto(d.dia)),
+          h('span', {
+            class: 'usage-day-bar',
+            style: { width: `${Math.round((d.minutos / pico) * 100)}%` },
+            'aria-hidden': 'true',
+          }),
+          h('span', { class: 'usage-day-min' }, `${d.minutos} min`),
+        ),
       ),
     ),
     h(

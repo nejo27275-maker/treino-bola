@@ -14,10 +14,15 @@
         android:name="android.hardware.camera.any"
         android:required="false" />
 
-    <!-- allowBackup=false: os dados ficam só no aparelho (para levar a outro celular, use
-         "Exportar meus dados" no app). -->
+    <!-- Backup automático do Android (ligado): o próprio Android guarda uma cópia criptografada
+         dos dados do app no backup do Google DO USUÁRIO (não em servidor nosso, sem conta no
+         app). Ao reinstalar no mesmo celular/conta Google, o Android traz os dados de volta
+         sozinho. Sem regras customizadas: o padrão já inclui o IndexedDB e o localStorage do
+         WebView (onde ficam perfil, histórico e preferências). Nós nunca vemos esses dados.
+         Para levar a outro aparelho na hora, continue usando "Exportar meus dados". -->
     <application
-        android:allowBackup="false"
+        android:allowBackup="true"
+        android:fullBackupOnly="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"

@@ -9,6 +9,7 @@ import {
   normalizar,
   resumir,
   somarUso,
+  ultimosDias,
 } from '../../src/core/usageStats.ts';
 
 const iso = (dia: string) => `${dia}T10:00:00.000Z`;
@@ -79,6 +80,19 @@ describe('tempo de uso (só deste aparelho)', () => {
     assert.equal(estaAtivo(true, -5), false);
     assert.equal(estaAtivo(true, Number.NaN), false);
     assert.equal(estaAtivo(true, 5000, 10_000), true, 'janela de ociosidade configurável');
+  });
+
+  test('últimos N dias terminam em hoje, com os minutos de cada um (dias sem uso = 0)', () => {
+    let u = USO_VAZIO;
+    u = somarUso(u, '2026-10-12', 60_000, iso('2026-10-12'));
+    u = somarUso(u, '2026-10-14', 60_000, iso('2026-10-14'));
+    const dias = ultimosDias(u, '2026-10-14', 3);
+    assert.deepEqual(dias, [
+      { dia: '2026-10-12', minutos: 1 },
+      { dia: '2026-10-13', minutos: 0 },
+      { dia: '2026-10-14', minutos: 1 },
+    ]);
+    assert.equal(ultimosDias(u, '2026-10-14', 0).length, 0);
   });
 
   test('normalizar tolera lixo e reconstrói o total a partir dos dias', () => {

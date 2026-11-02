@@ -35,18 +35,28 @@ Um APK novo é gerado sempre que o app muda (`src/`, `public/`, `android/` e afi
 Requisitos: Android 7.0 (API 24) ou mais novo, com o **Android System WebView** (ou o Chrome)
 atualizado pela Play Store — é ele que desenha o app.
 
+### Dados que voltam ao reinstalar (backup do Android)
+
+O APK tem o **backup automático do Android ligado** (`allowBackup`). Com o backup do Google
+ativado no celular, o próprio Android guarda uma cópia **criptografada** dos dados do app no
+**seu** backup do Google (não em servidor nosso, sem conta no app). Ao **reinstalar no mesmo
+celular/conta Google**, o Android traz perfil, histórico, preferências e níveis de volta
+sozinho. É o seu backup — nós nunca vemos. Dá para desligar nas configurações do Android
+(Sistema → Backup). Limite do Android: até ~25 MB por app.
+
 ### Atualizar sem perder os dados
 
 Cada APK do Actions tem um número de versão maior que o anterior e instala por cima, mantendo
 os dados, **desde que a assinatura seja a mesma**. Sem chave própria configurada, o workflow
 usa uma chave de depuração guardada no cache do Actions; se esse cache expirar (7 dias sem
-uso), a chave muda e o Android recusa a atualização. Nesse caso:
+uso), a chave muda e o Android recusa a atualização. Para **outro aparelho** (ou do Android
+para o iPhone), o backup do Google não serve — use Exportar/Importar:
 
 1. No app antigo: **Mais → Configurações → Exportar meus dados (JSON)**.
 2. Desinstale o app antigo e instale o novo.
 3. No app novo: **Importar backup** com o arquivo exportado.
 
-Para evitar isso de vez, configure uma chave própria (abaixo).
+Para evitar a troca de chave de vez, configure uma chave própria (abaixo).
 
 ## Permissões
 

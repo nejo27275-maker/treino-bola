@@ -285,7 +285,7 @@ export async function homeScreen(ctx: AppContext): Promise<Screen> {
     { class: 'stack' },
     pageHeader(
       name ? `Olá, ${name}!` : 'Olá!',
-      'Seu treinador de futebol, direto no celular — sem enviar seus dados para lugar nenhum.',
+      'Seu treinador de futebol, direto no celular — sem conta e sem enviar seus dados para nós.',
     ),
     welcome,
     countdown,

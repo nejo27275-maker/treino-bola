@@ -148,12 +148,41 @@ test('tempo de uso deste aparelho aparece no painel (só local, não identifica 
   await expect(uso.getByText('Hoje: 30 min')).toBeVisible();
   await expect(uso.getByText('Dias ativos: 2')).toBeVisible();
   await expect(uso.getByText('Sequência atual: 2 dias seguidos')).toBeVisible();
+  // Detalhamento dos últimos 7 dias (hoje = 30 min).
+  await expect(uso.getByText('Últimos 7 dias')).toBeVisible();
+  await expect(uso.locator('.usage-day')).toHaveCount(7);
+  await expect(uso.locator('.usage-day').last()).toContainText('30 min');
+
+  // No navegador: a seção de backup explica que não sobrevive sozinho ao desinstalar.
+  const bk = page
+    .locator('.card')
+    .filter({ has: page.getByRole('heading', { name: 'Backup e persistência' }) });
+  await expect(bk.getByText(/use Exportar\/Importar/)).toBeVisible();
+  await expect(bk.getByText(/servidores nossos/)).toBeVisible();
 
   // "Zerar o tempo de uso" apaga só essa contagem (pede confirmação) e não os treinos.
   await page.getByRole('button', { name: 'Zerar o tempo de uso' }).click();
   await page.getByRole('alertdialog').getByRole('button', { name: 'Zerar' }).click();
   await expect(uso.getByText('Total: 0 min')).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem('cfa:uso'))).toBeNull();
+});
+
+test('no APK, o painel mostra o backup automático do Android (restaura ao reinstalar)', async ({
+  page,
+}) => {
+  await usarCredencialDeTeste(page);
+  // Simula a ponte do APK Android.
+  await page.addInitScript(() => {
+    (window as unknown as { ClaudioAndroid: unknown }).ClaudioAndroid = { saveFile: () => {} };
+  });
+  await openApp(page, '#/admin');
+  await entrar(page, SENHA_DE_TESTE);
+  const bk = page
+    .locator('.card')
+    .filter({ has: page.getByRole('heading', { name: 'Backup e persistência' }) });
+  await expect(bk.getByText(/Backup automático do Android: ligado/)).toBeVisible();
+  await expect(bk.getByText(/backup do Google DO USUÁRIO/)).toBeVisible();
+  await expect(bk.locator('li', { hasText: 'Volta quando' })).toContainText('reinstalar');
 });
 
 test('erros inesperados ficam no registro local e aparecem no painel', async ({ page }) => {

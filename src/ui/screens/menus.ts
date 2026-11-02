@@ -1,4 +1,5 @@
 /** Telas de navegação (Treinar, Mais) e Sobre/Privacidade. */
+import { isAndroidApp } from '../../platform.ts';
 import type { AppContext } from '../app.ts';
 import { card, pageHeader } from '../components.ts';
 import { h } from '../dom.ts';
@@ -159,8 +160,15 @@ export function sobreScreen(_ctx: AppContext): Screen {
         h(
           'li',
           null,
-          'Não há conta, anúncios, rastreamento nem envio automático de dados. Tudo fica no armazenamento do navegador deste aparelho.',
+          'Não há conta, anúncios, rastreamento nem envio de dados para nós. Tudo fica no armazenamento deste aparelho.',
         ),
+        isAndroidApp()
+          ? h(
+              'li',
+              null,
+              'No aplicativo Android, se o backup do Google estiver ligado no celular, o próprio Android guarda uma cópia criptografada dos seus dados no SEU backup do Google — para voltar ao reinstalar. É o seu backup, nós nunca vemos. Dá para desligar nas configurações do Android.',
+            )
+          : null,
         h(
           'li',
           null,

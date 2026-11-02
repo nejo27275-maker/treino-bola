@@ -141,3 +141,18 @@ export function resumir(stats: UsageStats, hoje: string): ResumoUso {
     ultimoUso: stats.ultimoUso,
   };
 }
+
+/** Últimos `n` dias (hoje por último), com os minutos de cada um — para o painel. */
+export function ultimosDias(
+  stats: UsageStats,
+  hoje: string,
+  n: number,
+): { dia: string; minutos: number }[] {
+  const out: { dia: string; minutos: number }[] = [];
+  let cursor = hoje;
+  for (let i = 0; i < Math.max(0, n); i++) {
+    out.unshift({ dia: cursor, minutos: Math.round((stats.dias[cursor] ?? 0) / 60_000) });
+    cursor = diaAnterior(cursor);
+  }
+  return out;
+}

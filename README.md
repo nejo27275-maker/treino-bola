@@ -5,8 +5,8 @@ jogo, simuladores, preparação física e mental, análise de vídeo e câmera a
 adaptativo até o **interclasse de 20/10/2026**. Tudo roda **no próprio aparelho**: sem conta,
 sem API de IA, sem analytics, e funciona offline depois da primeira visita.
 
-> **Estado honesto:** o app foi construído e testado com testes automatizados (154 unitários e
-> 75 de ponta a ponta no Chromium), mas **não foi testado em um celular físico** nem publicado
+> **Estado honesto:** o app foi construído e testado com testes automatizados (155 unitários e
+> 76 de ponta a ponta no Chromium), mas **não foi testado em um celular físico** nem publicado
 > por mim. A câmera foi validada com a câmera falsa do Chromium e a estimativa de pose só com
 > uma biblioteca simulada. O APK Android é compilado no GitHub Actions e não foi instalado em
 > um aparelho real. Detalhes em [docs/TESTING.md](docs/TESTING.md).
@@ -115,9 +115,11 @@ Instalação, offline e atualização: [docs/PWA_E_OFFLINE.md](docs/PWA_E_OFFLIN
 
 ## Privacidade
 
-Nenhum dado sai do aparelho. Vídeos não são copiados, a câmera não grava, não há rastreamento.
-Exportar, importar e apagar ficam em **Mais → Configurações**. Detalhes:
-[docs/PRIVACIDADE.md](docs/PRIVACIDADE.md).
+Nenhum dado é enviado para nós: não há conta, rastreamento nem servidor. Vídeos não são
+copiados e a câmera não grava. No **APK Android**, o backup automático do Android guarda uma
+cópia criptografada dos dados no **seu** backup do Google (para voltar ao reinstalar) — é o seu
+backup, nós nunca vemos, e dá para desligar no Android. Exportar, importar e apagar ficam em
+**Mais → Configurações**. Detalhes: [docs/PRIVACIDADE.md](docs/PRIVACIDADE.md).
 
 ## Documentação
 
