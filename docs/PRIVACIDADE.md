@@ -16,7 +16,7 @@ anúncios, analytics, rastreamento ou telemetria, e não usa API de IA externa.
 | Arquivos do aplicativo para uso offline                                                                            | Cache do service worker (`cfa-*`)          | Na primeira visita                    |
 | Últimos 20 erros inesperados (data, hora e mensagem), para o painel de administração                               | localStorage (`cfa:erros`)                 | Quando um erro acontece               |
 | Tentativas erradas da senha do painel de administração (contagem e espera)                                         | localStorage (`cfa:admin-tentativas`)      | Ao errar a senha                      |
-| Tempo de uso só deste aparelho (minutos por dia), para o painel de administração                                   | localStorage (`cfa:uso`)                   | Enquanto o app está aberto e à vista  |
+| Tempo de uso ativo só deste aparelho (minutos por dia), para o painel de administração                             | localStorage (`cfa:uso`)                   | Em uso ativo (à vista, com interação) |
 
 O que **não** é guardado:
 

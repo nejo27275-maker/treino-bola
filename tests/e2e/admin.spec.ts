@@ -148,6 +148,12 @@ test('tempo de uso deste aparelho aparece no painel (só local, não identifica 
   await expect(uso.getByText('Hoje: 30 min')).toBeVisible();
   await expect(uso.getByText('Dias ativos: 2')).toBeVisible();
   await expect(uso.getByText('Sequência atual: 2 dias seguidos')).toBeVisible();
+
+  // "Zerar o tempo de uso" apaga só essa contagem (pede confirmação) e não os treinos.
+  await page.getByRole('button', { name: 'Zerar o tempo de uso' }).click();
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Zerar' }).click();
+  await expect(uso.getByText('Total: 0 min')).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem('cfa:uso'))).toBeNull();
 });
 
 test('erros inesperados ficam no registro local e aparecem no painel', async ({ page }) => {

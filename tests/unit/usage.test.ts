@@ -2,8 +2,10 @@ import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import {
   DIAS_GUARDADOS,
+  JANELA_OCIOSO_MS,
   MAX_INCREMENTO_MS,
   USO_VAZIO,
+  estaAtivo,
   normalizar,
   resumir,
   somarUso,
@@ -67,6 +69,16 @@ describe('tempo de uso (só deste aparelho)', () => {
     assert.equal(comBuraco.sequenciaAtual, 1);
     // Sem uso hoje, a sequência é zero.
     assert.equal(resumir(u, '2026-10-20').sequenciaAtual, 0);
+  });
+
+  test('conta como ativo só com o app à vista e interação recente', () => {
+    assert.equal(estaAtivo(true, 0), true);
+    assert.equal(estaAtivo(true, JANELA_OCIOSO_MS), true, 'no limite ainda conta');
+    assert.equal(estaAtivo(true, JANELA_OCIOSO_MS + 1), false, 'ocioso demais não conta');
+    assert.equal(estaAtivo(false, 0), false, 'app em segundo plano não conta');
+    assert.equal(estaAtivo(true, -5), false);
+    assert.equal(estaAtivo(true, Number.NaN), false);
+    assert.equal(estaAtivo(true, 5000, 10_000), true, 'janela de ociosidade configurável');
   });
 
   test('normalizar tolera lixo e reconstrói o total a partir dos dias', () => {

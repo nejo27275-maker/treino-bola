@@ -4,7 +4,7 @@
  * identifica ninguém; é apagado junto com os dados. A lógica pura está em core/usageStats.ts.
  */
 import { localDate } from '../core/dates.ts';
-import { normalizar, somarUso, type UsageStats } from '../core/usageStats.ts';
+import { estaAtivo, normalizar, somarUso, type UsageStats } from '../core/usageStats.ts';
 import { getPref, removePref, setPref } from '../storage/prefs.ts';
 
 const CHAVE = 'uso';
@@ -37,14 +37,15 @@ export function limparUso(): void {
  */
 export function iniciarRastreioDeUso(agora: () => number = () => performance.now()): () => void {
   let marca = agora();
+  let ultimaInteracao = agora();
   let timer = 0;
 
   const registrar = () => {
     const t = agora();
     const delta = t - marca;
     marca = t;
-    if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
-    if (delta <= 0) return;
+    const visivel = typeof document === 'undefined' || document.visibilityState === 'visible';
+    if (delta <= 0 || !estaAtivo(visivel, t - ultimaInteracao)) return;
     salvarUso(somarUso(lerUso(), localDate(new Date()), delta, new Date().toISOString()));
   };
 
@@ -58,8 +59,12 @@ export function iniciarRastreioDeUso(agora: () => number = () => performance.now
     timer = window.setInterval(registrar, BATIDA_MS);
   };
 
+  const aoInteragir = () => {
+    ultimaInteracao = agora();
+  };
   const aoMudarVisibilidade = () => {
     if (document.visibilityState === 'visible') {
+      ultimaInteracao = agora();
       retomar();
     } else {
       registrar(); // guarda o trecho visível que acabou
@@ -68,11 +73,14 @@ export function iniciarRastreioDeUso(agora: () => number = () => performance.now
   };
   const aoSair = () => registrar();
 
+  const EVENTOS = ['pointerdown', 'keydown', 'touchstart', 'scroll'] as const;
+  for (const ev of EVENTOS) window.addEventListener(ev, aoInteragir, { passive: true });
   document.addEventListener('visibilitychange', aoMudarVisibilidade);
   window.addEventListener('pagehide', aoSair);
   if (typeof document === 'undefined' || document.visibilityState === 'visible') retomar();
 
   return () => {
+    for (const ev of EVENTOS) window.removeEventListener(ev, aoInteragir);
     document.removeEventListener('visibilitychange', aoMudarVisibilidade);
     window.removeEventListener('pagehide', aoSair);
     registrar();

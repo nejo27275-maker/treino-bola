@@ -40,7 +40,7 @@ No primeiro uso do Playwright fora deste ambiente: `npx playwright install chrom
 | `npm run typecheck`                                               | PASSOU (sem erros)                                                                        |
 | `npm run lint`                                                    | PASSOU (sem avisos)                                                                       |
 | `npm run format:check`                                            | PASSOU                                                                                    |
-| `npm test` — 149 testes unitários                                 | **149 PASSOU, 0 FALHOU**                                                                  |
+| `npm test` — 150 testes unitários                                 | **150 PASSOU, 0 FALHOU**                                                                  |
 | `npm run build`                                                   | PASSOU — 73 arquivos pré-armazenados (~580 KB); dois builds seguidos geram a mesma versão |
 | `npx playwright test` — 73 testes de ponta a ponta (5 projetos)   | **73 PASSOU, 0 FALHOU**                                                                   |
 | APK Android no GitHub Actions (`android.yml`, execuções nº 1 a 6) | **PASSOU** — 5 testes JUnit, `assembleDebug`, conteúdo conferido; chave estável no cache  |
@@ -245,7 +245,7 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 | @negada no APK, a permissão negada aponta para as configurações do Android                  | camera-sem-permissao | PASSOU |
 | @negada sem HTTPS a tela explica o requisito (contexto inseguro simulado)                   | camera-sem-permissao | PASSOU |
 
-## Testes unitários (149) — todos PASSOU na última execução
+## Testes unitários (150) — todos PASSOU na última execução
 
 **painel de administração — senha** (3) — PASSOU
 
@@ -300,12 +300,13 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 - aritmética não é afetada por horário de verão
 - localDate formata com zeros à esquerda
 
-**tempo de uso (só deste aparelho)** (5) — PASSOU
+**tempo de uso (só deste aparelho)** (6) — PASSOU
 
 - soma por dia e no total; marca primeiro dia e último uso
 - descarta saltos grandes (app em segundo plano / relógio mudou) e valores inválidos
 - mantém só os últimos dias de detalhe; o total continua somando os antigos
 - resumo: total, hoje, dias ativos, sequência e média
+- conta como ativo só com o app à vista e interação recente
 - normalizar tolera lixo e reconstrói o total a partir dos dias
 
 **formatação em português** (4) — PASSOU

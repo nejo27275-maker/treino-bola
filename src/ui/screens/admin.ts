@@ -28,7 +28,7 @@ import { h, replaceChildren } from '../dom.ts';
 import { baixarJson } from '../download.ts';
 import { limparErros, listarErros } from '../errorLog.ts';
 import type { Screen } from '../router.ts';
-import { lerUso } from '../usage.ts';
+import { lerUso, limparUso } from '../usage.ts';
 
 const CHAVE_TENTATIVAS = 'admin-tentativas';
 const DURACAO_DESBLOQUEIO_MS = 15 * 60_000;
@@ -399,7 +399,7 @@ function tempoDeUso(ctx: AppContext): HTMLElement {
     h(
       'p',
       { class: 'small muted' },
-      'Tempo com o app aberto e à vista. Fica só neste aparelho, não identifica ninguém e é apagado junto com os dados.',
+      'Tempo de uso ativo (app à vista e com interação recente). Fica só neste aparelho, não identifica ninguém e é apagado junto com os dados.',
     ),
   );
 }
@@ -574,6 +574,18 @@ function manutencao(ctx: AppContext, snap: Snapshot, ambiente: Ambiente): HTMLEl
         if (!ok) return;
         await ctx.repo.saveSimLevels({ ...DEFAULT_SIM_LEVELS });
         ctx.toast('Níveis dos simuladores reiniciados.', 'sucesso');
+      }),
+      button('Zerar o tempo de uso', async () => {
+        const ok = await ctx.confirm({
+          title: 'Zerar o tempo de uso?',
+          message:
+            'Apaga só a contagem de tempo de uso deste aparelho. O histórico de treinos continua.',
+          confirmLabel: 'Zerar',
+        });
+        if (!ok) return;
+        limparUso();
+        ctx.toast('Tempo de uso zerado.', 'sucesso');
+        ctx.refresh();
       }),
       button('Exportar diagnóstico (JSON)', () => {
         const noApp = baixarJson(

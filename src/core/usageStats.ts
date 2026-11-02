@@ -26,6 +26,25 @@ export const DIAS_GUARDADOS = 180;
  * não conta como uso.
  */
 export const MAX_INCREMENTO_MS = 60_000;
+/**
+ * Sem interação (toque, tecla, rolagem) por mais que isto, o tempo não conta como uso: mede o
+ * uso ativo, não um app deixado aberto e esquecido.
+ */
+export const JANELA_OCIOSO_MS = 120_000;
+
+/** Conta como uso ativo quando o app está à vista e houve interação recente. */
+export function estaAtivo(
+  visivel: boolean,
+  msDesdeInteracao: number,
+  idleMs = JANELA_OCIOSO_MS,
+): boolean {
+  return (
+    visivel &&
+    Number.isFinite(msDesdeInteracao) &&
+    msDesdeInteracao >= 0 &&
+    msDesdeInteracao <= idleMs
+  );
+}
 
 function dataValida(dia: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(dia);
