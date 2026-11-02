@@ -43,7 +43,7 @@ No primeiro uso do Playwright fora deste ambiente: `npx playwright install chrom
 | `npm test` — 143 testes unitários                                 | **143 PASSOU, 0 FALHOU**                                                                  |
 | `npm run build`                                                   | PASSOU — 73 arquivos pré-armazenados (~580 KB); dois builds seguidos geram a mesma versão |
 | `npx playwright test` — 72 testes de ponta a ponta (5 projetos)   | **72 PASSOU, 0 FALHOU**                                                                   |
-| APK Android no GitHub Actions (`android.yml`, execuções nº 1 e 2) | **PASSOU** — 5 testes JUnit, `assembleDebug`, conteúdo conferido; chave estável no cache  |
+| APK Android no GitHub Actions (`android.yml`, execuções nº 1 a 3) | **PASSOU** — 5 testes JUnit, `assembleDebug`, conteúdo conferido; chave estável no cache  |
 
 Observação honesta sobre estabilidade: em uma execução completa anterior, o teste
 "cena parada: calibra, mede tentativas…" (câmera falsa) estourou o tempo uma vez com os 3
@@ -265,7 +265,7 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 
 **registro local de erros** (1) — PASSOU
 
-- guarda os 20 mais recentes, corta textos longos e tolera lixo
+- guarda os 20 mais recentes, corta textos longos, tolera lixo e não regrava o mesmo erro em loop
 
 **biblioteca de exercícios técnicos** (7) — PASSOU
 

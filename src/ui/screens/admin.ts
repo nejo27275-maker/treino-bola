@@ -89,14 +89,16 @@ export async function adminScreen(ctx: AppContext): Promise<Screen> {
     if (focar) conteudo.querySelector<HTMLElement>('[data-autofocus]')?.focus();
   };
 
-  aoBloquearSozinho = () => void mostrar(false);
+  const aoTrancar = () => void mostrar(false);
+  aoBloquearSozinho = aoTrancar;
   await mostrar(false);
   return {
     title: 'Administração',
     el,
     destroy: () => {
       ativo = false;
-      aoBloquearSozinho = null;
+      // Só desliga se ainda for a desta tela (outra tela do painel pode já ter assumido).
+      if (aoBloquearSozinho === aoTrancar) aoBloquearSozinho = null;
       for (const limpar of limpezas.splice(0)) limpar();
     },
   };

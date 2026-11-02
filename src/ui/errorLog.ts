@@ -15,6 +15,10 @@ export interface ErroRegistrado {
 const CHAVE = 'erros';
 export const MAX_ERROS = 20;
 const MAX_TEXTO = 300;
+/** O mesmo erro repetido dentro deste intervalo não é gravado de novo (ex.: erro em loop). */
+const INTERVALO_REPETICAO_MS = 5000;
+
+let ultimo: { chave: string; quando: number } | null = null;
 
 function valido(x: unknown): x is ErroRegistrado {
   const e = x as Partial<ErroRegistrado> | null;
@@ -41,10 +45,17 @@ export function registrarErro(
   quando: Date = new Date(),
 ): void {
   const texto = (mensagem || 'erro sem mensagem').slice(0, MAX_TEXTO);
+  const chave = `${origem}|${texto}`;
+  const instante = quando.getTime();
+  if (ultimo?.chave === chave && Math.abs(instante - ultimo.quando) < INTERVALO_REPETICAO_MS) {
+    return;
+  }
+  ultimo = { chave, quando: instante };
   const lista = [...listarErros(), { em: quando.toISOString(), origem, mensagem: texto }];
   setPref(CHAVE, JSON.stringify(lista.slice(-MAX_ERROS)));
 }
 
 export function limparErros(): void {
+  ultimo = null;
   removePref(CHAVE);
 }

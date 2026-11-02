@@ -160,6 +160,13 @@ describe('registro local de erros', () => {
       );
       memoria.set('cfa:erros', 'não é json');
       assert.deepEqual(listarErros(), []);
+      // O mesmo erro em loop é gravado uma vez a cada 5 s, não a cada repetição.
+      const base = new Date(2026, 10, 2, 12, 0, 0).getTime();
+      registrarErro('erro', 'em loop', new Date(base));
+      registrarErro('erro', 'em loop', new Date(base + 1000));
+      assert.equal(listarErros().filter((e) => e.mensagem === 'em loop').length, 1);
+      registrarErro('erro', 'em loop', new Date(base + 6000));
+      assert.equal(listarErros().filter((e) => e.mensagem === 'em loop').length, 2);
       limparErros();
       assert.equal(memoria.has('cfa:erros'), false);
     } finally {
