@@ -198,4 +198,25 @@ describe('mensagens de erro de câmera e vídeo', () => {
       checkVideoFile({ name: 'v.mp4', type: 'video/mp4', size: 600 * 1024 * 1024 }).warning,
     );
   });
+
+  test('abertura da câmera: tenta a exata, depois a preferida e por fim qualquer uma', async () => {
+    const { constraintAttempts, retryOnConstraintError } =
+      await import('../../src/media/camera.ts');
+    const tentativas = constraintAttempts('environment', { width: 640, height: 480 });
+    assert.equal(tentativas.length, 3);
+    // 1ª: exata (faz o alternar frontal/traseira funcionar); 2ª: preferida; 3ª: qualquer câmera.
+    assert.deepEqual((tentativas[0]?.video as MediaTrackConstraints).facingMode, {
+      exact: 'environment',
+    });
+    assert.deepEqual((tentativas[1]?.video as MediaTrackConstraints).facingMode, {
+      ideal: 'environment',
+    });
+    assert.equal(tentativas[2]?.video, true);
+    // Só a restrição (câmera daquele lado não existe) justifica tentar a próxima.
+    assert.equal(retryOnConstraintError('OverconstrainedError'), true);
+    assert.equal(retryOnConstraintError('NotFoundError'), true);
+    assert.equal(retryOnConstraintError('NotAllowedError'), false, 'permissão negada para na hora');
+    assert.equal(retryOnConstraintError('NotReadableError'), false, 'câmera ocupada para na hora');
+    assert.equal(retryOnConstraintError(undefined), false);
+  });
 });

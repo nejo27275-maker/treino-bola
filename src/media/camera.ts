@@ -14,6 +14,67 @@ const SIZES: Record<Resolution, { width: number; height: number }> = {
   media: { width: 1280, height: 720 },
 };
 
+/**
+ * Ordem das tentativas de abrir a câmera: a exata pedida (faz o alternar frontal/traseira
+ * funcionar de verdade), depois a preferida e, por fim, qualquer câmera.
+ */
+export function constraintAttempts(
+  facing: Facing,
+  size: { width: number; height: number },
+): MediaStreamConstraints[] {
+  const base: MediaTrackConstraints = {
+    width: { ideal: size.width },
+    height: { ideal: size.height },
+    frameRate: { ideal: 30, max: 30 },
+  };
+  return [
+    { audio: false, video: { ...base, facingMode: { exact: facing } } },
+    { audio: false, video: { ...base, facingMode: { ideal: facing } } },
+    { audio: false, video: true },
+  ];
+}
+
+/**
+ * Só a restrição (a câmera daquele lado não existe) justifica tentar a próxima combinação;
+ * permissão negada, câmera ocupada etc. param na hora (não adianta insistir).
+ */
+export function retryOnConstraintError(name: string | undefined): boolean {
+  return (
+    name === 'OverconstrainedError' ||
+    name === 'ConstraintNotSatisfiedError' ||
+    name === 'NotFoundError' ||
+    name === 'DevicesNotFoundError'
+  );
+}
+
+/** Resolve true quando o vídeo passa a ter dimensões (há imagem), ou false ao esgotar o tempo. */
+function waitForVideoFrame(video: HTMLVideoElement, timeoutMs: number): Promise<boolean> {
+  if (video.videoWidth > 0) return Promise.resolve(true);
+  return new Promise<boolean>((resolve) => {
+    let pronto = false;
+    const terminar = (valor: boolean) => {
+      if (pronto) return;
+      pronto = true;
+      video.removeEventListener('loadeddata', verificar);
+      video.removeEventListener('resize', verificar);
+      window.clearInterval(poll);
+      window.clearTimeout(limite);
+      resolve(valor);
+    };
+    const verificar = () => {
+      if (video.videoWidth > 0) terminar(true);
+    };
+    video.addEventListener('loadeddata', verificar);
+    video.addEventListener('resize', verificar);
+    const rvfc = (
+      video as HTMLVideoElement & { requestVideoFrameCallback?: (cb: () => void) => number }
+    ).requestVideoFrameCallback;
+    if (typeof rvfc === 'function') rvfc.call(video, () => terminar(true));
+    const poll = window.setInterval(verificar, 100);
+    const limite = window.setTimeout(() => terminar(video.videoWidth > 0), timeoutMs);
+  });
+}
+
 export class CameraController {
   state: CameraState = 'parada';
   problem: MediaProblem | null = null;
@@ -58,29 +119,8 @@ export class CameraController {
     this.facing = opts.facing;
     this.emit();
     const size = SIZES[opts.resolution];
-    let stream: MediaStream;
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: {
-          facingMode: { ideal: opts.facing },
-          width: { ideal: size.width },
-          height: { ideal: size.height },
-          frameRate: { ideal: 30, max: 30 },
-        },
-      });
-    } catch (error) {
-      const name = (error as { name?: string }).name;
-      if (name === 'OverconstrainedError' || name === 'ConstraintNotSatisfiedError') {
-        try {
-          stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
-        } catch (retryError) {
-          return this.fail(token, retryError);
-        }
-      } else {
-        return this.fail(token, error);
-      }
-    }
+    const stream = await this.abrirFluxo(token, opts.facing, size);
+    if (!stream) return false;
     if (token !== this.startToken) {
       // O pedido foi cancelado (o jogador saiu da tela ou desligou) enquanto aguardava a permissão.
       stream.getTracks().forEach((t) => t.stop());
@@ -110,9 +150,58 @@ export class CameraController {
     } catch {
       // Alguns navegadores exigem novo toque para reproduzir; a imagem aparece no próximo toque.
     }
+    // Espera a câmera realmente enviar imagem: começar a análise com quadros em branco
+    // (dimensões 0) estragaria a calibração e dispararia "movimento" falso no primeiro quadro.
+    const temImagem = await waitForVideoFrame(video, 4000);
+    if (token !== this.startToken) {
+      stream.getTracks().forEach((t) => t.stop());
+      return false;
+    }
+    if (!temImagem) {
+      stream.getTracks().forEach((t) => t.stop());
+      this.video = null;
+      this.stream = null;
+      this.state = 'erro';
+      this.problem = {
+        code: 'sem_imagem',
+        title: 'A câmera ligou, mas não há imagem',
+        message:
+          'A permissão foi dada, mas nenhum quadro chegou. Isso acontece com a câmera tapada, uma câmera virtual sem fonte ou alguns navegadores embutidos de outros aplicativos.',
+        steps: [
+          'Verifique se a câmera não está coberta.',
+          'Tente a outra câmera (frontal/traseira) ou abra o aplicativo no Google Chrome.',
+        ],
+      };
+      this.emit();
+      return false;
+    }
     this.state = 'ativa';
     this.emit();
     return true;
+  }
+
+  /**
+   * Abre o fluxo tentando, em ordem: a câmera exata pedida (faz o alternar frontal/traseira
+   * funcionar de verdade), depois a preferida e, por fim, qualquer câmera. Só continua para a
+   * próxima tentativa quando o problema é a restrição (câmera daquele lado não existe); erros
+   * como permissão negada param na hora.
+   */
+  private async abrirFluxo(
+    token: number,
+    facing: Facing,
+    size: { width: number; height: number },
+  ): Promise<MediaStream | null> {
+    let ultimoErro: unknown = new Error('Câmera indisponível.');
+    for (const constraints of constraintAttempts(facing, size)) {
+      try {
+        return await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (error) {
+        ultimoErro = error;
+        if (!retryOnConstraintError((error as { name?: string }).name)) break;
+      }
+    }
+    this.fail(token, ultimoErro);
+    return null;
   }
 
   private fail(token: number, error: unknown): false {

@@ -22,6 +22,9 @@ export class FrameSampler {
 
   /** Captura o quadro atual. Retorna uma cópia (os quadros anteriores não são sobrescritos). */
   grab(source: CanvasImageSource): GrayFrame | null {
+    // Vídeo ainda sem imagem (dimensões 0): não amostra quadro em branco.
+    const v = source as { videoWidth?: number; videoHeight?: number };
+    if (v.videoWidth !== undefined && (v.videoWidth === 0 || v.videoHeight === 0)) return null;
     try {
       this.ctx.drawImage(source, 0, 0, this.width, this.height);
       const image = this.ctx.getImageData(0, 0, this.width, this.height);
