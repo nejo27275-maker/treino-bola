@@ -1,6 +1,7 @@
 # Publicação MANUAL no GitHub Pages (aba Actions → "Publicar no GitHub Pages" → Run workflow).
-# Antes, em Settings → Pages, escolha "Source: GitHub Actions". O site fica em
+# Na primeira vez, o próprio workflow liga o Pages (enablement: true). O site fica em
 # https://<usuário>.github.io/<repositório>/ — o app usa só caminhos relativos.
+# Útil no iPhone: abra esse endereço HTTPS no Safari e "Adicione à Tela de Início".
 name: Publicar no GitHub Pages
 
 on:
@@ -30,7 +31,11 @@ jobs:
       # - run: npm run pose:prepare
       - name: Build de produção
         run: npm run build
+      # enablement: true liga o GitHub Pages (fonte = GitHub Actions) na primeira execução,
+      # sem precisar mexer em Settings → Pages antes.
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
