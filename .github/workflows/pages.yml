@@ -1,6 +1,9 @@
-# Publicação MANUAL no GitHub Pages (aba Actions → "Publicar no GitHub Pages" → Run workflow).
-# Na primeira vez, o próprio workflow liga o Pages (enablement: true). O site fica em
-# https://<usuário>.github.io/<repositório>/ — o app usa só caminhos relativos.
+# Publicação no GitHub Pages (aba Actions → "Publicar no GitHub Pages" → Run workflow).
+# PASSO ÚNICO ANTES DA 1ª VEZ: em Settings → Pages → Source, escolha "GitHub Actions".
+# (O workflow tenta ligar sozinho com enablement: true, mas o token padrão do Actions às vezes
+# não tem permissão para isso — se falhar com "Resource not accessible by integration" ou
+# "Pages enabled", faça esse passo em Settings e rode de novo.)
+# O site fica em https://<usuário>.github.io/<repositório>/ (o app usa só caminhos relativos).
 # Útil no iPhone: abra esse endereço HTTPS no Safari e "Adicione à Tela de Início".
 name: Publicar no GitHub Pages
 

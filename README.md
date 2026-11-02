@@ -71,12 +71,16 @@ npm run serve      # serve dist/ em http://127.0.0.1:4173/
 ## Usar no iPhone (iOS)
 
 O iPhone **não instala APK** (isso é só do Android). No iPhone o app roda no **Safari** e se
-instala na tela de início como um app (tela cheia, offline):
+instala na tela de início como um app (tela cheia, offline). Para isso ele precisa de um
+endereço **HTTPS**, e o caminho é publicar no GitHub Pages (uma vez):
 
-1. Abra o endereço **HTTPS** do app no **Safari** (publique no GitHub Pages — Opção B abaixo).
-2. Toque no botão **Compartilhar** (quadrado com seta para cima) → **"Adicionar à Tela de
-   Início"**.
-3. Abra pelo ícone novo: roda em tela cheia, funciona offline e usa a câmera (o Safari pede
+1. No GitHub: **Settings → Pages → Source: "GitHub Actions"** (passo único; o token do Actions
+   não consegue ligar o Pages sozinho).
+2. **Actions → "Publicar no GitHub Pages" → Run workflow**. O site fica em
+   `https://<seu-usuário>.github.io/<repositório>/`.
+3. No iPhone, abra esse endereço no **Safari** → botão **Compartilhar** (quadrado com seta para
+   cima) → **"Adicionar à Tela de Início"**.
+4. Abra pelo ícone novo: roda em tela cheia, funciona offline e usa a câmera (o Safari pede
    permissão). Vídeos MP4 do iPhone tocam normalmente.
 
 Precisa ser o Safari e um endereço HTTPS (a câmera e a instalação não funcionam em navegadores
