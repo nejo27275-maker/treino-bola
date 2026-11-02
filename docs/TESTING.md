@@ -40,10 +40,10 @@ No primeiro uso do Playwright fora deste ambiente: `npx playwright install chrom
 | `npm run typecheck`                                               | PASSOU (sem erros)                                                                        |
 | `npm run lint`                                                    | PASSOU (sem avisos)                                                                       |
 | `npm run format:check`                                            | PASSOU                                                                                    |
-| `npm test` — 143 testes unitários                                 | **143 PASSOU, 0 FALHOU**                                                                  |
+| `npm test` — 149 testes unitários                                 | **149 PASSOU, 0 FALHOU**                                                                  |
 | `npm run build`                                                   | PASSOU — 73 arquivos pré-armazenados (~580 KB); dois builds seguidos geram a mesma versão |
-| `npx playwright test` — 72 testes de ponta a ponta (5 projetos)   | **72 PASSOU, 0 FALHOU**                                                                   |
-| APK Android no GitHub Actions (`android.yml`, execuções nº 1 a 3) | **PASSOU** — 5 testes JUnit, `assembleDebug`, conteúdo conferido; chave estável no cache  |
+| `npx playwright test` — 73 testes de ponta a ponta (5 projetos)   | **73 PASSOU, 0 FALHOU**                                                                   |
+| APK Android no GitHub Actions (`android.yml`, execuções nº 1 a 6) | **PASSOU** — 5 testes JUnit, `assembleDebug`, conteúdo conferido; chave estável no cache  |
 
 Observação honesta sobre estabilidade: em uma execução completa anterior, o teste
 "cena parada: calibra, mede tentativas…" (câmera falsa) estourou o tempo uma vez com os 3
@@ -105,7 +105,7 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
   cálculo das métricas, marcação de confiança insuficiente, salvamento e tratamento de falhas —
   **não** a detecção real.
 
-## Testes de ponta a ponta (72) — todos PASSOU na última execução
+## Testes de ponta a ponta (73) — todos PASSOU na última execução
 
 #### `tests/e2e/a11y.spec.ts` (9)
 
@@ -121,13 +121,14 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 | zoom de 200% (180 px de largura): nenhuma tela rola para o lado nem corta controles | app     | PASSOU |
 | simuladores: descrição da cena em texto, sem revelar o que está escondido           | app     | PASSOU |
 
-#### `tests/e2e/admin.spec.ts` (4) — painel de administração (credencial de teste)
+#### `tests/e2e/admin.spec.ts` (5) — painel de administração (credencial de teste)
 
 | Teste                                                                            | Projeto | Status |
 | -------------------------------------------------------------------------------- | ------- | ------ |
 | os quatro cantos em até 3 s abrem a área restrita; nenhum menu leva ao painel    | app     | PASSOU |
 | senha errada é recusada; a certa abre o painel, que exporta diagnóstico e tranca | app     | PASSOU |
 | cinco senhas erradas bloqueiam novas tentativas, mesmo recarregando              | app     | PASSOU |
+| tempo de uso deste aparelho aparece no painel (só local, não identifica ninguém) | app     | PASSOU |
 | erros inesperados ficam no registro local e aparecem no painel                   | app     | PASSOU |
 
 #### `tests/e2e/android.spec.ts` (2) — ponte do APK simulada no Chromium
@@ -244,7 +245,7 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 | @negada no APK, a permissão negada aponta para as configurações do Android                  | camera-sem-permissao | PASSOU |
 | @negada sem HTTPS a tela explica o requisito (contexto inseguro simulado)                   | camera-sem-permissao | PASSOU |
 
-## Testes unitários (143) — todos PASSOU na última execução
+## Testes unitários (149) — todos PASSOU na última execução
 
 **painel de administração — senha** (3) — PASSOU
 
@@ -298,6 +299,14 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 - hora local de um instante salvo em UTC (rótulos do histórico)
 - aritmética não é afetada por horário de verão
 - localDate formata com zeros à esquerda
+
+**tempo de uso (só deste aparelho)** (5) — PASSOU
+
+- soma por dia e no total; marca primeiro dia e último uso
+- descarta saltos grandes (app em segundo plano / relógio mudou) e valores inválidos
+- mantém só os últimos dias de detalhe; o total continua somando os antigos
+- resumo: total, hoje, dias ativos, sequência e média
+- normalizar tolera lixo e reconstrói o total a partir dos dias
 
 **formatação em português** (4) — PASSOU
 
@@ -477,7 +486,7 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 - pontos pouco visíveis tornam a métrica não confiável
 - resumo de série: estabilidade do tronco
 
-**mensagens de erro de câmera e vídeo** (1) — PASSOU
+**mensagens de erro de câmera e vídeo** (2) — PASSOU
 
 - erros conhecidos viram orientações em português
 
