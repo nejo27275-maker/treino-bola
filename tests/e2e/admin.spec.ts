@@ -71,6 +71,7 @@ test('senha errada é recusada; a certa abre o painel, que exporta diagnóstico 
   for (const titulo of [
     'Aplicativo e aparelho',
     'Dados neste aparelho',
+    'Tempo de uso (só deste aparelho)',
     'Motor de avaliação',
     'Erros recentes',
     'Manutenção',
@@ -80,6 +81,9 @@ test('senha errada é recusada; a certa abre o painel, que exporta diagnóstico 
   }
   await expect(page.getByText(/Onde roda: navegador/)).toBeVisible();
   await expect(page.getByText(/Versão: 1\.0\.0/)).toBeVisible();
+  // Sinal de integridade: o build servido nos testes é de produção.
+  await expect(page.getByText(/Integridade:/)).toBeVisible();
+  await expect(page.getByText(/build de produção/)).toBeVisible();
 
   const download = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Exportar diagnóstico (JSON)' }).click();
@@ -89,6 +93,8 @@ test('senha errada é recusada; a certa abre o painel, que exporta diagnóstico 
   expect(diagnostico.tipo).toBe('diagnostico');
   expect(diagnostico.profile).toBeUndefined();
   expect(Object.keys(diagnostico.motor)).toContain('passe');
+  expect(typeof diagnostico.assinatura).toBe('string');
+  expect(diagnostico.uso).toBeTruthy();
 
   // Sair e voltar mantém o desbloqueio; "Bloquear agora" tranca de novo.
   await go(page, '#/mais');
@@ -115,6 +121,33 @@ test('cinco senhas erradas bloqueiam novas tentativas, mesmo recarregando', asyn
   await expect(botao).toBeDisabled();
   await page.reload();
   await expect(page.getByRole('button', { name: 'Entrar' })).toBeDisabled();
+});
+
+test('tempo de uso deste aparelho aparece no painel (só local, não identifica ninguém)', async ({
+  page,
+}) => {
+  await usarCredencialDeTeste(page);
+  // Semeia um tempo de uso já guardado neste aparelho (10 min no dia 13, 30 min no dia 14).
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      'cfa:uso',
+      JSON.stringify({
+        totalMs: 2_400_000,
+        dias: { '2026-10-13': 600_000, '2026-10-14': 1_800_000 },
+        primeiroDia: '2026-10-13',
+        ultimoUso: '2026-10-14T09:30:00.000Z',
+      }),
+    );
+  });
+  await openApp(page, '#/admin');
+  await entrar(page, SENHA_DE_TESTE);
+  const uso = page
+    .locator('.card')
+    .filter({ has: page.getByRole('heading', { name: 'Tempo de uso (só deste aparelho)' }) });
+  await expect(uso.getByText('Total: 40 min')).toBeVisible();
+  await expect(uso.getByText('Hoje: 30 min')).toBeVisible();
+  await expect(uso.getByText('Dias ativos: 2')).toBeVisible();
+  await expect(uso.getByText('Sequência atual: 2 dias seguidos')).toBeVisible();
 });
 
 test('erros inesperados ficam no registro local e aparecem no painel', async ({ page }) => {

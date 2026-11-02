@@ -18,14 +18,15 @@ página/reabrir o app. **Bloquear agora** tranca na hora.
 
 ## O que tem no painel
 
-| Seção                 | Conteúdo                                                                                                                                                        |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Aplicativo e aparelho | Versão, onde roda (navegador, PWA instalado ou APK), uso offline, armazenamento e espaço, data/hora e fuso, idioma, tela, detector de pose e navegador.         |
-| Dados neste aparelho  | Quantidade de sessões, resultados, análises e quadros; perfil; competição; período das sessões; níveis dos simuladores.                                         |
-| Motor de avaliação    | Para cada fundamento: situação, estimativa, confiança, tentativas (execução real / simulação) e tendência; as 5 prioridades atuais com motivos; bem-estar.      |
-| Erros recentes        | Os últimos 20 erros inesperados (guardados só no aparelho), com **Copiar** e **Limpar** — útil no celular e no APK, onde não há console.                        |
-| Manutenção            | Mostrar as boas-vindas de novo; voltar os simuladores ao nível 1; **Exportar diagnóstico (JSON)** (versões, contagens, motor e erros — sem perfil nem sessões). |
-| Segurança do painel   | Data da senha atual, parâmetros do hash e como trocar a senha.                                                                                                  |
+| Seção                 | Conteúdo                                                                                                                                                                                                                         |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Aplicativo e aparelho | Versão e assinatura, **integridade** (build de produção × desenvolvimento; service worker confere), onde roda (navegador, PWA ou APK), uso offline, armazenamento, data/hora e fuso, idioma, tela, detector de pose e navegador. |
+| Dados neste aparelho  | Quantidade de sessões, resultados, análises e quadros; perfil; competição; período das sessões; níveis dos simuladores.                                                                                                          |
+| Tempo de uso          | Só deste aparelho: total, hoje, dias ativos, sequência, média por dia ativo, primeiro e último uso. Fica no aparelho, não identifica ninguém e some com os dados.                                                                |
+| Motor de avaliação    | Para cada fundamento: situação, estimativa, confiança, tentativas (execução real / simulação) e tendência; as 5 prioridades atuais com motivos; bem-estar.                                                                       |
+| Erros recentes        | Os últimos 20 erros inesperados (guardados só no aparelho), com **Copiar** e **Limpar** — útil no celular e no APK, onde não há console.                                                                                         |
+| Manutenção            | Mostrar as boas-vindas de novo; voltar os simuladores ao nível 1; **Exportar diagnóstico (JSON)** (versões, contagens, motor e erros — sem perfil nem sessões).                                                                  |
+| Segurança do painel   | Data da senha atual, parâmetros do hash e como trocar a senha.                                                                                                                                                                   |
 
 ## A senha
 
@@ -54,12 +55,27 @@ O script sorteia uma nova senha, mostra-a **uma única vez** no terminal e grava
 hash em `src/admin/credencial.ts`. Depois, faça commit desse arquivo, publique o site e gere o
 APK de novo (o workflow do APK roda sozinho a cada push que muda o app).
 
+## Integridade (em vez de "travar a cópia")
+
+O app **não** tem código que o faz quebrar quando é copiado: isso não protege nada (o código é
+aberto) e, na prática, acabaria quebrando o app de gente de verdade por engano. Em vez disso, o
+painel **mostra** um sinal honesto de integridade:
+
+- **Build de desenvolvimento** (não é uma versão de produção) → aviso.
+- **Service worker não confere com esta versão** (cache antigo ou cópia alterada) → aviso.
+- A **assinatura** (hash do conteúdo do build, também no registro do GitHub Actions) permite
+  comparar à mão com a versão oficial.
+
+Limite honesto: como o app é público e compilado em um CI público, **não dá** para provar por
+criptografia que uma cópia é "a oficial" (não há segredo de assinatura que já não seja público).
+No APK, a integridade do pacote é garantida pela assinatura do próprio Android.
+
 ## Limites (honestos)
 
-- A senha protege a **interface** do painel. Como tudo roda no próprio aparelho, quem tiver
-  controle total do aparelho e conhecimento técnico (por exemplo, ferramentas de
-  desenvolvedor) consegue ler os dados locais de outras formas — o painel não dá acesso a
-  nada além do que já está neste aparelho, e não acessa nenhum servidor.
+- A senha protege a **interface** do painel, e o tempo de uso é só deste aparelho. Como tudo
+  roda no próprio aparelho, o painel não identifica quem usa, não acessa nenhum servidor e não
+  vê outros aparelhos; quem tiver controle total do aparelho e conhecimento técnico consegue
+  ler os dados locais de outras formas.
 - O gesto dos cantos é um atalho escondido, não uma proteção: a proteção é a senha.
 - O registro de erros fica no `localStorage` (`cfa:erros`) e é apagado em **Mais →
   Configurações → Apagar todos os dados**, junto com o resto.

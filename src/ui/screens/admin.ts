@@ -18,6 +18,7 @@ import { formatDateBR } from '../../core/dates.ts';
 import { bytes, decimal, localTime, percent, plural } from '../../core/format.ts';
 import { DEFAULT_SIM_LEVELS, SIM_MODES, SIM_MODE_ORDER } from '../../core/sim/index.ts';
 import { SKILLS, SKILL_ORDER } from '../../core/skills.ts';
+import { resumir } from '../../core/usageStats.ts';
 import { checkPoseAvailability } from '../../media/pose.ts';
 import { isAndroidApp } from '../../platform.ts';
 import { getPref, removePref, setPref } from '../../storage/prefs.ts';
@@ -27,6 +28,7 @@ import { h, replaceChildren } from '../dom.ts';
 import { baixarJson } from '../download.ts';
 import { limparErros, listarErros } from '../errorLog.ts';
 import type { Screen } from '../router.ts';
+import { lerUso } from '../usage.ts';
 
 const CHAVE_TENTATIVAS = 'admin-tentativas';
 const DURACAO_DESBLOQUEIO_MS = 15 * 60_000;
@@ -200,6 +202,8 @@ function telaDeEntrada(limpezas: (() => void)[], aoEntrar: () => void): HTMLElem
 
 interface Ambiente {
   versao: string;
+  mode: string | null;
+  assinatura: string | null;
   cache: string | null;
   uso?: number;
   cota?: number;
@@ -208,7 +212,9 @@ interface Ambiente {
 
 async function lerAmbiente(): Promise<Ambiente> {
   const info = await fetch('build-info.json', { cache: 'no-store' })
-    .then((r) => (r.ok ? (r.json() as Promise<{ versao?: string }>) : null))
+    .then((r) =>
+      r.ok ? (r.json() as Promise<{ versao?: string; mode?: string; assinatura?: string }>) : null,
+    )
     .catch(() => null);
   const cache = await globalThis.caches
     ?.keys()
@@ -220,10 +226,35 @@ async function lerAmbiente(): Promise<Ambiente> {
     .catch(() => 'indisponível');
   return {
     versao: typeof info?.versao === 'string' ? info.versao : 'desconhecida',
+    mode: typeof info?.mode === 'string' ? info.mode : null,
+    assinatura: typeof info?.assinatura === 'string' ? info.assinatura : null,
     cache: cache ?? null,
     uso: espaco?.usage,
     cota: espaco?.quota,
     pose,
+  };
+}
+
+/**
+ * Sinal honesto de integridade (sem travar nada): aponta build de desenvolvimento e service
+ * worker que não confere com esta versão. Não prova "build oficial" — isto é impossível num
+ * app público e compilado em CI público; a assinatura serve para você comparar com a oficial.
+ */
+function integridade(amb: Ambiente): { texto: string; alerta: boolean } {
+  if (amb.mode && amb.mode !== 'production') {
+    return { texto: 'build de desenvolvimento (não é uma versão de produção)', alerta: true };
+  }
+  if (amb.assinatura && amb.cache && amb.cache !== amb.assinatura) {
+    return {
+      texto: 'o service worker ativo não confere com esta versão (cache antigo ou cópia alterada)',
+      alerta: true,
+    };
+  }
+  return {
+    texto: isAndroidApp()
+      ? 'build de produção (a integridade do APK é garantida pela assinatura do Android)'
+      : 'build de produção; o service worker confere com esta versão',
+    alerta: false,
   };
 }
 
@@ -273,8 +304,17 @@ async function painel(ctx: AppContext, aoBloquear: () => void): Promise<HTMLElem
       { class: 'small' },
       item(
         'Versão',
-        ambiente.cache ? `${ambiente.versao} · cache ${ambiente.cache}` : ambiente.versao,
+        `${ambiente.versao}${ambiente.assinatura ? ` · assinatura ${ambiente.assinatura}` : ''}`,
       ),
+      (() => {
+        const i = integridade(ambiente);
+        return h(
+          'li',
+          null,
+          h('strong', null, 'Integridade: '),
+          i.alerta ? pill(i.texto, 'warn') : i.texto,
+        );
+      })(),
       item('Onde roda', plataforma(ctx)),
       item('Uso offline', OFFLINE[ctx.pwa.swStatus]),
       item(
@@ -322,11 +362,46 @@ async function painel(ctx: AppContext, aoBloquear: () => void): Promise<HTMLElem
     topo,
     aplicativo,
     dados,
+    tempoDeUso(ctx),
     motor(snap),
     errosRecentes(ctx),
     manutencao(ctx, snap, ambiente),
     seguranca(),
   ];
+}
+
+/** "1 h 05 min", "12 min". */
+function duracao(minutos: number): string {
+  if (minutos < 60) return `${minutos} min`;
+  const h = Math.floor(minutos / 60);
+  const m = minutos % 60;
+  return m ? `${h} h ${String(m).padStart(2, '0')} min` : `${h} h`;
+}
+
+function tempoDeUso(ctx: AppContext): HTMLElement {
+  const r = resumir(lerUso(), ctx.today());
+  return card(
+    { title: 'Tempo de uso (só deste aparelho)', headingLevel: 2 },
+    h(
+      'ul',
+      { class: 'small' },
+      item('Total', duracao(r.totalMinutos)),
+      item('Hoje', duracao(r.minutosHoje)),
+      item('Dias ativos', String(r.diasAtivos)),
+      item('Sequência atual', plural(r.sequenciaAtual, 'dia seguido', 'dias seguidos')),
+      item('Média por dia ativo', duracao(r.mediaPorDiaAtivoMin)),
+      item('Primeiro uso', r.primeiroDia ? formatDateBR(r.primeiroDia) : '—'),
+      item(
+        'Último uso',
+        r.ultimoUso ? `${formatDateBR(r.ultimoUso.slice(0, 10))} ${localTime(r.ultimoUso)}` : '—',
+      ),
+    ),
+    h(
+      'p',
+      { class: 'small muted' },
+      'Tempo com o app aberto e à vista. Fica só neste aparelho, não identifica ninguém e é apagado junto com os dados.',
+    ),
+  );
 }
 
 function periodo(snap: Snapshot): string {
@@ -522,9 +597,13 @@ function diagnostico(ctx: AppContext, snap: Snapshot, ambiente: Ambiente): unkno
     tipo: 'diagnostico',
     geradoEm: ctx.now().toISOString(),
     versao: ambiente.versao,
+    assinatura: ambiente.assinatura,
+    mode: ambiente.mode,
     cache: ambiente.cache,
+    integridade: integridade(ambiente),
     plataforma: plataforma(ctx),
     offline: ctx.pwa.swStatus,
+    uso: resumir(lerUso(), ctx.today()),
     armazenamento: { tipo: ctx.repo.backend.kind, uso: ambiente.uso, cota: ambiente.cota },
     detectorDePose: ambiente.pose,
     tela: { largura: window.innerWidth, altura: window.innerHeight, dpr: window.devicePixelRatio },

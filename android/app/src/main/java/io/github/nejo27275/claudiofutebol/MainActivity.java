@@ -63,13 +63,22 @@ public final class MainActivity extends Activity {
         WebSettings ajustes = web.getSettings();
         ajustes.setJavaScriptEnabled(true);
         ajustes.setDomStorageEnabled(true);
-        ajustes.setAllowFileAccess(false);
         ajustes.setMediaPlaybackRequiresUserGesture(false);
+        // Travas de segurança: a página só acessa os próprios arquivos (servidos pelo app) e
+        // nada do sistema de arquivos, de content:// nem da localização.
+        ajustes.setAllowFileAccess(false);
+        ajustes.setAllowContentAccess(false);
+        ajustes.setAllowFileAccessFromFileURLs(false);
+        ajustes.setAllowUniversalAccessFromFileURLs(false);
+        ajustes.setGeolocationEnabled(false);
+        // Sem janelas/pop-ups: nada abre uma segunda WebView fora do nosso controle.
         ajustes.setSupportMultipleWindows(false);
         ajustes.setJavaScriptCanOpenWindowsAutomatically(false);
+        ajustes.setSaveFormData(false);
 
         web.setWebViewClient(new ClienteLocal());
         web.setWebChromeClient(new ClienteChrome());
+        // A ponte só é vista pelas páginas do próprio app (nenhuma outra origem é carregada aqui).
         web.addJavascriptInterface(new Ponte(), "ClaudioAndroid");
 
         if (estado == null || web.restoreState(estado) == null) {

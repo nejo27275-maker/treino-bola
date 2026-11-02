@@ -8,6 +8,7 @@ import { observarGestoQuatroCantos } from './ui/cantos.ts';
 import { button, pill } from './ui/components.ts';
 import { h } from './ui/dom.ts';
 import { registrarErro } from './ui/errorLog.ts';
+import { iniciarRastreioDeUso } from './ui/usage.ts';
 import { icon, type IconName } from './ui/icons.ts';
 import { RouteNotFound, Router } from './ui/router.ts';
 import { homeScreen } from './ui/screens/home.ts';
@@ -299,6 +300,8 @@ async function main(): Promise<void> {
 
   router.start();
   observarGestoQuatroCantos(() => ctx.navigate('/admin'));
+  // Conta o tempo de uso só deste aparelho (fica no aparelho, para o painel de administração).
+  iniciarRastreioDeUso();
   void setupServiceWorker(ctx, () => router.confirmLeave());
   prefetchWhenIdle(Object.values(screens));
 }

@@ -80,35 +80,52 @@ function compileTypeScript() {
   }
 }
 
+const BUILD_INFO = 'build-info.json';
+
 async function buildServiceWorker() {
   const pose = await poseInfo();
   const pacote = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
-  // build-info.json é escrito antes da lista de pré-cache para também funcionar offline.
+  const template = await readFile(path.join(root, 'scripts', 'sw-template.js'), 'utf8');
+
+  // Assinatura do conteúdo: hash de todos os arquivos pré-armazenados, em ordem fixa e EXCETO
+  // o próprio build-info.json (que carrega a assinatura — incluí-lo seria circular). É também a
+  // versão do service worker: dois builds do mesmo conteúdo geram a mesma assinatura.
+  const todos = (await listFiles(dist))
+    .filter((f) => !PRECACHE_EXCLUDE.some((re) => re.test(f)))
+    .sort();
+  const revs = new Map();
+  const versionHash = createHash('sha256');
+  for (const file of todos) {
+    if (file === BUILD_INFO) continue;
+    const content = await readFile(path.join(dist, file));
+    const rev = createHash('sha256').update(content).digest('hex').slice(0, 12);
+    versionHash.update(`${file}:${rev};`);
+    revs.set(file, rev);
+  }
+  const version = isDev ? `dev-${Date.now()}` : versionHash.digest('hex').slice(0, 16);
+
+  // build-info.json leva a assinatura (o painel de administração a mostra para conferência).
   await writeFile(
-    path.join(dist, 'build-info.json'),
+    path.join(dist, BUILD_INFO),
     JSON.stringify(
       {
-        // Sem data/hora do build: um novo build sem mudanças gera a mesma versão (o aparelho
-        // não baixa tudo de novo à toa).
         mode: isDev ? 'development' : 'production',
         versao: pacote.version,
+        assinatura: version,
         pose,
       },
       null,
       2,
     ),
   );
-  const template = await readFile(path.join(root, 'scripts', 'sw-template.js'), 'utf8');
-  const files = (await listFiles(dist)).filter((f) => !PRECACHE_EXCLUDE.some((re) => re.test(f)));
-  const precache = [];
-  const versionHash = createHash('sha256');
-  for (const file of files) {
-    const content = await readFile(path.join(dist, file));
-    const rev = createHash('sha256').update(content).digest('hex').slice(0, 12);
-    versionHash.update(`${file}:${rev};`);
-    precache.push({ url: file, rev });
-  }
-  const version = isDev ? `dev-${Date.now()}` : versionHash.digest('hex').slice(0, 16);
+  // Fica no pré-cache (para abrir offline), com o rev do conteúdo já final.
+  const biRev = createHash('sha256')
+    .update(await readFile(path.join(dist, BUILD_INFO)))
+    .digest('hex')
+    .slice(0, 12);
+  revs.set(BUILD_INFO, biRev);
+  const files = todos.includes(BUILD_INFO) ? todos : [...todos, BUILD_INFO];
+  const precache = files.map((url) => ({ url, rev: revs.get(url) }));
   const replaceMarker = (source, marker, line) => {
     const re = new RegExp(`^.*// @build:${marker}$`, 'm');
     if (!re.test(source)) throw new Error(`Marcador @build:${marker} ausente no template do SW.`);
