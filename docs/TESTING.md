@@ -42,7 +42,7 @@ No primeiro uso do Playwright fora deste ambiente: `npx playwright install chrom
 | `npm run format:check`                                            | PASSOU                                                                                    |
 | `npm test` — 150 testes unitários                                 | **150 PASSOU, 0 FALHOU**                                                                  |
 | `npm run build`                                                   | PASSOU — 73 arquivos pré-armazenados (~580 KB); dois builds seguidos geram a mesma versão |
-| `npx playwright test` — 73 testes de ponta a ponta (5 projetos)   | **73 PASSOU, 0 FALHOU**                                                                   |
+| `npx playwright test` — 74 testes de ponta a ponta (5 projetos)   | **74 PASSOU, 0 FALHOU**                                                                   |
 | APK Android no GitHub Actions (`android.yml`, execuções nº 1 a 6) | **PASSOU** — 5 testes JUnit, `assembleDebug`, conteúdo conferido; chave estável no cache  |
 
 Observação honesta sobre estabilidade: em uma execução completa anterior, o teste
@@ -105,7 +105,7 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
   cálculo das métricas, marcação de confiança insuficiente, salvamento e tratamento de falhas —
   **não** a detecção real.
 
-## Testes de ponta a ponta (73) — todos PASSOU na última execução
+## Testes de ponta a ponta (74) — todos PASSOU na última execução
 
 #### `tests/e2e/a11y.spec.ts` (9)
 
@@ -121,7 +121,7 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 | zoom de 200% (180 px de largura): nenhuma tela rola para o lado nem corta controles | app     | PASSOU |
 | simuladores: descrição da cena em texto, sem revelar o que está escondido           | app     | PASSOU |
 
-#### `tests/e2e/admin.spec.ts` (5) — painel de administração (credencial de teste)
+#### `tests/e2e/admin.spec.ts` (6) — painel de administração (credencial de teste)
 
 | Teste                                                                            | Projeto | Status |
 | -------------------------------------------------------------------------------- | ------- | ------ |
@@ -130,6 +130,7 @@ carga de CPU (mede tempos reais). Se acontecer no seu computador, rode
 | cinco senhas erradas bloqueiam novas tentativas, mesmo recarregando              | app     | PASSOU |
 | tempo de uso deste aparelho aparece no painel (só local, não identifica ninguém) | app     | PASSOU |
 | erros inesperados ficam no registro local e aparecem no painel                   | app     | PASSOU |
+| integridade avisa quando não consegue ler o build-info (cópia sem o arquivo)     | app     | PASSOU |
 
 #### `tests/e2e/android.spec.ts` (2) — ponte do APK simulada no Chromium
 

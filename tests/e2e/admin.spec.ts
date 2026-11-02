@@ -174,3 +174,15 @@ test('erros inesperados ficam no registro local e aparecem no painel', async ({ 
   await page.getByRole('button', { name: 'Limpar' }).click();
   await expect(page.getByText('Nenhum erro registrado neste aparelho.')).toBeVisible();
 });
+
+test('integridade avisa quando não consegue ler o build-info (cópia sem o arquivo)', async ({
+  page,
+}) => {
+  await usarCredencialDeTeste(page);
+  // Simula uma cópia em que o build-info.json foi removido/corrompido.
+  await page.route('**/build-info.json', (route) => route.fulfill({ status: 404, body: '' }));
+  await openApp(page, '#/admin');
+  await entrar(page, SENHA_DE_TESTE);
+  await expect(page.getByText(/não foi possível verificar a integridade/)).toBeVisible();
+  await expect(page.getByText(/build de produção; o service worker confere/)).toHaveCount(0);
+});

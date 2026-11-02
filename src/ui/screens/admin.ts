@@ -241,10 +241,18 @@ async function lerAmbiente(): Promise<Ambiente> {
  * app público e compilado em CI público; a assinatura serve para você comparar com a oficial.
  */
 function integridade(amb: Ambiente): { texto: string; alerta: boolean } {
-  if (amb.mode && amb.mode !== 'production') {
+  if (amb.mode === null || amb.assinatura === null) {
+    // Não deu para ler o build-info.json: justamente o caso de cópia sem esse arquivo. Avisa
+    // em vez de mostrar um "ok" tranquilizador.
+    return {
+      texto: 'não foi possível verificar a integridade (build-info ausente ou ilegível)',
+      alerta: true,
+    };
+  }
+  if (amb.mode !== 'production') {
     return { texto: 'build de desenvolvimento (não é uma versão de produção)', alerta: true };
   }
-  if (amb.assinatura && amb.cache && amb.cache !== amb.assinatura) {
+  if (amb.cache && amb.cache !== amb.assinatura) {
     return {
       texto: 'o service worker ativo não confere com esta versão (cache antigo ou cópia alterada)',
       alerta: true,

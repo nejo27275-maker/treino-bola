@@ -40,11 +40,14 @@ export function iniciarRastreioDeUso(agora: () => number = () => performance.now
   let ultimaInteracao = agora();
   let timer = 0;
 
-  const registrar = () => {
+  // `assumirVisivel` credita o trecho que acabou quando a transição para "oculto" já aconteceu
+  // (a página estava à vista até este instante); a checagem de ociosidade continua valendo.
+  const registrar = (assumirVisivel = false) => {
     const t = agora();
     const delta = t - marca;
     marca = t;
-    const visivel = typeof document === 'undefined' || document.visibilityState === 'visible';
+    const visivel =
+      assumirVisivel || typeof document === 'undefined' || document.visibilityState === 'visible';
     if (delta <= 0 || !estaAtivo(visivel, t - ultimaInteracao)) return;
     salvarUso(somarUso(lerUso(), localDate(new Date()), delta, new Date().toISOString()));
   };
@@ -67,11 +70,11 @@ export function iniciarRastreioDeUso(agora: () => number = () => performance.now
       ultimaInteracao = agora();
       retomar();
     } else {
-      registrar(); // guarda o trecho visível que acabou
+      registrar(true); // credita o trecho ativo que estava em curso até ocultar
       parar();
     }
   };
-  const aoSair = () => registrar();
+  const aoSair = () => registrar(true);
 
   const EVENTOS = ['pointerdown', 'keydown', 'touchstart', 'scroll'] as const;
   for (const ev of EVENTOS) window.addEventListener(ev, aoInteragir, { passive: true });
